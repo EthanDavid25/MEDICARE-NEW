@@ -23,6 +23,7 @@ hiddenimports = [
     'kivy.uix.slider',
     'kivy.uix.textinput',
     'kivy.uix.popup',
+    'kivy.uix.widget',
     'kivy.graphics',
     'sqlite3',
     'reportlab',
@@ -31,6 +32,10 @@ hiddenimports = [
     'reportlab.lib.styles',
     'cryptography',
     'cryptography.fernet',
+    'urllib.request',
+    'urllib.parse',
+    'webbrowser',
+    'app.healthcare.location_service',
 ]
 
 a = Analysis(

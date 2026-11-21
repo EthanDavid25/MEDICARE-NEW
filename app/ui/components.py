@@ -1,6 +1,7 @@
 """
 MEDICARE Custom UI Widgets and Layout Components.
 Built with pure Kivy graphics and properties for Android and Windows cross-platform fidelity.
+Includes WrappedLabel for zero-overlap multi-line text rendering.
 """
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
@@ -14,6 +15,36 @@ from app.ui.theme import (
     COLOR_BORDER, COLOR_URGENT_EMERGENCY, COLOR_URGENT_EARLY,
     COLOR_URGENT_ROUTINE, COLOR_URGENT_INSUFF
 )
+
+class WrappedLabel(Label):
+    """
+    A label that automatically wraps text to its container width
+    and dynamically sets its height to texture_size[1].
+    Eliminates text clipping and vertical overlap across all screen resolutions.
+    """
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.size_hint_y = None
+        self.markup = True
+        self.valign = "top"
+        self.halign = "left"
+        self.color = kwargs.get("color", COLOR_TEXT_DARK)
+        self.font_size = kwargs.get("font_size", "13sp")
+        self.bind(width=self._update_text_size, texture_size=self._update_height)
+
+    def _update_text_size(self, instance, value):
+        self.text_size = (max(value, 50), None)
+
+    def _update_height(self, instance, value):
+        # Texture height plus subtle vertical breathing space
+        self.height = max(value[1] + 4, 18)
+
+class SectionTitle(WrappedLabel):
+    """Clean prominent section header with robust height."""
+    def __init__(self, text="", **kwargs):
+        super().__init__(text=f"[b]{text}[/b]", **kwargs)
+        self.font_size = "15sp"
+        self.color = COLOR_NAVY_PRIMARY
 
 class CardBox(BoxLayout):
     """Modern rounded card container with background and optional border."""
@@ -87,7 +118,7 @@ class UrgencyBadge(Label):
         self.font_size = "12sp"
         self.size_hint = (None, None)
         self.height = 28
-        self.width = 160
+        self.width = 170
         self.color = COLOR_TEXT_LIGHT
         self.bind(pos=self._update_canvas, size=self._update_canvas, category=self._update_canvas)
 

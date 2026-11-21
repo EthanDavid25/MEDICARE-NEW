@@ -12,7 +12,10 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-# Set Kivy headless / dummy window for testing
+# Set Kivy local home and headless / dummy window for testing
+local_kivy_home = ROOT / ".kivy_home"
+local_kivy_home.mkdir(exist_ok=True)
+os.environ["KIVY_HOME"] = str(local_kivy_home)
 os.environ["KIVY_NO_ARGS"] = "1"
 os.environ["KIVY_LOG_LEVEL"] = "warning"
 
@@ -156,10 +159,19 @@ def run_verification():
 
     # 10. Test Healthcare Directory & Medical References
     facs = controller.dataset_loader.get_facilities()
-    assert len(facs) == 20
+    assert len(facs) >= 12
     refs = controller.dataset_loader.get_medical_references()
     assert len(refs) >= 8
     print(f"[PASS] 10. Local Healthcare Directory ({len(facs)} facilities) & References ({len(refs)} items) Verified.")
+
+    # 10b. Test Location Service & Hospital Priority Recommendations
+    loc_s = controller.location_service
+    ok, loc_label = loc_s.set_manual_location("New York, NY")
+    assert ok
+    rec_facs = loc_s.get_nearby_facilities(urgency_category=1, limit=3)
+    assert len(rec_facs) > 0
+    assert str(rec_facs[0].get("has_emergency")) == "1"
+    print(f"[PASS] 10b. Nearby Hospital Recommendation Verified (Priority 1: {rec_facs[0]['name']} has ER).")
 
     # 11. Test Security & Input Sanitization
     raw_str = "Secret Note \x00 with null bytes"

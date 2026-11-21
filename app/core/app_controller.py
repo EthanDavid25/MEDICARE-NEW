@@ -16,6 +16,7 @@ from app.history.history_service import HistoryService
 from app.triage.engine import TriageEngine
 from app.security.encryption import SecurityManager
 from app.synchronization.sync_service import SyncService
+from app.healthcare.location_service import LocationService
 
 logger = logging.getLogger("medicare.controller")
 
@@ -36,6 +37,7 @@ class AppController:
         self.triage_engine: TriageEngine = None
         self.security: SecurityManager = None
         self.sync_service: SyncService = None
+        self.location_service: LocationService = None
         
         # Runtime State
         self.current_patient_id: int = 1
@@ -68,6 +70,7 @@ class AppController:
         self.history_service = HistoryService(self.db)
         self.triage_engine = TriageEngine(self.dataset_loader, self.native, self.db)
         self.sync_service = SyncService(self.config, self.db)
+        self.location_service = LocationService(self.dataset_loader)
 
         # 6. Ensure default demonstration patient profile exists
         patients = self.patient_service.get_all_patients()
@@ -92,6 +95,13 @@ class AppController:
 
     def start(self):
         """Starts the Kivy user interface."""
+        # Set window size BEFORE importing Kivy Window — Config must be set
+        # before SDL2 creates the display, otherwise the size is ignored.
+        from kivy.config import Config as KivyConfig
+        KivyConfig.set("graphics", "width", "1366")
+        KivyConfig.set("graphics", "height", "768")
+        KivyConfig.set("graphics", "resizable", "1")
+        KivyConfig.set("graphics", "fullscreen", "0")
         from app.ui.app import MedicareKivyApp
         app = MedicareKivyApp(self)
         return app.run()

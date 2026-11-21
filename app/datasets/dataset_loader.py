@@ -98,7 +98,12 @@ class DatasetLoader:
             with open(csv_path, "r", encoding="utf-8") as f:
                 reader = csv.DictReader(row for row in f if not row.strip().startswith("#"))
                 for row in reader:
-                    facilities.append(dict(row))
+                    item = dict(row)
+                    # Normalize verified flag
+                    v = item.get("verified", item.get("is_verified", "0"))
+                    item["verified"] = v
+                    item["is_verified"] = v
+                    facilities.append(item)
             self._facilities = facilities
         except Exception as e:
             logger.error("Failed to load facilities CSV: %s", e)
@@ -125,19 +130,81 @@ class DatasetLoader:
     def get_warning_signs(self) -> list[dict]:
         return self._warning_signs
 
-    def get_followup_questions_for_symptoms(self, symptom_codes: list[str]) -> list[dict]:
-        """Finds relevant follow-up questions linked to selected symptoms, plus general questions."""
+    def get_followup_questions_for_symptoms(
+        self, symptom_codes: list[str], progression: str = "ALL", severity: int = 5
+    ) -> list[dict]:
+        """
+        Finds relevant, adaptive follow-up questions linked to selected symptoms,
+        filtered by progression and severity, while NEVER skipping emergency safety checks.
+        """
         codes_set = set(symptom_codes)
+        
+        # Determine body systems / categories of selected symptoms
+        selected_categories = set()
+        for sym in self._symptoms:
+            if sym.get("code") in codes_set:
+                bs = sym.get("body_system", "").lower()
+                if bs:
+                    selected_categories.add(bs)
+                cat = sym.get("category", "").lower()
+                if cat:
+                    selected_categories.add(cat)
+
+        norm_prog = (progression or "ALL").lower()
+
         matched = []
         seen = set()
+
         for q in self._followup_questions:
             qid = q.get("question_id")
             if qid in seen:
                 continue
+
             q_syms = set(q.get("symptom_codes", []))
-            if "ALL" in q_syms or bool(q_syms.intersection(codes_set)):
-                matched.append(q)
-                seen.add(qid)
+            q_cats = set(c.lower() for c in q.get("symptom_categories", []))
+
+            # Symptom / Category match check
+            symptom_matched = (
+                "ALL" in q_syms
+                or bool(q_syms.intersection(codes_set))
+                or bool(q_cats.intersection(selected_categories))
+            )
+
+            if not symptom_matched:
+                continue
+
+            # Progression check:
+            # Questions with applicable_progression containing ALL apply to all progressions (including general emergency safety checks).
+            # Trajectory-specific questions (e.g. specifically worsening or specifically improving) apply only to their trajectory.
+            app_prog = [p.lower() for p in q.get("applicable_progression", ["ALL"])]
+            if "all" in app_prog or norm_prog == "all" or norm_prog in app_prog:
+                progression_matched = True
+            else:
+                progression_matched = False
+
+            if not progression_matched:
+                continue
+
+            # Severity filter: If question specifies min_severity, check it unless it's an emergency check
+            min_sev = q.get("min_severity", 0)
+            is_emergency = bool(
+                q.get("is_emergency_safety_check", False)
+                or q.get("triggers_emergency_check", False)
+                or q.get("category") == "emergency_warning"
+            )
+            if not is_emergency and severity < min_sev:
+                continue
+
+            matched.append(q)
+            seen.add(qid)
+
+        # Sort so emergency red-flag checks appear prominently first, followed by others
+        matched.sort(
+            key=lambda item: (
+                0 if (item.get("is_emergency_safety_check") or item.get("triggers_emergency_check")) else 1,
+                item.get("question_id", "")
+            )
+        )
         return matched
 
     def get_risk_factors(self) -> list[dict]:
