@@ -9,6 +9,9 @@ __pycache__/
 *.egg
 *.whl
 .eggs/
+# Keys and sensitive local state
+data/.medicare.key
+data/reports/*.pdf
 dist/
 build/
 # *.spec except build configs
