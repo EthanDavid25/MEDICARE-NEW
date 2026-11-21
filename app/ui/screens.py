@@ -1011,19 +1011,38 @@ class HealthcareDirectoryScreen(BaseScreen):
         self.content = BoxLayout(orientation="vertical", spacing=10, padding=[16, 16, 16, 24], size_hint_y=None)
         self.content.bind(minimum_height=self.content.setter("height"))
 
-        self.content.add_widget(create_section_title("Local Healthcare Facilities Directory"))
-        self.content.add_widget(create_desc_label("Find nearby emergency departments, hospitals, and clinics. Works 100% offline with local directory."))
+        self.content.add_widget(create_section_title("Nearby Healthcare Facilities"))
+        self.content.add_widget(create_desc_label(
+            "Find nearby hospitals, clinics and emergency departments. "
+            "Uses live Google Maps data when configured; falls back to local directory offline."
+        ))
+
+        # --- Google Maps status banner ---
+        self.maps_status_lbl = WrappedLabel(
+            text="",
+            font_size="11sp",
+            color=COLOR_TEXT_MUTED
+        )
+        self.content.add_widget(self.maps_status_lbl)
 
         # 1. Location Settings & Privacy Box
         loc_card = CardBox(orientation="vertical", spacing=8, padding=[14, 12, 14, 12], size_hint_y=None)
         loc_card.bind(minimum_height=loc_card.setter("height"))
-        
+
         self.lbl_loc_status = WrappedLabel(
-            text="📍 Reference Location: [b]New York, NY (Offline Default)[/b]",
+            text="📍 Reference Location: [b]Not Set — Set location to search nearby facilities[/b]",
             font_size="12sp",
             color=COLOR_NAVY_PRIMARY
         )
         loc_card.add_widget(self.lbl_loc_status)
+
+        # Location privacy note
+        loc_card.add_widget(WrappedLabel(
+            text="🔒 Privacy: Only your geographic coordinates are used for facility search. "
+                 "No symptoms, medical history or patient data is ever sent to external services.",
+            font_size="10sp",
+            color=COLOR_TEXT_MUTED
+        ))
 
         # Buttons row for location mode
         loc_btn_row = BoxLayout(orientation="horizontal", spacing=8, size_hint_y=None, height=36)
@@ -1047,12 +1066,26 @@ class HealthcareDirectoryScreen(BaseScreen):
 
         self.content.add_widget(loc_card)
 
-        # 2. Filter / Search Box
+        # 2. Search + Filter Row
         search_card = CardBox(orientation="vertical", spacing=6, padding=[12, 10, 12, 10], size_hint_y=None)
         search_card.bind(minimum_height=search_card.setter("height"))
-        self.in_search = TextInput(hint_text="Filter by hospital name, service, or state...", multiline=False, size_hint_y=None, height=36)
+
+        search_row = BoxLayout(orientation="horizontal", spacing=6, size_hint_y=None, height=36)
+        self.in_search = TextInput(hint_text="Filter by name, service, or type...", multiline=False, size_hint_x=0.7)
         self.in_search.bind(text=self._on_search)
-        search_card.add_widget(self.in_search)
+        btn_search = PrimaryButton(text="🔍 Search Nearby", size_hint_x=0.3)
+        btn_search.bind(on_release=self._on_live_search)
+        search_row.add_widget(self.in_search)
+        search_row.add_widget(btn_search)
+        search_card.add_widget(search_row)
+
+        # Data source label (updated after each search)
+        self.lbl_data_source = WrappedLabel(
+            text="",
+            font_size="10sp",
+            color=COLOR_TEXT_MUTED
+        )
+        search_card.add_widget(self.lbl_data_source)
         self.content.add_widget(search_card)
 
         # 3. Facilities List
@@ -1065,12 +1098,41 @@ class HealthcareDirectoryScreen(BaseScreen):
         self.add_widget(root)
 
     def on_pre_enter(self):
+        self._update_maps_status()
         self._update_loc_label()
         self._on_search(None, self.in_search.text or "")
+
+    def _update_maps_status(self):
+        """Show whether Google Maps live search is available."""
+        try:
+            maps = self.controller.location_service._get_maps_service()
+            if maps and maps.is_configured():
+                self.maps_status_lbl.text = (
+                    "[color=#059669][b]✓ Google Maps API configured[/b][/color] — "
+                    "Live facility search enabled. Set a location and tap Search Nearby."
+                )
+                self.maps_status_lbl.color = (0.02, 0.59, 0.42, 1)
+            else:
+                self.maps_status_lbl.text = (
+                    "[color=#6B7280]Google Maps API not configured — "
+                    "showing local offline directory. See .env.example to enable live search.[/color]"
+                )
+                self.maps_status_lbl.color = COLOR_TEXT_MUTED
+        except Exception:
+            self.maps_status_lbl.text = ""
 
     def _update_loc_label(self):
         loc = self.controller.location_service.current_location_name
         self.lbl_loc_status.text = f"📍 Reference Location: [b]{loc}[/b]"
+
+    def _update_data_source_label(self):
+        source = self.controller.location_service.last_search_source
+        if source == "google_maps":
+            self.lbl_data_source.text = "📡 Results: Live Google Maps data"
+        elif source == "offline":
+            self.lbl_data_source.text = "📂 Results: Local offline directory (last verified with dataset)"
+        else:
+            self.lbl_data_source.text = ""
 
     def _on_use_device_location(self, *args):
         success, loc_name = self.controller.location_service.request_device_location()
@@ -1085,6 +1147,10 @@ class HealthcareDirectoryScreen(BaseScreen):
         self._update_loc_label()
         self._on_search(None, self.in_search.text or "")
 
+    def _on_live_search(self, *args):
+        """Explicitly triggers a fresh live Google Maps search (bypasses text filter temporarily)."""
+        self._on_search(None, self.in_search.text or "")
+
     def _on_clear_location(self, *args):
         self.controller.location_service.clear_location()
         self.in_address.text = ""
@@ -1094,66 +1160,130 @@ class HealthcareDirectoryScreen(BaseScreen):
     def _on_search(self, instance, query):
         self.list_box.clear_widgets()
         loc_service = self.controller.location_service
-        # Get facilities sorted by distance
+
+        # Get facilities (Google Maps live or offline fallback)
         facilities = loc_service.get_nearby_facilities(urgency_category=3, limit=30)
-        
+        self._update_data_source_label()
+
         q_clean = (query or "").lower().strip()
         filtered = []
         for f in facilities:
             if not q_clean:
                 filtered.append(f)
             else:
-                combined = f"{f.get('name', '')} {f.get('city', '')} {f.get('services', '')} {f.get('address', '')}".lower()
+                combined = (
+                    f"{f.get('name', '')} {f.get('city', '')} "
+                    f"{f.get('services', '')} {f.get('address', '')} "
+                    f"{f.get('facility_type', '')}"
+                ).lower()
                 if q_clean in combined:
                     filtered.append(f)
 
         if not filtered:
             empty = CardBox(padding=[14, 12, 14, 12], size_hint_y=None)
             empty.bind(minimum_height=empty.setter("height"))
-            empty.add_widget(WrappedLabel(text="No matching healthcare facilities found.", font_size="12sp", color=COLOR_TEXT_MUTED))
+            if loc_service.current_lat is None:
+                msg = "Set a location above to find nearby healthcare facilities."
+            else:
+                msg = "No matching healthcare facilities found. Try widening your search."
+            empty.add_widget(WrappedLabel(text=msg, font_size="12sp", color=COLOR_TEXT_MUTED))
             self.list_box.add_widget(empty)
             return
 
         for fac in filtered:
-            card = CardBox(orientation="vertical", spacing=6, padding=[14, 12, 14, 12], size_hint_y=None)
-            card.bind(minimum_height=card.setter("height"))
-            
-            top_row = BoxLayout(orientation="horizontal", size_hint_y=None, height=24)
-            top_row.add_widget(WrappedLabel(text=f"[b]{fac.get('name')}[/b]", font_size="13sp", color=COLOR_NAVY_PRIMARY))
-            
-            is_emerg = str(fac.get("has_emergency", "0")) == "1"
-            if is_emerg:
-                top_row.add_widget(WrappedLabel(text="[b]24/7 ER[/b]", font_size="10sp", color=COLOR_URGENT_EMERGENCY, size_hint_x=0.25))
-            card.add_widget(top_row)
+            self._add_facility_card(fac, loc_service)
 
-            # Verified status badge
-            is_verified = fac.get("is_verified", "1") == "1"
-            status_tag = "[color=#059669][b]✓ VERIFIED FACILITY[/b][/color]" if is_verified else "[color=#6B7280][b]DEMO SAMPLE[/b][/color]"
-            
-            miles = fac.get("distance_miles", 0.0)
-            km = fac.get("distance_km", 0.0)
-            card.add_widget(WrappedLabel(
-                text=f"{status_tag} | 📍 {fac.get('address')}, {fac.get('city')}, {fac.get('state')} — [b]{miles} mi / {km} km away[/b]",
-                font_size="11sp",
-                color=COLOR_TEXT_DARK
+    def _add_facility_card(self, fac: dict, loc_service):
+        """Renders a single facility card — handles both Google Maps and offline data."""
+        card = CardBox(orientation="vertical", spacing=6, padding=[14, 12, 14, 12], size_hint_y=None)
+        card.bind(minimum_height=card.setter("height"))
+
+        # --- Header: Name + ER badge ---
+        top_row = BoxLayout(orientation="horizontal", size_hint_y=None, height=24)
+        top_row.add_widget(WrappedLabel(
+            text=f"[b]{fac.get('name', 'Unknown Facility')}[/b]",
+            font_size="13sp",
+            color=COLOR_NAVY_PRIMARY
+        ))
+        has_emerg = fac.get("has_emergency") or str(fac.get("has_emergency", "0")) == "1"
+        if has_emerg:
+            top_row.add_widget(WrappedLabel(
+                text="[b]  🚨 ER[/b]",
+                font_size="10sp",
+                color=COLOR_URGENT_EMERGENCY,
+                size_hint_x=0.2
             ))
+        card.add_widget(top_row)
+
+        # --- Facility type + data source badge ---
+        source = fac.get("source", "offline")
+        facility_type = fac.get("facility_type", "Healthcare Facility")
+        if source == "google_maps":
+            source_badge = "[color=#1A73E8][b]📡 Google Maps[/b][/color]"
+        else:
+            is_verified = fac.get("is_verified", "1") in (True, "1", 1)
+            source_badge = (
+                "[color=#059669][b]✓ Local Directory[/b][/color]" if is_verified
+                else "[color=#6B7280]Local Sample[/color]"
+            )
+        card.add_widget(WrappedLabel(
+            text=f"{source_badge} · {facility_type}",
+            font_size="10sp",
+            color=COLOR_TEXT_MUTED
+        ))
+
+        # --- Address + Distance ---
+        address = fac.get("address") or fac.get("formattedAddress", "")
+        city = fac.get("city", "")
+        state = fac.get("state", "")
+        full_addr = ", ".join(filter(None, [address, city, state]))
+        miles = fac.get("distance_miles", 0.0)
+        km = fac.get("distance_km", 0.0)
+        card.add_widget(WrappedLabel(
+            text=f"📍 {full_addr} — [b]{miles} mi / {km} km[/b]",
+            font_size="11sp",
+            color=COLOR_TEXT_DARK
+        ))
+
+        # --- Phone ---
+        phone = fac.get("phone") or fac.get("nationalPhoneNumber") or "Not listed"
+        card.add_widget(WrappedLabel(
+            text=f"📞 {phone}",
+            font_size="11sp",
+            color=COLOR_TEXT_MUTED
+        ))
+
+        # --- Hours ---
+        hours = fac.get("operating_hours", "")
+        if hours:
             card.add_widget(WrappedLabel(
-                text=f"📞 Phone: [b]{fac.get('phone')}[/b] | Hours: {fac.get('operating_hours')}",
-                font_size="11sp",
+                text=f"🕐 {hours}",
+                font_size="10sp",
                 color=COLOR_TEXT_MUTED
             ))
+
+        # --- Website (Google Maps results only) ---
+        website = fac.get("website", "")
+        if website:
+            btn_web = SecondaryButton(text="🌐 Visit Website ↗", size_hint_y=None, height=30)
+            btn_web.bind(on_release=lambda x, url=website: webbrowser.open(url))
+            card.add_widget(btn_web)
+
+        # --- Services (offline directory only) ---
+        services = fac.get("services", "")
+        if services and source != "google_maps":
             card.add_widget(WrappedLabel(
-                text=f"Services: {fac.get('services')}",
+                text=f"Services: {services}",
                 font_size="10sp",
                 color=COLOR_NAVY_LIGHT
             ))
 
-            # Directions button
-            btn_dir = SecondaryButton(text=f"Open Directions in Maps ↗", size_hint_y=None, height=34)
-            btn_dir.bind(on_release=lambda x, target=fac: loc_service.open_directions(target))
-            card.add_widget(btn_dir)
+        # --- Directions button ---
+        btn_dir = SecondaryButton(text="🗺️ Open Directions in Maps ↗", size_hint_y=None, height=34)
+        btn_dir.bind(on_release=lambda x, target=fac: loc_service.open_directions(target))
+        card.add_widget(btn_dir)
 
-            self.list_box.add_widget(card)
+        self.list_box.add_widget(card)
 
 
 # =========================================================================

@@ -1,6 +1,24 @@
-PySide6>=6.12.0
-matplotlib>=3.11.0
-reportlab>=5.1.0
-cryptography>=50.0.0
-pyinstaller>=6.22.0
-numpy>=2.5.0
+# MEDICARE — Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# Core UI framework
+kivy>=2.3.0
+kivy-deps.angle>=0.4.0; sys_platform=="win32"
+kivy-deps.glew>=0.3.0; sys_platform=="win32"
+kivy-deps.sdl2>=0.8.0; sys_platform=="win32"
+
+# PDF report generation
+reportlab>=4.0.0
+
+# Local encryption (patient profile data)
+cryptography>=41.0.0
+
+# Windows executable packaging
+pyinstaller>=6.0.0
+
+# Google Maps integration (optional — for live facility search)
+# No additional packages required: uses Python stdlib urllib for HTTP calls.
+# Set GOOGLE_MAPS_API_KEY in your .env file to enable live search.
+
+# Development / testing only
+# pytest>=8.0.0

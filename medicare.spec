@@ -36,6 +36,7 @@ hiddenimports = [
     'urllib.parse',
     'webbrowser',
     'app.healthcare.location_service',
+    'app.healthcare.maps_service',
 ]
 
 a = Analysis(

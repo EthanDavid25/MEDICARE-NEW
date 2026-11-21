@@ -9,9 +9,16 @@ __pycache__/
 *.egg
 *.whl
 .eggs/
-# Keys and sensitive local state
+
+# Keys and sensitive local state — NEVER commit these
 data/.medicare.key
 data/reports/*.pdf
+.env
+.env.local
+.env.production
+# Allow .env.example (template without real keys)
+!.env.example
+
 dist/
 build/
 # *.spec except build configs
@@ -28,10 +35,6 @@ env/
 ENV/
 env.bak/
 venv.bak/
-
-# Environment variables
-.env
-.env.*
 
 # IDE
 .vscode/
@@ -61,6 +64,13 @@ logs/
 data/database/*.db
 data/database/*.db-shm
 data/database/*.db-wal
+
+# Screenshots (generated artifacts — not source)
+screenshots/
+
+# Kivy home (local runtime cache)
+.kivy_home/logs/
+.kivy_home/mods/
 
 # Native build artifacts (keep *.dll in native/build)
 native/build/*.o
