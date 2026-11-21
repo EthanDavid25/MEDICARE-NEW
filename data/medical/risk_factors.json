@@ -1,0 +1,109 @@
+{
+  "metadata": {
+    "dataset_name": "MEDICARE_RISK_FACTORS_V1",
+    "version": "1.0.0",
+    "source": "Clinical Risk Stratification Framework - Educational Reference",
+    "clinical_review_status": "NOT_REVIEWED - For educational, navigation, and demonstration purposes only.",
+    "acquired_date": "2026-11-21",
+    "last_updated": "2026-11-21",
+    "record_count": 30
+  },
+  "risk_factors": [
+    {
+      "code": "RF_HYPERTENSION",
+      "name": "Hypertension (High Blood Pressure)",
+      "category": "cardiovascular",
+      "description": "Chronically elevated arterial pressure; increases vulnerability to acute coronary syndromes and cerebral vascular events.",
+      "increases_urgency_for": ["SYM_HEADACHE", "SYM_CHEST_PAIN", "SYM_DIZZINESS", "SYM_VISION_CHANGES"],
+      "urgency_weight": 1
+    },
+    {
+      "code": "RF_DIABETES",
+      "name": "Diabetes Mellitus (Type 1 or Type 2)",
+      "category": "metabolic",
+      "description": "Risk factor for atypical/silent myocardial ischemia, accelerated infections, and delayed wound healing.",
+      "increases_urgency_for": ["SYM_CHEST_PAIN", "SYM_FEVER", "SYM_CONFUSION", "SYM_FATIGUE"],
+      "urgency_weight": 1
+    },
+    {
+      "code": "RF_CORONARY_ARTERY_DISEASE",
+      "name": "Known Coronary Artery Disease / Prior Heart Attack or Stent",
+      "category": "cardiovascular",
+      "description": "Established atherosclerotic cardiovascular disease dramatically increases pre-test probability of recurrent ischemia.",
+      "increases_urgency_for": ["SYM_CHEST_PAIN", "SYM_CHEST_TIGHTNESS", "SYM_SHORTNESS_OF_BREATH", "SYM_PALPITATIONS"],
+      "urgency_weight": 2
+    },
+    {
+      "code": "RF_STROKE_TIA_HISTORY",
+      "name": "Prior Stroke or Transient Ischemic Attack (TIA)",
+      "category": "neurological",
+      "description": "Prior cerebrovascular event predisposes to recurrent ischemic stroke.",
+      "increases_urgency_for": ["SYM_HEADACHE", "SYM_CONFUSION", "SYM_DIZZINESS", "SYM_NUMBNESS"],
+      "urgency_weight": 2
+    },
+    {
+      "code": "RF_ASTHMA_COPD",
+      "name": "Asthma or Chronic Obstructive Pulmonary Disease (COPD)",
+      "category": "respiratory",
+      "description": "Baseline reactive or obstructed airway lowers threshold for respiratory failure during infections.",
+      "increases_urgency_for": ["SYM_SHORTNESS_OF_BREATH", "SYM_COUGH", "SYM_WHEEZING"],
+      "urgency_weight": 1
+    },
+    {
+      "code": "RF_ANTICOAGULANT_USE",
+      "name": "Blood Thinner Medication Use (Warfarin, DOACs, Clopidogrel)",
+      "category": "pharmacological",
+      "description": "Impaired hemostasis; minor trauma can cause life-threatening internal or intracranial hemorrhage.",
+      "increases_urgency_for": ["SYM_HEADACHE", "SYM_DIZZINESS", "SYM_ABDOMINAL_PAIN"],
+      "urgency_weight": 2
+    },
+    {
+      "code": "RF_IMMUNOCOMPROMISED",
+      "name": "Immunocompromised State (Chemotherapy, HIV, Organ Transplant, Biologics)",
+      "category": "immunological",
+      "description": "Suppressed immune system; subtle symptoms can signify fulminant systemic infection or neutropenic sepsis.",
+      "increases_urgency_for": ["SYM_FEVER", "SYM_COUGH", "SYM_FATIGUE"],
+      "urgency_weight": 2
+    },
+    {
+      "code": "RF_AGE_OVER_65",
+      "name": "Age 65 Years or Older",
+      "category": "demographic",
+      "description": "Physiological reserve decline and atypical clinical presentations of major acute medical emergencies.",
+      "increases_urgency_for": ["SYM_CONFUSION", "SYM_DIZZINESS", "SYM_FEVER", "SYM_CHEST_PAIN"],
+      "urgency_weight": 1
+    },
+    {
+      "code": "RF_PREGNANCY",
+      "name": "Current Pregnancy or Postpartum (<6 Weeks)",
+      "category": "obstetric",
+      "description": "Hypercoagulable state with risks of pulmonary embolism, pre-eclampsia, placental abruption, and ectopic pregnancy.",
+      "increases_urgency_for": ["SYM_HEADACHE", "SYM_ABDOMINAL_PAIN", "SYM_SHORTNESS_OF_BREATH"],
+      "urgency_weight": 2
+    },
+    {
+      "code": "RF_SMOKING_HISTORY",
+      "name": "Current or Significant Past Cigarette Smoking",
+      "category": "behavioral",
+      "description": "Major risk factor for cardiovascular disease, chronic airway disease, and thromboembolism.",
+      "increases_urgency_for": ["SYM_CHEST_PAIN", "SYM_SHORTNESS_OF_BREATH", "SYM_COUGH"],
+      "urgency_weight": 1
+    },
+    {
+      "code": "RF_RECENT_SURGERY",
+      "name": "Major Surgery or Immobilization Within Past 4 Weeks",
+      "category": "surgical",
+      "description": "High Virchow's triad risk for deep vein thrombosis and fatal pulmonary embolism.",
+      "increases_urgency_for": ["SYM_SHORTNESS_OF_BREATH", "SYM_CHEST_PAIN"],
+      "urgency_weight": 2
+    },
+    {
+      "code": "RF_CHRONIC_KIDNEY_DISEASE",
+      "name": "Chronic Kidney Disease or Dialysis Dependency",
+      "category": "renal",
+      "description": "High susceptibility to fluid overload, hyperkalemia, accelerated atherosclerosis, and uremic pericarditis.",
+      "increases_urgency_for": ["SYM_SHORTNESS_OF_BREATH", "SYM_PALPITATIONS", "SYM_FATIGUE"],
+      "urgency_weight": 1
+    }
+  ]
+}

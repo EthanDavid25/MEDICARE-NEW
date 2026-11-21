@@ -1,0 +1,107 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyd
+*.pyo
+*.pyw
+*.egg-info/
+*.egg
+*.whl
+.eggs/
+dist/
+build/
+*.spec
+*.manifest
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+ENV/
+env.bak/
+venv.bak/
+
+# Environment variables
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+*.iml
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*~
+
+# Testing
+.pytest_cache/
+.tox/
+.coverage
+coverage.xml
+htmlcov/
+*.cover
+.hypothesis/
+
+# Logs
+*.log
+logs/
+
+# Database files
+data/database/*.db
+data/database/*.db-shm
+data/database/*.db-wal
+
+# Native build artifacts (keep *.dll in native/build)
+native/build/*.o
+native/build/*.a
+native/build/*.obj
+native/build/*.lib
+native/build/*.exp
+native/build/*.pdb
+# Allow native/build/*.dll (do NOT ignore those)
+
+# DLLs outside native/build
+*.dll
+!native/build/*.dll
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+
+# Distribution / packaging
+MANIFEST
+*.dist-info/
+
+# PyInstaller
+*.spec
+
+# Mypy / type checking
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Temporary
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp

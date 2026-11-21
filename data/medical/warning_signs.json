@@ -1,0 +1,413 @@
+{
+  "metadata": {
+    "dataset_name": "MEDICARE_WARNING_SIGNS_V1",
+    "version": "1.0.0",
+    "source": "General emergency medicine and clinical triage literature compilation",
+    "clinical_review_status": "NOT_REVIEWED - For educational, navigation, and demonstration purposes only.",
+    "acquired_date": "2026-11-21",
+    "last_updated": "2026-11-21",
+    "record_count": 40
+  },
+  "warning_signs": [
+    {
+      "code": "WARN_CHEST_RADIATION",
+      "name": "Chest Pain Radiating to Left Arm, Jaw, or Back",
+      "category": "cardiovascular",
+      "urgency_override": 1,
+      "description": "Pressure, squeezing, fullness or pain in the center of the chest that radiates to shoulders, neck, jaw, or arms.",
+      "associated_conditions": ["Acute Coronary Syndrome", "Myocardial Infarction"],
+      "action_required": "Call emergency medical services immediately (e.g. 911 / 112 / 999). Rest quietly while awaiting help.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_STROKE_FAST",
+      "name": "Facial Droop, Arm Weakness, or Slurred Speech (FAST)",
+      "category": "neurological",
+      "urgency_override": 1,
+      "description": "Sudden unilateral facial droop, inability to raise both arms equally, or slurred/incomprehensible speech.",
+      "associated_conditions": ["Acute Ischemic Stroke", "Intracranial Hemorrhage"],
+      "action_required": "Call emergency services immediately. Note exact time symptoms began (crucial for thrombolytic window).",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_RESP_DISTRESS_SEVERE",
+      "name": "Severe Respiratory Distress / Inability to Speak Full Sentences",
+      "category": "respiratory",
+      "urgency_override": 1,
+      "description": "Extreme shortness of breath with cyanosis (blue lips/fingers), intercostal retractions, or gasping.",
+      "associated_conditions": ["Severe Asthma Exacerbation", "Pulmonary Embolism", "Pneumothorax"],
+      "action_required": "Activate emergency response immediately. Maintain sitting upright position.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_ANAPHYLAXIS",
+      "name": "Anaphylaxis / Airway Compromise with Stridor or Tongue Swelling",
+      "category": "immunological",
+      "urgency_override": 1,
+      "description": "Rapidly developing allergic reaction with tongue/throat swelling, hoarseness, stridor, or hypotension.",
+      "associated_conditions": ["Severe Anaphylaxis"],
+      "action_required": "Administer intramuscular epinephrine auto-injector if prescribed and available. Call emergency services immediately.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_THUNDERCLAP_HEADACHE",
+      "name": "Thunderclap Headache (Worst Headache of Life)",
+      "category": "neurological",
+      "urgency_override": 1,
+      "description": "Headache reaching peak intensity in under one minute, often described as a catastrophic blow to the head.",
+      "associated_conditions": ["Subarachnoid Hemorrhage"],
+      "action_required": "Emergency Department evaluation immediately via emergency medical transport.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_UNCONTROLLED_HEMORRHAGE",
+      "name": "Uncontrolled Pulsatile or Severe External Hemorrhage",
+      "category": "trauma",
+      "urgency_override": 1,
+      "description": "Active bleeding from a major blood vessel that does not stop with direct sustained pressure.",
+      "associated_conditions": ["Arterial Laceration", "Vascular Trauma"],
+      "action_required": "Apply firm direct continuous pressure; use commercial tourniquet if extremity and trained. Call emergency services.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_SEIZURE_PROLONGED",
+      "name": "Prolonged Seizure (>5 minutes) or Status Epilepticus",
+      "category": "neurological",
+      "urgency_override": 1,
+      "description": "Continuous generalized seizure activity lasting more than 5 minutes or repeated seizures without regaining consciousness.",
+      "associated_conditions": ["Status Epilepticus"],
+      "action_required": "Protect patient from physical injury; do not put anything in mouth; position on side; call emergency services immediately.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_SYNCOPE_EXERTIONAL",
+      "name": "Sudden Collapse or Loss of Consciousness During Exertion",
+      "category": "cardiovascular",
+      "urgency_override": 1,
+      "description": "Fainting or sudden cardiac arrest occurring during physical exertion or exercise.",
+      "associated_conditions": ["Cardiac Arrhythmia", "Hypertrophic Cardiomyopathy", "Aortic Stenosis"],
+      "action_required": "Check responsiveness and breathing; begin CPR and use AED if pulseless; call emergency services immediately.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_SHOCK_SIGNS",
+      "name": "Signs of Systemic Shock (Cold Clammy Skin, Marked Confusion, Tachycardia)",
+      "category": "systemic",
+      "urgency_override": 1,
+      "description": "Profound circulatory collapse: systolic blood pressure very low, extreme pallor, rapid thready pulse, oliguria.",
+      "associated_conditions": ["Septic Shock", "Hypovolemic Shock", "Cardiogenic Shock"],
+      "action_required": "Call emergency services immediately. Keep patient warm and supine with legs slightly elevated if tolerated.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_ACUTE_ABDOMEN_RIGID",
+      "name": "Board-like Rigid Abdomen with Involuntary Guarding",
+      "category": "gastrointestinal",
+      "urgency_override": 1,
+      "description": "Severe abdominal pain accompanied by generalized rigidity of abdominal muscles that cannot be voluntarily relaxed.",
+      "associated_conditions": ["Visceral Perforation", "Peritonitis"],
+      "action_required": "Emergency surgical evaluation required. Patient should not consume food or water.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_SUDDEN_VISION_LOSS",
+      "name": "Sudden Painless or Painful Loss of Vision in One or Both Eyes",
+      "category": "ophthalmic",
+      "urgency_override": 1,
+      "description": "Sudden complete darkness, curtain falling across vision field, or loss of central vision.",
+      "associated_conditions": ["Central Retinal Artery Occlusion", "Retinal Detachment", "Temporal Arteritis"],
+      "action_required": "Immediate emergency ophthalmology evaluation within hours to prevent irreversible vision loss.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_HEMATEMESIS",
+      "name": "Vomiting Bright Red Blood or Dark 'Coffee-Ground' Material",
+      "category": "gastrointestinal",
+      "urgency_override": 1,
+      "description": "Vomiting frank red blood or partially digested blood resembling dark coffee grounds in volume.",
+      "associated_conditions": ["Upper Gastrointestinal Bleed", "Esophageal Variceal Hemorrhage"],
+      "action_required": "Emergency Department evaluation immediately via emergency medical transport.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_HEMOPTYSIS_MASSIVE",
+      "name": "Coughing Up Moderate to Large Volumes of Blood (>100 mL)",
+      "category": "respiratory",
+      "urgency_override": 1,
+      "description": "Coughing up fresh blood from the respiratory tract indicating pulmonary vascular breach.",
+      "associated_conditions": ["Massive Hemoptysis", "Pulmonary Infarction", "Bronchiectasis"],
+      "action_required": "Immediate emergency evaluation; position on affected side if known to prevent aspiration.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_SUICIDALITY_ACUTE",
+      "name": "Acute Suicidal Ideation with Intent or Immediate Plan",
+      "category": "psychiatric",
+      "urgency_override": 1,
+      "description": "Expressed thoughts of immediate self-harm with identified means or active suicidal gesture.",
+      "associated_conditions": ["Acute Psychiatric Crisis"],
+      "action_required": "Do not leave patient alone. Call emergency services or national suicide prevention lifeline (988 in US / local crisis line).",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_MENINGEAL_SIGNS",
+      "name": "High Fever with Inability to Touch Chin to Chest (Nuchal Rigidity)",
+      "category": "neurological",
+      "urgency_override": 1,
+      "description": "Severe neck stiffness preventing neck flexion, accompanied by high fever and altered mental state.",
+      "associated_conditions": ["Bacterial Meningitis"],
+      "action_required": "Emergency room assessment immediately for urgent diagnostic lumbar puncture and antibiotics.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_PURPURA_NONBLANCHING",
+      "name": "Rapidly Spreading Non-Blanching Purple Rash (Petechiae / Purpura)",
+      "category": "dermatological",
+      "urgency_override": 1,
+      "description": "Purple or red spots that do not fade or turn white when pressed firmly with a clear glass tumbler.",
+      "associated_conditions": ["Meningococcal Septicemia", "Thrombotic Microangiopathy"],
+      "action_required": "Immediate emergency hospitalization.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_ACUTE_URINARY_RETENTION",
+      "name": "Complete Inability to Pass Urine with Painful Palpable Bladder",
+      "category": "urological",
+      "urgency_override": 2,
+      "description": "Distressing lower abdominal pain with complete cessation of urination over 8-12 hours.",
+      "associated_conditions": ["Acute Urinary Retention"],
+      "action_required": "Prompt emergency or urgent care decompression with Foley catheterization.",
+      "red_flag": false
+    },
+    {
+      "code": "WARN_TESTICULAR_TORSION",
+      "name": "Sudden Severe Unilateral Testicular Pain with Swelling",
+      "category": "urological",
+      "urgency_override": 1,
+      "description": "Acute onset of high-intensity scrotal pain, swelling, and elevation of testis.",
+      "associated_conditions": ["Testicular Torsion"],
+      "action_required": "Immediate surgical evaluation within 6 hours to preserve testicular viability.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_ECTOPIC_PREGNANCY",
+      "name": "Severe Lower Pelvic Pain with Vaginal Bleeding and Positive Pregnancy",
+      "category": "obstetric",
+      "urgency_override": 1,
+      "description": "Unilateral pelvic pain, dizziness, or shoulder-tip pain in a female of reproductive age.",
+      "associated_conditions": ["Ruptured Ectopic Pregnancy"],
+      "action_required": "Immediate emergency evaluation for life-threatening hemoperitoneum.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_HYPOGLYCEMIA_SEVERE",
+      "name": "Severe Hypoglycemia with Inability to Cooperate or Seizure",
+      "category": "endocrine",
+      "urgency_override": 1,
+      "description": "Severe low blood glucose in diabetic patient unresponsive to oral carbohydrates or unable to swallow.",
+      "associated_conditions": ["Severe Hypoglycemia"],
+      "action_required": "Administer intramuscular glucagon if trained; call emergency services.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_DVT_PE",
+      "name": "Unilateral Swollen Painful Calf Following Prolonged Inactivity or Surgery",
+      "category": "cardiovascular",
+      "urgency_override": 2,
+      "description": "Marked swelling, erythema, and warmth in one leg, especially with recent immobilization.",
+      "associated_conditions": ["Deep Vein Thrombosis", "Risk of Pulmonary Embolism"],
+      "action_required": "Same-day urgent medical evaluation with venous duplex ultrasonography.",
+      "red_flag": false
+    },
+    {
+      "code": "WARN_HIGH_FEVER_INFANT",
+      "name": "Fever >= 38.0°C (100.4°F) in Infant Under 3 Months of Age",
+      "category": "pediatric",
+      "urgency_override": 1,
+      "description": "Any documented fever in a neonate or young infant, who have immature immune responses.",
+      "associated_conditions": ["Neonatal Sepsis", "Occult Bacteremia"],
+      "action_required": "Immediate pediatric emergency evaluation; do not wait.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_CARBON_MONOXIDE",
+      "name": "Simultaneous Headache, Nausea, and Confusion in Multiple Household Members",
+      "category": "toxicology",
+      "urgency_override": 1,
+      "description": "Shared symptoms occurring in an enclosed space with fuel-burning heaters or generators.",
+      "associated_conditions": ["Carbon Monoxide Poisoning"],
+      "action_required": "Evacuate the structure immediately into fresh air and contact emergency services.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_HEATSTROKE",
+      "name": "Body Temperature > 40°C (104°F) with Hot Dry Skin and Delirium",
+      "category": "environmental",
+      "urgency_override": 1,
+      "description": "Thermoregulatory failure following heat exposure; altered sensorium, lack of sweating.",
+      "associated_conditions": ["Exertional / Classic Heatstroke"],
+      "action_required": "Call emergency services; initiate rapid aggressive active cooling with cold water / ice immersion.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_HYPOTHERMIA_SEVERE",
+      "name": "Severe Shivering Followed by Apathy, Slurred Speech, and Paradoxical Undressing",
+      "category": "environmental",
+      "urgency_override": 1,
+      "description": "Core body temperature dropping critically low with cessation of shivering and confusion.",
+      "associated_conditions": ["Severe Accidental Hypothermia"],
+      "action_required": "Gentle handling, passive and active rewarming, emergency transport.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_OCULAR_CHEMICAL_BURN",
+      "name": "Acid or Alkali Chemical Splash Directly into Eye",
+      "category": "ophthalmic",
+      "urgency_override": 1,
+      "description": "Contact with caustic cleaning products, battery fluid, or cement.",
+      "associated_conditions": ["Corneal Caustic Injury"],
+      "action_required": "Immediately irrigate eye continuously with clean tap water or saline for at least 15-30 minutes; call emergency services.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_MAJOR_BURN",
+      "name": "Second or Third Degree Burns Covering >10% Body Area or Involving Face/Hands",
+      "category": "trauma",
+      "urgency_override": 1,
+      "description": "Extensive blistering, charred, or leathery white tissue damage.",
+      "associated_conditions": ["Major Thermal Burn Injury"],
+      "action_required": "Cover with clean dry non-adherent dressing; keep warm; transport to burn center via EMS.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_FRACTURE_OPEN",
+      "name": "Deformed Limb with Bone Fragment Piercing Through Skin",
+      "category": "musculoskeletal",
+      "urgency_override": 1,
+      "description": "High-energy extremity injury with open dermal wound communicating with fracture.",
+      "associated_conditions": ["Open / Compound Fracture"],
+      "action_required": "Cover with sterile dressing, immobilize without manipulation, emergency department transfer.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_HEAD_TRAUMA_LUCID",
+      "name": "Head Injury with Loss of Consciousness, Brief Awakening, then Rapid Deterioration",
+      "category": "neurological",
+      "urgency_override": 1,
+      "description": "The classic 'lucid interval' indicative of rapid intracranial arterial accumulation.",
+      "associated_conditions": ["Epidural Hematoma"],
+      "action_required": "Immediate neurosurgical emergency evaluation.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_COMPARTMENT_SYNDROME",
+      "name": "Pain Out of Proportion to Injury with Tense Swelling and Paresthesia",
+      "category": "musculoskeletal",
+      "urgency_override": 1,
+      "description": "Intense pain on passive muscle stretching, firm fascial compartment.",
+      "associated_conditions": ["Acute Compartment Syndrome"],
+      "action_required": "Emergency fasciotomy consultation required within hours.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_CAUDA_EQUINA",
+      "name": "Back Pain with Saddle Anesthesia (Numb Groin) and Fecal/Urinary Incontinence",
+      "category": "neurological",
+      "urgency_override": 1,
+      "description": "Compression of cauda equina nerve roots causing perineal sensory loss and sphincter dysfunction.",
+      "associated_conditions": ["Cauda Equina Syndrome"],
+      "action_required": "Emergency MRI and decompression within 24-48 hours to prevent permanent deficit.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_JAUNDICE_FEVER",
+      "name": "Yellow Skin/Eyes (Jaundice) with Spiking High Fever and Right Upper Quadrant Pain",
+      "category": "gastrointestinal",
+      "urgency_override": 1,
+      "description": "Charcot's triad indicating acute purulent infection of the biliary tree.",
+      "associated_conditions": ["Acute Ascending Cholangitis"],
+      "action_required": "Immediate hospitalization for resuscitation and urgent biliary decompression.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_HYPERTENSIVE_CRISIS",
+      "name": "Blood Pressure > 180/120 mmHg Accompanied by Headache, Chest Pain, or Dyspnea",
+      "category": "cardiovascular",
+      "urgency_override": 1,
+      "description": "Extremely elevated blood pressure with evidence of acute end-organ damage.",
+      "associated_conditions": ["Hypertensive Emergency"],
+      "action_required": "Emergency room treatment with intravenous antihypertensive medications.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_ACUTE_GLAUCOMA",
+      "name": "Severe Eye Pain, Colored Halos Around Lights, and Hazy Cornea",
+      "category": "ophthalmic",
+      "urgency_override": 1,
+      "description": "Rapid spike in intraocular pressure causing globe tenderness, nausea, and visual distortion.",
+      "associated_conditions": ["Acute Angle-Closure Glaucoma"],
+      "action_required": "Emergency ophthalmic pressure-reducing drops and systemic medications.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_DIABETIC_KETOACIDOSIS",
+      "name": "Deep Rapid Breathing (Kussmaul), Fruity Acetone Breath, and Vomiting in Diabetic",
+      "category": "endocrine",
+      "urgency_override": 1,
+      "description": "Metabolic acidosis resulting from severe insulin deficiency.",
+      "associated_conditions": ["Diabetic Ketoacidosis (DKA)"],
+      "action_required": "Emergency hospital admission for intravenous insulin and electrolyte replacement.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_PNEUMOTHORAX_TENSION",
+      "name": "Sudden Sharp Pleuritic Chest Pain with Tracheal Deviation and Cyanosis",
+      "category": "respiratory",
+      "urgency_override": 1,
+      "description": "Air trapped under pressure in pleural cavity causing mediastinal shift and vascular collapse.",
+      "associated_conditions": ["Tension Pneumothorax"],
+      "action_required": "Immediate emergency needle decompression followed by tube thoracostomy.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_SEPSIS_SCREEN_POSITIVE",
+      "name": "Infection Signs with Tachypnea, Altered Consciousness, and Low Blood Pressure",
+      "category": "systemic",
+      "urgency_override": 1,
+      "description": "Dysregulated host response to infection causing life-threatening organ dysfunction (qSOFA >= 2).",
+      "associated_conditions": ["Severe Sepsis"],
+      "action_required": "Immediate medical emergency: blood cultures, broad-spectrum antibiotics, and IV crystalloids.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_MELENA",
+      "name": "Jet-Black, Tarry, Foul-Smelling Stools",
+      "category": "gastrointestinal",
+      "urgency_override": 2,
+      "description": "Oxidized hemoglobin from significant upper gastrointestinal tract bleeding.",
+      "associated_conditions": ["Upper GI Bleeding", "Peptic Ulcer Bleed"],
+      "action_required": "Urgent same-day medical assessment or emergency visit if accompanied by dizziness.",
+      "red_flag": false
+    },
+    {
+      "code": "WARN_FOREIGN_BODY_AIRWAY",
+      "name": "Sudden Choking with Inability to Speak, Cough, or Breathe",
+      "category": "respiratory",
+      "urgency_override": 1,
+      "description": "Complete mechanical obstruction of upper airway by food or foreign object.",
+      "associated_conditions": ["Foreign Body Airway Obstruction"],
+      "action_required": "Immediate Heimlich maneuver (abdominal thrusts) or back blows / chest thrusts; call emergency services.",
+      "red_flag": true
+    },
+    {
+      "code": "WARN_RAPID_CELLULITIS",
+      "name": "Red, Swollen Skin Lesion Expanding Visibly Within Hours with Crepitus",
+      "category": "dermatological",
+      "urgency_override": 1,
+      "description": "Disproportionate soft tissue pain, bullae, skin anesthesia, or crackling gas sensation.",
+      "associated_conditions": ["Necrotizing Fasciitis"],
+      "action_required": "Surgical emergency consultation for immediate debridement and parenteral antibiotics.",
+      "red_flag": true
+    }
+  ]
+}

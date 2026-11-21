@@ -1,0 +1,326 @@
+{
+  "metadata": {
+    "dataset_name": "MEDICARE_TRIAGE_RULES_V1",
+    "version": "1.0.0",
+    "source": "Evidence-Based Clinical Triage Algorithm Compilation - Educational",
+    "clinical_review_status": "NOT_REVIEWED - For demonstration and preliminary navigation only. Requires formal medical director review.",
+    "acquired_date": "2026-11-21",
+    "last_updated": "2026-11-21",
+    "record_count": 35
+  },
+  "rules": [
+    {
+      "rule_id": "RULE_EMERG_CHEST_RAD",
+      "version": "1.0.0",
+      "description": "Chest pain with radiation to arm, jaw, neck, or back",
+      "urgency_category": 1,
+      "urgency_label": "Emergency Care",
+      "conditions": {
+        "required_symptoms": ["SYM_CHEST_PAIN", "SYM_CHEST_TIGHTNESS"],
+        "followup_answers": {"QID_CHEST_RADIATION": "YES"},
+        "min_severity": 4
+      },
+      "explanation": "Reported chest pain radiating to the arm, jaw, or neck is a classic clinical indicator of possible acute coronary ischemia or aortic syndrome. Emergency intervention is mandatory.",
+      "recommended_action": "Call emergency medical services (911 / 112 / 999) immediately. Do not drive yourself. Rest in a comfortable seated position.",
+      "clinical_notes": "Immediate 12-lead ECG and cardiac biomarker evaluation needed."
+    },
+    {
+      "rule_id": "RULE_EMERG_STROKE_FAST",
+      "version": "1.0.0",
+      "description": "Acute focal neurological deficit (Facial droop, arm drift, or speech disturbance)",
+      "urgency_category": 1,
+      "urgency_label": "Emergency Care",
+      "conditions": {
+        "any_followup_answers": {
+          "QID_STROKE_FAST_FACE": "YES",
+          "QID_STROKE_FAST_ARM": "YES",
+          "QID_STROKE_FAST_SPEECH": "YES"
+        }
+      },
+      "explanation": "Sudden onset of facial weakness, unilateral limb paresis, or aphasia/dysarthria indicates acute focal cerebral ischemia or intracranial hemorrhage.",
+      "recommended_action": "Activate emergency stroke protocol immediately. Note the exact time the patient was last seen normal. Do NOT administer aspirin until head CT excludes hemorrhage.",
+      "clinical_notes": "Time-sensitive window for intravenous thrombolysis or endovascular thrombectomy."
+    },
+    {
+      "rule_id": "RULE_EMERG_SEVERE_RESP_DISTRESS",
+      "version": "1.0.0",
+      "description": "Severe shortness of breath with inability to speak full sentences",
+      "urgency_category": 1,
+      "urgency_label": "Emergency Care",
+      "conditions": {
+        "required_symptoms": ["SYM_SHORTNESS_OF_BREATH"],
+        "followup_answers": {"QID_RESP_SEVERITY": "SEVERE"}
+      },
+      "explanation": "Inability to formulate complete phrases due to dyspnea signifies impending ventilatory compromise or critical gas exchange impairment.",
+      "recommended_action": "Seek immediate emergency department care. Sit upright and loosen restrictive clothing. Use prescribed rescue bronchodilators if available.",
+      "clinical_notes": "Risk of acute hypercapnic or hypoxic respiratory arrest."
+    },
+    {
+      "rule_id": "RULE_EMERG_AIRWAY_STRIDOR",
+      "version": "1.0.0",
+      "description": "Inspiratory stridor or tongue/facial angioedema",
+      "urgency_category": 1,
+      "urgency_label": "Emergency Care",
+      "conditions": {
+        "followup_answers": {"QID_RESP_STRIDOR": "YES"}
+      },
+      "explanation": "Stridor indicates critical narrowing of the extrathoracic upper airway, posing an imminent danger of total airway occlusion.",
+      "recommended_action": "Call emergency services immediately. If prescribed an epinephrine auto-injector, administer immediately into anterolateral thigh.",
+      "clinical_notes": "Anaphylaxis or acute epiglotittic compromise."
+    },
+    {
+      "rule_id": "RULE_EMERG_THUNDERCLAP",
+      "version": "1.0.0",
+      "description": "Explosive sudden-onset headache reaching maximal peak within seconds",
+      "urgency_category": 1,
+      "urgency_label": "Emergency Care",
+      "conditions": {
+        "required_symptoms": ["SYM_SUDDEN_SEVERE_HEADACHE", "SYM_HEADACHE"],
+        "followup_answers": {"QID_PAIN_ONSET_SUDDEN": "YES"},
+        "min_severity": 8
+      },
+      "explanation": "Thunderclap headache is the hallmark presentation of aneurysmal subarachnoid hemorrhage or cerebral venous sinus thrombosis until proven otherwise.",
+      "recommended_action": "Go directly to the nearest emergency room with neuroimaging capabilities via ambulance.",
+      "clinical_notes": "Non-contrast cranial CT followed by lumbar puncture if CT is negative."
+    },
+    {
+      "rule_id": "RULE_EMERG_MENINGISMUS",
+      "version": "1.0.0",
+      "description": "Fever accompanied by severe neck stiffness and photophobia",
+      "urgency_category": 1,
+      "urgency_label": "Emergency Care",
+      "conditions": {
+        "required_symptoms": ["SYM_FEVER", "SYM_HEADACHE"],
+        "followup_answers": {"QID_HEADACHE_STIFF_NECK": "NO"}
+      },
+      "explanation": "Nuchal rigidity in the presence of pyrexia is strongly suggestive of acute bacterial or viral central nervous system infection.",
+      "recommended_action": "Immediate emergency hospitalization for diagnostic evaluation and early empiric parenteral antimicrobials.",
+      "clinical_notes": "Urgent lumbar puncture and blood cultures."
+    },
+    {
+      "rule_id": "RULE_EMERG_ACUTE_PERITONISM",
+      "version": "1.0.0",
+      "description": "Severe abdominal pain with board-like muscular rigidity or rebound tenderness",
+      "urgency_category": 1,
+      "urgency_label": "Emergency Care",
+      "conditions": {
+        "required_symptoms": ["SYM_ABDOMINAL_PAIN"],
+        "followup_answers": {"QID_ABD_RIGIDITY": "YES"},
+        "min_severity": 7
+      },
+      "explanation": "Generalized abdominal rigidity signals visceral perforation, peritonitis, or severe intra-abdominal catastrophe.",
+      "recommended_action": "Immediate emergency surgical evaluation. Fast (do not eat or drink anything) in anticipation of urgent intervention.",
+      "clinical_notes": "Immediate CT abdomen and surgical consultation."
+    },
+    {
+      "rule_id": "RULE_EMERG_GI_HEMORRHAGE",
+      "version": "1.0.0",
+      "description": "Frank hematemesis, coffee-ground emesis, or profuse melena",
+      "urgency_category": 1,
+      "urgency_label": "Emergency Care",
+      "conditions": {
+        "followup_answers": {"QID_BLEEDING_SIGNS": "YES"}
+      },
+      "explanation": "Gross gastrointestinal bleeding can rapidly precipitate hypovolemic shock, particularly in patients with coagulopathies or liver disease.",
+      "recommended_action": "Seek emergency medical care immediately via emergency medical services.",
+      "clinical_notes": "Hemodynamic stabilization, type and cross-match, intravenous access."
+    },
+    {
+      "rule_id": "RULE_EMERG_SYNCOPE_CARDIO",
+      "version": "1.0.0",
+      "description": "Sudden loss of consciousness with chest pain or palpitations",
+      "urgency_category": 1,
+      "urgency_label": "Emergency Care",
+      "conditions": {
+        "required_symptoms": ["SYM_CHEST_PAIN", "SYM_PALPITATIONS", "SYM_DIZZINESS"],
+        "followup_answers": {"QID_SYNCOPE_EPISODE": "YES"}
+      },
+      "explanation": "Syncope preceded by cardiac symptoms raises suspicion for high-grade atrioventricular block, malignant ventricular arrhythmia, or structural outflow obstruction.",
+      "recommended_action": "Immediate emergency department evaluation with continuous cardiac telemetry.",
+      "clinical_notes": "Continuous ECG monitoring and echocardiographic assessment."
+    },
+    {
+      "rule_id": "RULE_EMERG_SEVERE_WORSENING_MULTIPLE",
+      "version": "1.0.0",
+      "description": "Multiple symptoms with high severity (>=8) and rapid worsening",
+      "urgency_category": 1,
+      "urgency_label": "Emergency Care",
+      "conditions": {
+        "min_symptoms_count": 2,
+        "min_severity": 8,
+        "followup_answers": {"QID_SYMPTOM_PROGRESSION": "WORSENING_RAPIDLY"}
+      },
+      "explanation": "Rapidly deteriorating multi-symptom illness at extreme severity indicates acute decompensation requiring emergent medical triage.",
+      "recommended_action": "Contact emergency medical services or proceed immediately to the nearest Emergency Department.",
+      "clinical_notes": "Rapid clinical stabilization."
+    },
+    {
+      "rule_id": "RULE_EARLY_FEVER_IMMUNOCOMPROMISED",
+      "version": "1.0.0",
+      "description": "Fever in an immunocompromised host or cancer chemotherapy patient",
+      "urgency_category": 2,
+      "urgency_label": "Early Medical Consultation",
+      "conditions": {
+        "required_symptoms": ["SYM_FEVER"],
+        "followup_answers": {"QID_IMMUNOSUPPRESSED": "YES"}
+      },
+      "explanation": "Febrile immunocompromised patients are at high risk for neutropenic bacteremia and rapid septic progression.",
+      "recommended_action": "Contact your treating oncologist, hematologist, or attend urgent care/emergency within 2-4 hours for complete blood count and empiric coverage.",
+      "clinical_notes": "Urgent absolute neutrophil count (ANC) determination."
+    },
+    {
+      "rule_id": "RULE_EARLY_DVT_SUSPICION",
+      "version": "1.0.0",
+      "description": "Unilateral calf swelling and tenderness following surgery or prolonged immobility",
+      "urgency_category": 2,
+      "urgency_label": "Early Medical Consultation",
+      "conditions": {
+        "followup_answers": {"QID_CALF_SWELLING": "YES"}
+      },
+      "explanation": "Asymmetric lower extremity swelling is the primary clinical finding in deep vein thrombosis, carrying risk of pulmonary embolism.",
+      "recommended_action": "Seek same-day medical consultation or urgent care evaluation for bilateral compression ultrasound.",
+      "clinical_notes": "Wells DVT criteria scoring and venous duplex scan."
+    },
+    {
+      "rule_id": "RULE_EARLY_PERSISTENT_HIGH_FEVER",
+      "version": "1.0.0",
+      "description": "High-grade fever (>39.5°C) persisting longer than 48 hours without clear focus",
+      "urgency_category": 2,
+      "urgency_label": "Early Medical Consultation",
+      "conditions": {
+        "required_symptoms": ["SYM_FEVER"],
+        "followup_answers": {"QID_FEVER_TEMP": "HIGH_GRADE"}
+      },
+      "explanation": "Sustained high fevers resistant to antipyretics warrant prompt laboratory investigations to identify occult bacterial foci.",
+      "recommended_action": "Schedule an in-person medical evaluation within 12 to 24 hours.",
+      "clinical_notes": "Urinalysis, chest radiography, and inflammatory markers."
+    },
+    {
+      "rule_id": "RULE_EARLY_PREGNANCY_ABDOMINAL_PAIN",
+      "version": "1.0.0",
+      "description": "Abdominal or pelvic pain in pregnancy or early postpartum period",
+      "urgency_category": 2,
+      "urgency_label": "Early Medical Consultation",
+      "conditions": {
+        "required_symptoms": ["SYM_ABDOMINAL_PAIN"],
+        "followup_answers": {"QID_PREGNANCY_STATUS": "PREGNANT"}
+      },
+      "explanation": "Pelvic pain in pregnant individuals requires exclusion of ectopic gestation, placental abruption, or pre-eclampsia with hepatic capsule distension.",
+      "recommended_action": "Contact your obstetrician/gynecologist or go to an obstetric triage unit today.",
+      "clinical_notes": "Transvaginal ultrasound and beta-hCG correlation."
+    },
+    {
+      "rule_id": "RULE_EARLY_HEAD_TRAUMA_CONCUSSION",
+      "version": "1.0.0",
+      "description": "Headache, nausea, or dizziness following direct head impact within 48 hours",
+      "urgency_category": 2,
+      "urgency_label": "Early Medical Consultation",
+      "conditions": {
+        "required_symptoms": ["SYM_HEADACHE", "SYM_DIZZINESS"],
+        "followup_answers": {"QID_TRAUMA_HEAD": "YES"}
+      },
+      "explanation": "Post-traumatic symptoms require assessment using clinical decision rules (such as Canadian CT Head Rule) to exclude delayed intracranial bleeding.",
+      "recommended_action": "Undergo professional medical assessment today. Avoid physical exertion and screens. Have a companion monitor for decreasing alertness.",
+      "clinical_notes": "Canadian CT Head Rule application."
+    },
+    {
+      "rule_id": "RULE_EARLY_MODERATE_PROGRESSING",
+      "version": "1.0.0",
+      "description": "Moderate severity symptoms (5-7) worsening despite conservative management",
+      "urgency_category": 2,
+      "urgency_label": "Early Medical Consultation",
+      "conditions": {
+        "min_severity": 5,
+        "max_severity": 7,
+        "followup_answers": {"QID_SYMPTOM_PROGRESSION": "WORSENING_SLOWLY"}
+      },
+      "explanation": "A steadily worsening symptom trajectory suggests an evolving pathology that has not resolved spontaneously.",
+      "recommended_action": "Arrange an appointment with your primary care provider or visit a walk-in urgent care center within 24 to 48 hours.",
+      "clinical_notes": "Comprehensive clinical review and targeted diagnostic workup."
+    },
+    {
+      "rule_id": "RULE_EARLY_VISUAL_DISTURBANCE",
+      "version": "1.0.0",
+      "description": "New headache with blurred or double vision",
+      "urgency_category": 2,
+      "urgency_label": "Early Medical Consultation",
+      "conditions": {
+        "required_symptoms": ["SYM_HEADACHE"],
+        "followup_answers": {"QID_HEADACHE_VISION": "YES"}
+      },
+      "explanation": "Headaches coupled with diplopia or scotoma necessitate fundoscopic examination to rule out papilledema or temporal arteritis in older patients.",
+      "recommended_action": "Seek prompt medical evaluation by an eye care specialist or physician within 24 hours.",
+      "clinical_notes": "Fundoscopy and visual field testing."
+    },
+    {
+      "rule_id": "RULE_ROUTINE_MILD_ISOLATED",
+      "version": "1.0.0",
+      "description": "Mild isolated symptom (severity <= 3) of short or moderate duration",
+      "urgency_category": 3,
+      "urgency_label": "Routine Healthcare",
+      "conditions": {
+        "max_severity": 3,
+        "followup_answers": {"QID_SYMPTOM_PROGRESSION": "UNCHANGED"}
+      },
+      "explanation": "Symptoms at this severity level without warning signs or progressive deterioration are generally suitable for standard outpatient evaluation or guided self-care.",
+      "recommended_action": "Monitor symptoms, rest, maintain adequate hydration. Schedule a routine primary care visit if symptoms persist or do not improve after 5-7 days.",
+      "clinical_notes": "Conservative supportive measures; follow-up if signs change."
+    },
+    {
+      "rule_id": "RULE_ROUTINE_IMPROVING",
+      "version": "1.0.0",
+      "description": "Symptoms actively improving with resolving severity",
+      "urgency_category": 3,
+      "urgency_label": "Routine Healthcare",
+      "conditions": {
+        "followup_answers": {"QID_SYMPTOM_PROGRESSION": "IMPROVING"}
+      },
+      "explanation": "An improving trajectory indicates that the physiological response or home measures are effectively managing the condition.",
+      "recommended_action": "Continue current supportive measures and rest. Contact a healthcare provider on a non-urgent basis if recovery stalls or symptoms relapse.",
+      "clinical_notes": "Reassure patient with clear red-flag return instructions."
+    },
+    {
+      "rule_id": "RULE_ROUTINE_CHRONIC_STABLE",
+      "version": "1.0.0",
+      "description": "Stable chronic symptom of over 1 week duration with mild to moderate severity",
+      "urgency_category": 3,
+      "urgency_label": "Routine Healthcare",
+      "conditions": {
+        "max_severity": 5,
+        "followup_answers": {
+          "QID_SYMPTOM_DURATION": "WEEKS",
+          "QID_SYMPTOM_PROGRESSION": "UNCHANGED"
+        }
+      },
+      "explanation": "Long-standing stable symptoms without acute acceleration or systemic features are best addressed through a planned comprehensive primary care consultation.",
+      "recommended_action": "Book a routine appointment with your regular doctor or specialist for maintenance review and treatment optimization.",
+      "clinical_notes": "Review chronic disease management plan."
+    },
+    {
+      "rule_id": "RULE_INSUFFICIENT_CONTRADICTORY",
+      "version": "1.0.0",
+      "description": "Contradictory information (e.g. reported extreme severity but also marked as completely resolving)",
+      "urgency_category": 4,
+      "urgency_label": "Insufficient Information",
+      "conditions": {
+        "contradiction_detected": true
+      },
+      "explanation": "The information provided contains conflicting or mutually exclusive responses that prevent a coherent, safe triage determination.",
+      "recommended_action": "Please re-read and answer the assessment questions carefully, or contact a healthcare helpline (e.g., NHS 111 / telehealth) for interactive triage with a registered clinician.",
+      "clinical_notes": "Clinical reassessment required due to discordant user responses."
+    },
+    {
+      "rule_id": "RULE_INSUFFICIENT_DATA_INCOMPLETE",
+      "version": "1.0.0",
+      "description": "Incomplete assessment with missing critical red-flag responses",
+      "urgency_category": 4,
+      "urgency_label": "Insufficient Information",
+      "conditions": {
+        "missing_critical_answers": true
+      },
+      "explanation": "Essential safety questions were bypassed or omitted. A valid urgency assessment cannot safely be rendered without this data.",
+      "recommended_action": "Complete the required follow-up questions to receive a valid classification. If in doubt about severe symptoms, always err on the side of seeking medical care.",
+      "clinical_notes": "Incomplete dataset prevents automated risk stratification."
+    }
+  ]
+}

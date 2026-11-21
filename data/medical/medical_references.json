@@ -1,0 +1,93 @@
+{
+  "metadata": {
+    "dataset_name": "MEDICARE_MEDICAL_REFERENCES_V1",
+    "version": "1.0.0",
+    "source": "WHO ICD-11 Classification and International Clinical Practice Guidelines - Educational",
+    "clinical_review_status": "NOT_REVIEWED - Reference material only",
+    "acquired_date": "2026-11-21",
+    "last_updated": "2026-11-21",
+    "record_count": 25
+  },
+  "references": [
+    {
+      "ref_code": "REF_ICD11_CARDIO",
+      "category": "cardiovascular",
+      "title": "WHO ICD-11: Acute Ischemic Heart Disease (BA40-BA42)",
+      "summary": "Clinical classification and presentation criteria for acute myocardial infarction and unstable angina.",
+      "content": "Under WHO ICD-11, Acute Myocardial Infarction (BA41) encompasses conditions characterized by myocardial necrosis in a clinical setting consistent with acute myocardial ischemia. Cardinal presentations include retrosternal chest pressure radiating to left arm or jaw, diaphoresis, dyspnea, and nausea. A normal ECG does not exclude early acute coronary syndrome.",
+      "source": "World Health Organization (WHO) ICD-11 Mortality and Morbidity Statistics",
+      "version": "ICD-11 (2024)",
+      "last_updated": "2026-11-21"
+    },
+    {
+      "ref_code": "REF_ICD11_STROKE",
+      "category": "neurological",
+      "title": "WHO ICD-11: Cerebrovascular Diseases (8B00-8B2Z)",
+      "summary": "Diagnostic criteria and emergency management of ischemic stroke and intracerebral hemorrhage.",
+      "content": "WHO ICD-11 classifies acute stroke under Cerebrovascular Disease (8B11 for acute ischemic stroke, 8B00 for intracerebral hemorrhage). Time is brain: approximately 1.9 million neurons are lost per minute in untreated large vessel occlusion. Pre-hospital recognition tools such as the FAST algorithm (Face, Arm, Speech, Time) provide sensitivity exceeding 85% for anterior circulation strokes.",
+      "source": "World Health Organization (WHO) ICD-11 / American Stroke Association Guidelines",
+      "version": "ICD-11 (2024)",
+      "last_updated": "2026-11-21"
+    },
+    {
+      "ref_code": "REF_ICD11_RESPIRATORY",
+      "category": "respiratory",
+      "title": "WHO ICD-11: Acute Respiratory Infections & Asthma (CA20-CA40)",
+      "summary": "Assessment of airway obstruction, acute hypoxemia, and asthma exacerbations.",
+      "content": "Acute asthma exacerbations (CA23) and acute lower respiratory infections (CA40) cause progressive bronchial constriction and ventilation-perfusion mismatch. Key markers of life-threatening attack include inability to speak in sentences, silent chest on auscultation, cyanosis, and paradoxically normal or elevated PaCO2.",
+      "source": "Global Initiative for Asthma (GINA) / WHO Guidelines",
+      "version": "2024 Update",
+      "last_updated": "2026-11-21"
+    },
+    {
+      "ref_code": "REF_ANAPHYLAXIS_EAACI",
+      "category": "immunological",
+      "title": "EAACI Anaphylaxis Management Guidelines",
+      "summary": "Emergency clinical recognition and first-line treatment protocols for severe systemic hypersensitivity.",
+      "content": "Anaphylaxis is a severe, life-threatening systemic hypersensitivity reaction characterized by rapid onset of airway, breathing, or circulation problems, usually associated with skin and mucosal changes. First-line pharmacotherapy is intramuscular adrenaline (epinephrine) injected into the mid-anterolateral aspect of the thigh (0.01 mg/kg, max 0.5 mg in adults). Delay in adrenaline administration is the primary risk factor for fatal outcome.",
+      "source": "European Academy of Allergy and Clinical Immunology (EAACI)",
+      "version": "2023 Revision",
+      "last_updated": "2026-11-21"
+    },
+    {
+      "ref_code": "REF_SEPSIS3_CRITERIA",
+      "category": "systemic",
+      "title": "Surviving Sepsis Campaign: Sepsis-3 Definitions",
+      "summary": "Quick Sequential Organ Failure Assessment (qSOFA) and bedside sepsis recognition.",
+      "content": "Sepsis is defined as life-threatening organ dysfunction caused by a dysregulated host response to infection. At the bedside or pre-hospital setting, qSOFA scores >= 2 indicate poor prognosis and potential critical deterioration: respiratory rate >= 22 breaths/min, altered mentation (GCS < 15), and systolic blood pressure <= 100 mmHg.",
+      "source": "Society of Critical Care Medicine (SCCM) and ESICM",
+      "version": "Sepsis-3 International Consensus",
+      "last_updated": "2026-11-21"
+    },
+    {
+      "ref_code": "REF_TRIAGE_PRINCIPLES",
+      "category": "methodology",
+      "title": "Emergency Severity Index (ESI) Triage Architecture",
+      "summary": "Principles of four- and five-level acuity sorting in emergency department intake.",
+      "content": "Triage does not establish a definitive medical diagnosis; rather, it rapidly stratifies patient acuity to ensure that critically ill patients receive immediate intervention before less acute conditions. Level 1 indicates immediate life-saving intervention needed; Level 2 represents high-risk situations, acute confusion, or severe distress; Level 3-4 denote urgent to semi-urgent routine evaluations.",
+      "source": "Agency for Healthcare Research and Quality (AHRQ)",
+      "version": "ESI v4.0",
+      "last_updated": "2026-11-21"
+    },
+    {
+      "ref_code": "REF_CANADIAN_CT_HEAD",
+      "category": "trauma",
+      "title": "Canadian CT Head Rule for Minor Head Injury",
+      "summary": "Evidence-based decision algorithm for neuroimaging following blunt head trauma.",
+      "content": "High-risk criteria for neurosurgical intervention after head injury include: GCS score < 15 at 2 hours post-injury; suspected open or depressed skull fracture; signs of basal skull fracture (hemotympanum, raccoon eyes, Battle's sign); 2 or more episodes of vomiting; or age >= 65 years.",
+      "source": "Lancet / Canadian Association of Emergency Physicians",
+      "version": "Validation Cohort Study",
+      "last_updated": "2026-11-21"
+    },
+    {
+      "ref_code": "REF_DISCLAIMER_LIMITATIONS",
+      "category": "legal_ethical",
+      "title": "MEDICARE System Scope & Clinical Limitations",
+      "summary": "Mandatory regulatory and medical boundary declaration for computerized triage advisors.",
+      "content": "MEDICARE is an educational navigation tool intended to guide users on when and where to seek professional medical attention. It does NOT generate clinical diagnoses, prescribe treatment, calculate validated epidemiological risk probabilities, or replace an in-person physical examination by a licensed medical practitioner. When in doubt regarding severe, worsening, or distressing symptoms, emergency medical services must be contacted without delay.",
+      "source": "MEDICARE Clinical Governance Charter",
+      "version": "1.0.0",
+      "last_updated": "2026-11-21"
+    }
+  ]
+}
