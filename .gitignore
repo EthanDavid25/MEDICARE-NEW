@@ -11,7 +11,10 @@ __pycache__/
 .eggs/
 dist/
 build/
+# *.spec except build configs
 *.spec
+!medicare.spec
+!buildozer.spec
 *.manifest
 
 # Virtual environments
@@ -88,7 +91,10 @@ MANIFEST
 *.dist-info/
 
 # PyInstaller
+# *.spec except build configs
 *.spec
+!medicare.spec
+!buildozer.spec
 
 # Mypy / type checking
 .mypy_cache/
