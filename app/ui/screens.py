@@ -46,7 +46,6 @@ def create_desc_label(text: str) -> WrappedLabel:
     """Creates a subtle descriptive subtitle that wraps cleanly."""
     return WrappedLabel(text=text, font_size="12sp", color=COLOR_TEXT_MUTED)
 
-
 class BaseScreen(Screen):
     """
     Base Screen with guaranteed solid opaque background.
@@ -414,50 +413,50 @@ class SymptomAssessmentScreen(BaseScreen):
         root = BoxLayout(orientation="vertical", spacing=0)
         
         scroll = ScrollView(size_hint=(1, 1), do_scroll_x=False)
-        content = BoxLayout(orientation="vertical", spacing=12, padding=[16, 16, 16, 24], size_hint_y=None)
+        content = BoxLayout(orientation="vertical", spacing=8, padding=[14, 12, 14, 16], size_hint_y=None)
         content.bind(minimum_height=content.setter("height"))
 
         content.add_widget(create_section_title("Step 1: Enter Reported Symptoms"))
-        content.add_widget(create_desc_label("Search and select your primary symptoms, then rate pain severity (1-10) and progression."))
+        content.add_widget(create_desc_label("Search and select your primary symptoms, then rate pain severity (1–10) and progression."))
 
         # 1. Search Box
-        search_card = CardBox(orientation="vertical", spacing=8, padding=[12, 10, 12, 10], size_hint_y=None)
+        search_card = CardBox(orientation="vertical", spacing=6, padding=[10, 8, 10, 8], size_hint_y=None)
         search_card.bind(minimum_height=search_card.setter("height"))
         search_card.add_widget(WrappedLabel(text="[b]Search Symptom Library (85+ items):[/b]", font_size="12sp", color=COLOR_NAVY_PRIMARY))
-        self.in_search = TextInput(hint_text="e.g. Headache, Chest pain, Shortness of breath, Fever...", multiline=False, size_hint_y=None, height=36)
+        self.in_search = TextInput(hint_text="e.g. Headache, Chest pain, Shortness of breath, Fever...", multiline=False, size_hint_y=None, height=34)
         self.in_search.bind(text=self._on_search)
         search_card.add_widget(self.in_search)
         content.add_widget(search_card)
 
         # 2. Search Results List (Dynamically populated)
-        self.results_box = BoxLayout(orientation="vertical", spacing=6, size_hint_y=None)
+        self.results_box = BoxLayout(orientation="vertical", spacing=4, size_hint_y=None)
         self.results_box.bind(minimum_height=self.results_box.setter("height"))
         content.add_widget(self.results_box)
 
         # 3. Selected Symptoms Summary Card
         content.add_widget(create_section_title("Selected Symptoms for Assessment"))
-        self.selected_container = BoxLayout(orientation="vertical", spacing=8, size_hint_y=None)
+        self.selected_container = BoxLayout(orientation="vertical", spacing=6, size_hint_y=None)
         self.selected_container.bind(minimum_height=self.selected_container.setter("height"))
         content.add_widget(self.selected_container)
 
         # 4. Severity & Progression Inputs
-        sev_card = CardBox(orientation="vertical", spacing=10, padding=[14, 12, 14, 12], size_hint_y=None)
+        sev_card = CardBox(orientation="vertical", spacing=8, padding=[12, 10, 12, 10], size_hint_y=None)
         sev_card.bind(minimum_height=sev_card.setter("height"))
         
         # Interactive pain severity label updating dynamically
         self.lbl_sev = WrappedLabel(
-            text="[b]Reported Pain / Severity Rating: 5 / 10[/b]",
+            text="[b]Pain / Severity Rating: 5 / 10[/b]",
             font_size="13sp",
             color=COLOR_NAVY_PRIMARY
         )
         sev_card.add_widget(self.lbl_sev)
 
-        self.slider_sev = Slider(min=1, max=10, value=5, step=1, size_hint_y=None, height=38)
+        self.slider_sev = Slider(min=1, max=10, value=5, step=1, size_hint_y=None, height=34)
         self.slider_sev.bind(value=self._on_slider)
         sev_card.add_widget(self.slider_sev)
 
         # Duration input
-        dur_box = BoxLayout(orientation="horizontal", spacing=10, size_hint_y=None, height=36)
+        dur_box = BoxLayout(orientation="horizontal", spacing=8, size_hint_y=None, height=34)
         dur_lbl = WrappedLabel(text="[b]Duration (Days):[/b]", font_size="12sp", color=COLOR_NAVY_PRIMARY, size_hint_x=0.4)
         dur_box.add_widget(dur_lbl)
         self.in_dur = TextInput(text="1", multiline=False, size_hint_x=0.6)
@@ -465,13 +464,13 @@ class SymptomAssessmentScreen(BaseScreen):
         sev_card.add_widget(dur_box)
 
         # Trajectory / Progression buttons
-        sev_card.add_widget(WrappedLabel(text="[b]Symptom Progression / Trajectory:[/b]", font_size="12sp", color=COLOR_NAVY_PRIMARY))
-        traj_box = BoxLayout(orientation="horizontal", spacing=8, size_hint_y=None, height=38)
-        self.btn_worse = OptionButton(text="  Worsening", size_hint_y=None, height=38)
+        sev_card.add_widget(WrappedLabel(text="[b]Symptom Progression:[/b]", font_size="12sp", color=COLOR_NAVY_PRIMARY))
+        traj_box = BoxLayout(orientation="horizontal", spacing=6, size_hint_y=None, height=34)
+        self.btn_worse = OptionButton(text="  Worsening", size_hint_y=None, height=34)
         self.btn_worse.bind(on_release=lambda x: self._set_traj("worsening"))
-        self.btn_same = OptionButton(text="  Unchanged", size_hint_y=None, height=38)
+        self.btn_same = OptionButton(text="  Unchanged", size_hint_y=None, height=34)
         self.btn_same.bind(on_release=lambda x: self._set_traj("unchanged"))
-        self.btn_better = OptionButton(text="  Improving", size_hint_y=None, height=38)
+        self.btn_better = OptionButton(text="  Improving", size_hint_y=None, height=34)
         self.btn_better.bind(on_release=lambda x: self._set_traj("improving"))
         traj_box.add_widget(self.btn_worse)
         traj_box.add_widget(self.btn_same)
@@ -481,7 +480,7 @@ class SymptomAssessmentScreen(BaseScreen):
         content.add_widget(sev_card)
 
         # 5. Continue to Follow-up Questions Button
-        btn_next = PrimaryButton(text="PROCEED TO CLINICAL QUESTIONS →", size_hint_y=None, height=44)
+        btn_next = PrimaryButton(text="PROCEED TO CLINICAL QUESTIONS →", size_hint_y=None, height=40)
         btn_next.bind(on_release=self._proceed_to_followups)
         content.add_widget(btn_next)
 
@@ -505,7 +504,7 @@ class SymptomAssessmentScreen(BaseScreen):
             category_text = "[color=#DC2626]Severe (Significant distress / high urgency)[/color]"
         else:
             category_text = "[color=#991B1B]Critical (Extreme / worst pain imaginable)[/color]"
-        self.lbl_sev.text = f"[b]Reported Pain / Severity Rating: {val} / 10[/b] — {category_text}"
+        self.lbl_sev.text = f"[b]Pain / Severity Rating: {val} / 10[/b] — {category_text}"
 
     def on_pre_enter(self):
         self.in_search.text = ""
@@ -519,7 +518,7 @@ class SymptomAssessmentScreen(BaseScreen):
         self.results_box.clear_widgets()
         matches = self.controller.dataset_loader.search_symptoms(text or "")[:6]
         for s in matches:
-            btn = SecondaryButton(text=f"+ {s.get('name')} ({s.get('body_system', '')})", size_hint_y=None, height=36)
+            btn = SecondaryButton(text=f"+ {s.get('name')} ({s.get('body_system', '')})", size_hint_y=None, height=34)
             if s.get("is_emergency_warning"):
                 btn.text = f"[RED FLAG] {btn.text}"
                 btn.color = COLOR_URGENT_EMERGENCY
@@ -538,19 +537,19 @@ class SymptomAssessmentScreen(BaseScreen):
     def _update_selected_ui(self):
         self.selected_container.clear_widgets()
         if not self.selected_symptoms:
-            empty = CardBox(padding=[12, 10, 12, 10], size_hint_y=None)
+            empty = CardBox(padding=[10, 8, 10, 8], size_hint_y=None)
             empty.bind(minimum_height=empty.setter("height"))
-            empty.add_widget(WrappedLabel(text="No symptoms added yet. Pick at least one symptom above.", font_size="11sp", color=COLOR_TEXT_MUTED))
+            empty.add_widget(WrappedLabel(text="No symptoms added yet. Pick at least one symptom above.", font_size="12sp", color=COLOR_TEXT_MUTED))
             self.selected_container.add_widget(empty)
         else:
             for s in self.selected_symptoms:
-                card = CardBox(orientation="horizontal", padding=[12, 6, 12, 6], spacing=8, size_hint_y=None)
+                card = CardBox(orientation="horizontal", padding=[10, 5, 10, 5], spacing=8, size_hint_y=None)
                 card.bind(minimum_height=card.setter("height"))
                 
                 name_lbl = WrappedLabel(text=f"[b]{s.get('name')}[/b] ({s.get('body_system', '')})", font_size="12sp", color=COLOR_NAVY_PRIMARY)
                 card.add_widget(name_lbl)
                 
-                b_del = Button(text="Remove", font_size="11sp", size_hint=(None, None), size=(72, 28), background_color=COLOR_URGENT_EMERGENCY, color=COLOR_WHITE)
+                b_del = Button(text="Remove", font_size="11sp", size_hint=(None, None), size=(66, 26), background_color=COLOR_URGENT_EMERGENCY, color=COLOR_WHITE)
                 b_del.bind(on_release=lambda x, code=s["code"]: self._remove_symptom(code))
                 card.add_widget(b_del)
                 self.selected_container.add_widget(card)
@@ -604,7 +603,7 @@ class FollowupQuestionsScreen(BaseScreen):
         root = BoxLayout(orientation="vertical", spacing=0)
         
         scroll = ScrollView(size_hint=(1, 1), do_scroll_x=False)
-        self.content = BoxLayout(orientation="vertical", spacing=14, padding=[16, 16, 16, 24], size_hint_y=None)
+        self.content = BoxLayout(orientation="vertical", spacing=8, padding=[14, 10, 14, 16], size_hint_y=None)
         self.content.bind(minimum_height=self.content.setter("height"))
 
         scroll.add_widget(self.content)
@@ -624,8 +623,8 @@ class FollowupQuestionsScreen(BaseScreen):
         severity = staging.get("severity", 5)
 
         self.content.add_widget(create_desc_label(
-            f"Adaptive questions tailored to reported symptoms, severity ({severity}/10), and trajectory ({progression.upper()}). "
-            "Emergency red-flag safety checks are always verified."
+            f"Adaptive questions for reported symptoms, severity ({severity}/10), trajectory ({progression.upper()}). "
+            "Emergency red-flag checks always verified."
         ))
 
         # Dynamically retrieve targeted questions linked to reported symptoms, progression, and severity
@@ -634,33 +633,37 @@ class FollowupQuestionsScreen(BaseScreen):
         )
 
         for q in questions:
-            q_card = CardBox(orientation="vertical", spacing=8, padding=[14, 12, 14, 12], size_hint_y=None)
+            q_card = CardBox(orientation="vertical", spacing=6, padding=[12, 10, 12, 10], size_hint_y=None)
             q_card.bind(minimum_height=q_card.setter("height"))
 
             is_emerg = bool(q.get("is_emergency_safety_check", False) or q.get("triggers_emergency_check", False))
             title_text = f"[b]{q.get('question_text')}[/b]"
             if is_emerg:
-                title_text = f"[b][color=#DC2626]RED FLAG CHECK:[/color][/b] {title_text}"
+                title_text = f"[b][color=#DC2626]RED FLAG:[/color][/b] {title_text}"
 
             q_lbl = WrappedLabel(
                 text=title_text,
-                font_size="13sp",
+                font_size="14sp",
                 color=COLOR_NAVY_PRIMARY
             )
             q_card.add_widget(q_lbl)
 
+            # Optional description / hint
+            if q.get("description"):
+                q_card.add_widget(WrappedLabel(text=q["description"], font_size="12sp", color=COLOR_TEXT_MUTED))
+
             qid = q["question_id"]
-            opts_box = BoxLayout(orientation="vertical", spacing=6, size_hint_y=None)
+            opts_box = BoxLayout(orientation="vertical", spacing=4, size_hint_y=None)
             opts_box.bind(minimum_height=opts_box.setter("height"))
 
             btn_group = []
             for opt in q.get("options", []):
                 opt_code = opt["code"]
                 opt_btn = OptionButton(
-                    text=f"  • {opt['text']}",
-                    font_size="12sp",
+                    text=f"  {opt['text']}",
+                    font_size="13sp",
                     size_hint_y=None,
-                    height=38
+                    height=36
                 )
                 opt_btn.bind(on_release=lambda x, q=qid, c=opt_code, bg=btn_group, curr=opt_btn: self._select_answer(q, c, bg, curr))
                 opts_box.add_widget(opt_btn)
@@ -670,7 +673,7 @@ class FollowupQuestionsScreen(BaseScreen):
             self.content.add_widget(q_card)
 
         # Assessment Action Button
-        btn_evaluate = PrimaryButton(text="SUBMIT & EVALUATE TRIAGE RESULTS →", size_hint_y=None, height=46)
+        btn_evaluate = PrimaryButton(text="SUBMIT & EVALUATE TRIAGE RESULTS →", size_hint_y=None, height=42)
         btn_evaluate.bind(on_release=self._evaluate_triage)
         self.content.add_widget(btn_evaluate)
 

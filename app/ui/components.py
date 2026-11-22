@@ -43,7 +43,7 @@ class SectionTitle(WrappedLabel):
     """Clean prominent section header with robust height."""
     def __init__(self, text="", **kwargs):
         super().__init__(text=f"[b]{text}[/b]", **kwargs)
-        self.font_size = "15sp"
+        self.font_size = "14sp"
         self.color = COLOR_NAVY_PRIMARY
 
 class CardBox(BoxLayout):
@@ -109,18 +109,21 @@ class SecondaryButton(Button):
             Line(rounded_rectangle=(self.x, self.y, self.width, self.height, 8), width=1)
 
 class OptionButton(Button):
-    """Clean white card option button with selection highlight and zero grey artifact."""
+    """Clean white card option button with selection highlight and zero grey artifact.
+    
+    Compact by default for assessment question answers.
+    """
     is_selected = BooleanProperty(False)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.background_color = (0, 0, 0, 0)
-        self.font_size = kwargs.get("font_size", "12sp")
+        self.font_size = kwargs.get("font_size", "13sp")
         self.halign = "left"
         self.valign = "middle"
         self.size_hint_y = None
-        self.height = kwargs.get("height", 42)
-        self.padding = [14, 8, 14, 8]
+        self.height = kwargs.get("height", 36)
+        self.padding = [12, 6, 12, 6]
         self.bind(pos=self._update_canvas, size=self._update_canvas, is_selected=self._update_canvas, state=self._update_canvas)
         self.bind(size=self.setter("text_size"))
 
