@@ -1,0 +1,47 @@
+{
+  "expo": {
+    "name": "MEDICARE",
+    "slug": "medicare-triage",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A2342"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "org.medicare.triage"
+    },
+    "android": {
+      "package": "org.medicare.triage",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0A2342"
+      },
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "medicare-offline-triage"
+      },
+      "apiUrl": "http://10.0.2.2:8000",
+      "appVersion": "1.0.0",
+      "country": "India"
+    }
+  }
+}
