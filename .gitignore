@@ -132,3 +132,7 @@ temp/
 mobile/.expo/
 mobile/node_modules/
 mobile/android_backup/
+
+.kivy_home_diag/
+startup_error.txt
+user_data/
