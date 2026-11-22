@@ -757,11 +757,11 @@ class TriageResultsScreen(BaseScreen):
             return
 
         cat = result.urgency_category
-        
+
         # -------------------------------------------------------------
         # SECTION 1: PROMINENT URGENCY OUTCOME BANNER
         # -------------------------------------------------------------
-        cat_card = CardBox(orientation="vertical", spacing=8, padding=[18, 16, 18, 16], size_hint_y=None)
+        cat_card = CardBox(orientation="vertical", spacing=6, padding=[18, 16, 18, 16], size_hint_y=None)
         cat_card.bind(minimum_height=cat_card.setter("height"))
         if cat == 1:
             cat_card.bg_color = COLOR_URGENT_EMERGENCY
@@ -773,86 +773,238 @@ class TriageResultsScreen(BaseScreen):
             cat_card.bg_color = COLOR_URGENT_INSUFF
 
         cat_card.add_widget(WrappedLabel(
-            text=f"[size=20sp][b]{result.urgency_label.upper()}[/b][/size]\nClassification Category: {cat} of 4",
-            font_size="15sp",
+            text=f"[size=20sp][b]{result.urgency_label.upper()}[/b][/size]\n"
+                 f"Triage Urgency: Category {cat} of 4",
+            font_size="14sp",
             color=COLOR_TEXT_LIGHT
         ))
         self.content.add_widget(cat_card)
 
         # -------------------------------------------------------------
-        # SECTION 2: PLAIN LANGUAGE EXPLANATION
+        # SECTION 2: RECOMMENDED CLINICAL ACTION GUIDANCE (High Prominence)
         # -------------------------------------------------------------
-        self.content.add_widget(create_section_title("1. Assessment Summary & Explanation"))
-        expl_card = CardBox(orientation="vertical", spacing=6, padding=[14, 12, 14, 12], size_hint_y=None)
-        expl_card.bind(minimum_height=expl_card.setter("height"))
-        
-        expl_card.add_widget(WrappedLabel(
-            text=result.summary_explanation,
-            font_size="13sp",
-            color=COLOR_NAVY_PRIMARY
-        ))
-        self.content.add_widget(expl_card)
-
-        # -------------------------------------------------------------
-        # SECTION 3: CLINICAL JUSTIFICATION & TRIGGERED INDICATORS
-        # -------------------------------------------------------------
-        self.content.add_widget(create_section_title("2. Detailed Clinical Reasoning & Triggered Indicators"))
-        just_card = CardBox(orientation="vertical", spacing=6, padding=[14, 12, 14, 12], size_hint_y=None)
-        just_card.bind(minimum_height=just_card.setter("height"))
-        
-        for d in result.detailed_reasoning:
-            just_card.add_widget(WrappedLabel(
-                text=d,
-                font_size="12sp",
-                color=COLOR_TEXT_DARK
-            ))
-        self.content.add_widget(just_card)
-
-        # -------------------------------------------------------------
-        # SECTION 4: RECOMMENDED NEXT STEPS & CLINICAL ACTIONS
-        # -------------------------------------------------------------
-        self.content.add_widget(create_section_title("3. Recommended Clinical Action Guidance"))
+        self.content.add_widget(create_section_title("Recommended Clinical Action Guidance"))
         act_card = CardBox(orientation="vertical", spacing=8, padding=[16, 14, 16, 14], size_hint_y=None)
         act_card.bind(minimum_height=act_card.setter("height"))
-        
+
         if cat == 1:
             act_card.bg_color = (1.0, 0.94, 0.94, 1.0)
             act_card.border_color = COLOR_URGENT_EMERGENCY
             act_card.add_widget(WrappedLabel(
                 text="[b][color=#DC2626]CRITICAL ACTION PROTOCOL — CALL EMERGENCY SERVICES (112 / 102)[/color][/b]",
-                font_size="13sp"
+                font_size="14sp"
             ))
             act_card.add_widget(WrappedLabel(
-                text="• Dial 112 (National Emergency Helpline) or 102 (Ambulance Service) immediately.\n"
-                     "• Do not attempt to operate a motor vehicle yourself; arrange for emergency medical transport.\n"
-                     "• Maintain a calm posture and ensure airway is clear. Have a family member or bystander remain present.\n"
-                     "• Download and provide your MEDICARE Doctor Handover report to the incoming emergency team.",
-                font_size="12sp",
+                text="• [b]Call 112 (National Emergency Helpline)[/b] or [b]102 (Ambulance Service)[/b] immediately.\n"
+                     "• Do NOT operate a motor vehicle yourself; arrange for emergency medical transport or have someone drive you.\n"
+                     "• Sit or lie in a comfortable position, stay calm, and notify family or someone nearby.\n"
+                     "• Download and provide your MEDICARE Doctor Handover report to the emergency care team.",
+                font_size="13sp",
                 color=COLOR_TEXT_DARK
             ))
         elif cat == 2:
             act_card.bg_color = (1.0, 0.97, 0.92, 1.0)
             act_card.border_color = COLOR_URGENT_EARLY
             act_card.add_widget(WrappedLabel(
-                text="[b][color=#D97706]SAME-DAY CLINICAL EVALUATION ADVISORY[/color][/b]",
-                font_size="13sp"
+                text="[b][color=#D97706]SAME-DAY CLINICAL EVALUATION ADVISORY (WITHIN 12–24 HOURS)[/color][/b]",
+                font_size="14sp"
             ))
             act_card.add_widget(WrappedLabel(
                 text="• Schedule an in-person medical consultation within 12–24 hours.\n"
-                     "• Present your downloaded Doctor Handover summary to the consulting physician.\n"
-                     "• If symptoms rapidly escalate, chest pain develops, or consciousness is altered, call 112 immediately.",
+                     "• Present your downloaded MEDICARE Doctor Handover summary to the consulting physician.\n"
+                     "• Monitor your symptoms closely: if you develop new chest pain, severe shortness of breath, or confusion, dial 112 immediately.\n"
+                     "• Rest and maintain adequate hydration while awaiting clinical evaluation.",
+                font_size="13sp",
+                color=COLOR_TEXT_DARK
+            ))
+        elif cat == 3:
+            act_card.bg_color = (0.95, 0.99, 0.96, 1.0)
+            act_card.border_color = COLOR_URGENT_ROUTINE
+            act_card.add_widget(WrappedLabel(
+                text="[b][color=#10B981]ROUTINE PRIMARY CARE & SUPPORTIVE SELF-CARE GUIDANCE[/color][/b]",
+                font_size="14sp"
+            ))
+            act_card.add_widget(WrappedLabel(
+                text="• Follow supportive home care measures: get adequate rest and drink plenty of fluids.\n"
+                     "• Schedule a standard routine appointment with your primary clinic if symptoms persist beyond 5–7 days.\n"
+                     "• Retake this assessment if your condition changes or new concerning symptoms develop.",
+                font_size="13sp",
+                color=COLOR_TEXT_DARK
+            ))
+        else: # Cat 4
+            act_card.bg_color = (0.96, 0.97, 0.98, 1.0)
+            act_card.border_color = COLOR_URGENT_INSUFF
+            act_card.add_widget(WrappedLabel(
+                text="[b][color=#4B5563]ADDITIONAL CLINICAL INFORMATION REQUIRED[/color][/b]",
+                font_size="14sp"
+            ))
+            act_card.add_widget(WrappedLabel(
+                text="• Retake the assessment and answer all questions completely to allow a safe evaluation.\n"
+                     "• Incomplete responses cannot confirm safety; if you feel distressed or very unwell, seek medical attention or call a health helpline (104).",
+                font_size="13sp",
+                color=COLOR_TEXT_DARK
+            ))
+        self.content.add_widget(act_card)
+
+        # -------------------------------------------------------------
+        # SECTION 3: ASSESSMENT SUMMARY & KEY FINDINGS
+        # -------------------------------------------------------------
+        self.content.add_widget(create_section_title("1. Assessment Summary & Key Findings"))
+        summary_card = CardBox(orientation="vertical", spacing=8, padding=[16, 14, 16, 14], size_hint_y=None)
+        summary_card.bind(minimum_height=summary_card.setter("height"))
+        summary_card.bg_color = COLOR_WHITE
+
+        # Main plain-language summary
+        summary_card.add_widget(WrappedLabel(
+            text=f"[b]Clinical Summary:[/b] {result.summary_explanation}",
+            font_size="13sp",
+            color=COLOR_NAVY_PRIMARY
+        ))
+
+        # Important confirmed symptoms
+        symptoms = getattr(result, "symptoms", [])
+        if isinstance(symptoms, str):
+            try:
+                symptoms = json.loads(symptoms)
+            except Exception:
+                symptoms = []
+        if symptoms:
+            sym_lines = []
+            for s in symptoms:
+                name = s.get("name") or s.get("symptom_name") or s.get("code", "Symptom")
+                sev = s.get("severity")
+                dur_v = s.get("duration_value", "")
+                dur_u = s.get("duration_unit", "")
+                prog = s.get("progression", "")
+                details = []
+                if sev is not None:
+                    details.append(f"Severity: {sev}/10")
+                if dur_v:
+                    details.append(f"Duration: {dur_v} {dur_u}".strip())
+                if prog and prog != "unchanged":
+                    details.append(f"Trend: {prog.capitalize()}")
+                det_str = f" ({', '.join(details)})" if details else ""
+                sym_lines.append(f"• {name}{det_str}")
+
+            summary_card.add_widget(WrappedLabel(
+                text="[b]Confirmed Reported Symptoms:[/b]\n" + "\n".join(sym_lines),
                 font_size="12sp",
                 color=COLOR_TEXT_DARK
             ))
-        else:
-            act_card.bg_color = COLOR_WHITE
-            for act in result.recommended_next_steps:
-                act_card.add_widget(WrappedLabel(
-                    text=f"• {act}",
-                    font_size="12sp",
-                    color=COLOR_NAVY_PRIMARY
+
+        # Progression assessment & severity score
+        prog_text = getattr(result, "progression_trend", "stable").capitalize()
+        sev_val = getattr(result, "severity_score", 0.0)
+        summary_card.add_widget(WrappedLabel(
+            text=f"[b]Progression Assessment:[/b] {prog_text} trajectory &nbsp;|&nbsp; "
+                 f"[b]Severity Metric:[/b] {sev_val:.1f} / 10.0",
+            font_size="12sp",
+            color=COLOR_TEXT_DARK
+        ))
+
+        # Incomplete Data Points / Missing Safety Questions:
+        # SINGLE clean notice shown ONLY if relevant safety questions were skipped!
+        missing_data = getattr(result, "missing_critical_data", [])
+        if isinstance(missing_data, str):
+            try:
+                missing_data = json.loads(missing_data)
+            except Exception:
+                missing_data = []
+
+        if missing_data:
+            summary_card.add_widget(WrappedLabel(
+                text="[color=#B45309][b]⚠️ Note:[/b] Some safety questions were not answered. "
+                     "Assessment confidence may be limited.[/color]",
+                font_size="12sp"
+            ))
+
+        self.content.add_widget(summary_card)
+
+        # -------------------------------------------------------------
+        # SECTION 4: DETAILED CLINICAL REASONING & DECISION FACTORS
+        # -------------------------------------------------------------
+        self.content.add_widget(create_section_title("2. Detailed Clinical Reasoning & Decision Factors"))
+        just_card = CardBox(orientation="vertical", spacing=8, padding=[16, 14, 16, 14], size_hint_y=None)
+        just_card.bind(minimum_height=just_card.setter("height"))
+        just_card.bg_color = COLOR_WHITE
+
+        # A. Confirmed Emergency Indicators
+        warnings = getattr(result, "warning_signs_found", [])
+        if isinstance(warnings, str):
+            try:
+                warnings = json.loads(warnings)
+            except Exception:
+                warnings = []
+        if warnings:
+            just_card.add_widget(WrappedLabel(
+                text="[b][color=#DC2626]Confirmed Emergency Indicators:[/color][/b]",
+                font_size="12sp"
+            ))
+            for ws in warnings:
+                just_card.add_widget(WrappedLabel(
+                    text=f"[color=#DC2626]• {ws}[/color]",
+                    font_size="12sp"
                 ))
-        self.content.add_widget(act_card)
+        else:
+            just_card.add_widget(WrappedLabel(
+                text="[b]Emergency Indicators:[/b] No immediate red-flag emergency indicators detected from the reported symptoms.",
+                font_size="12sp",
+                color=COLOR_TEXT_DARK
+            ))
+
+        # B. Triggered Clinical Decision Factors (Human-readable, no raw technical rule IDs like RULE_EMERG_003)
+        rules = getattr(result, "rules_triggered", [])
+        if isinstance(rules, str):
+            try:
+                rules = json.loads(rules)
+            except Exception:
+                rules = []
+        if rules:
+            just_card.add_widget(WrappedLabel(
+                text="[b]Triggered Clinical Factors:[/b]",
+                font_size="12sp",
+                color=COLOR_NAVY_PRIMARY
+            ))
+            for r in rules:
+                if isinstance(r, dict):
+                    expl = r.get("explanation") or r.get("description", "")
+                else:
+                    expl = str(r)
+                if expl:
+                    just_card.add_widget(WrappedLabel(
+                        text=f"• {expl}",
+                        font_size="12sp",
+                        color=COLOR_TEXT_DARK
+                    ))
+
+        # C. Input Discordance / Contradictions (if any)
+        contradictions = getattr(result, "contradictions", [])
+        if isinstance(contradictions, str):
+            try:
+                contradictions = json.loads(contradictions)
+            except Exception:
+                contradictions = []
+        if contradictions:
+            just_card.add_widget(WrappedLabel(
+                text="[b]Input Observations:[/b]",
+                font_size="12sp",
+                color=COLOR_NAVY_PRIMARY
+            ))
+            for c in contradictions:
+                just_card.add_widget(WrappedLabel(
+                    text=f"• {c}",
+                    font_size="12sp",
+                    color=COLOR_TEXT_DARK
+                ))
+
+        # D. Trajectory & Severity Summary
+        just_card.add_widget(WrappedLabel(
+            text=f"• Trajectory: {prog_text} over reported duration — Severity score: {sev_val:.1f}/10.0",
+            font_size="12sp",
+            color=COLOR_TEXT_DARK
+        ))
+
+        self.content.add_widget(just_card)
 
         # -------------------------------------------------------------
         # SECTION 5: CLINICAL DISCLAIMER & GOVERNANCE
@@ -861,7 +1013,7 @@ class TriageResultsScreen(BaseScreen):
         disc_card.bind(minimum_height=disc_card.setter("height"))
         disc_card.bg_color = (0.97, 0.97, 0.98, 1)
         disc_card.add_widget(WrappedLabel(
-            text="[b]Safety Notice:[/b] MEDICARE is an offline preliminary triage advisor and clinical decision-support tool. It does not provide medical diagnoses, treatment prescriptions, or emergency guarantees. If your condition worsens rapidly, seek emergency medical care immediately.",
+            text="[b]Safety & Governance Notice:[/b] MEDICARE is an offline preliminary triage advisor and clinical decision-support tool. It does not provide medical diagnoses, treatment prescriptions, or emergency guarantees. If your condition worsens rapidly, seek emergency medical care immediately.",
             font_size="10sp",
             color=COLOR_TEXT_MUTED
         ))

@@ -230,20 +230,79 @@ def generate_doctor_handover_pdf(
 
     # 5. Rationale & Triggered Warning Signs
     story.append(Paragraph("4. CLINICAL RATIONALE & TRIGGERED INDICATORS", section_heading))
-    explanation = assessment.get("explanation", "No explanation recorded.")
+    explanation = assessment.get("explanation") or assessment.get("summary_explanation", "No explanation recorded.")
     story.append(Paragraph(f"<b>Summary:</b> {explanation}", body_style))
     story.append(Spacer(1, 4))
 
-    warnings = assessment.get("warnings_found", [])
+    # Severity Score and Trajectory
+    sev_score = assessment.get("severity_score", 0.0)
+    prog_trend = assessment.get("progression_trend", "unknown")
+    try:
+        sev_display = f"{float(sev_score):.1f} / 10.0"
+    except (ValueError, TypeError):
+        sev_display = str(sev_score)
+    story.append(Paragraph(
+        f"<b>Computed Severity Metric:</b> {sev_display} &nbsp;|&nbsp; "
+        f"<b>Progression Trajectory:</b> {str(prog_trend).title()}",
+        body_style
+    ))
+    story.append(Spacer(1, 4))
+
+    warnings = assessment.get("warnings_found") or assessment.get("warning_signs_found", [])
     if isinstance(warnings, str):
         try:
             warnings = json.loads(warnings)
         except Exception:
             warnings = []
     if warnings:
-        story.append(Paragraph("<b>Warning Signs Detected:</b>", bold_body))
+        story.append(Paragraph("<b>Warning Signs & Emergency Indicators:</b>", bold_body))
         for w in warnings:
             story.append(Paragraph(f"• <font color='#DC3545'>{w}</font>", body_style))
+        story.append(Spacer(1, 4))
+
+    # Triggered Clinical Rules (with technical IDs)
+    rules = assessment.get("rules_triggered", [])
+    if isinstance(rules, str):
+        try:
+            rules = json.loads(rules)
+        except Exception:
+            rules = []
+    if rules:
+        story.append(Paragraph("<b>Triggered Clinical Rules (Technical IDs):</b>", bold_body))
+        for r in rules:
+            if isinstance(r, dict):
+                rid = r.get("rule_id", "RULE")
+                desc = r.get("explanation") or r.get("description", "")
+                r_text = f"[{rid}] {desc}" if desc else f"[{rid}]"
+            else:
+                r_text = str(r)
+            story.append(Paragraph(f"• {r_text}", body_style))
+        story.append(Spacer(1, 4))
+
+    # Unanswered Safety Questions / Incomplete Clinical Data Points
+    missing = assessment.get("missing_critical_data", [])
+    if isinstance(missing, str):
+        try:
+            missing = json.loads(missing)
+        except Exception:
+            missing = []
+    if missing:
+        story.append(Paragraph("<b>Unanswered Safety Questions / Incomplete Clinical Data:</b>", bold_body))
+        for m in missing:
+            story.append(Paragraph(f"• <font color='#B45309'>{m}</font>", body_style))
+        story.append(Spacer(1, 4))
+
+    # Recommended Clinical Next Steps
+    steps = assessment.get("recommended_next_steps", [])
+    if isinstance(steps, str):
+        try:
+            steps = json.loads(steps)
+        except Exception:
+            steps = []
+    if steps:
+        story.append(Paragraph("<b>Recommended Clinical Next Steps:</b>", bold_body))
+        for s in steps:
+            story.append(Paragraph(f"• {s}", body_style))
         story.append(Spacer(1, 4))
 
     # 6. Mandatory Governance & Disclaimer Box

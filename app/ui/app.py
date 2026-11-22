@@ -6,6 +6,9 @@ and adaptive Sidebar (Desktop) / Bottom Navigation (Mobile).
 import sys
 from pathlib import Path
 
+from kivy.config import Config as KivyConfig
+KivyConfig.set("input", "mouse", "mouse,disable_multitouch")
+
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.uix.boxlayout import BoxLayout

@@ -63,27 +63,24 @@ def build_explanation(
     if warning_signs_found:
         for ws in warning_signs_found:
             reasons.append(f"• Emergency Warning Identified: {ws}")
+    else:
+        reasons.append("• Emergency Indicators: No immediate red-flag emergency indicators detected from the reported symptoms.")
 
     if rules_triggered:
         for r in rules_triggered:
-            rid = r.get("rule_id", "RULE")
             expl = r.get("explanation", r.get("description", ""))
-            reasons.append(f"• Triggered Clinical Rule [{rid}]: {expl}")
+            reasons.append(f"• Clinical Decision Factor: {expl}")
 
     if contradictions:
         for c in contradictions:
             reasons.append(f"• Input Discordance / Contradiction: {c}")
-
-    if missing_data:
-        for m in missing_data:
-            reasons.append(f"• Incomplete Data Point: {m}")
 
     reasons.append(f"• Computed Severity Metric: {severity_score:.1f} / 10.0 (Weighted Average)")
     reasons.append(f"• Symptom Progression Trend: {progression_trend.upper()}")
 
     # 3. Recommended Next Steps
     if urgency_category == 1:
-        next_steps.append("1. Call emergency services (e.g. 911 / 112 / 999) or attend the nearest Emergency Department immediately.")
+        next_steps.append("1. Call emergency services (e.g. 112 / 102) or attend the nearest Emergency Department immediately.")
         next_steps.append("2. Do not drive yourself to the hospital; await an ambulance or have someone drive you.")
         next_steps.append("3. Rest in a safe, comfortable position while awaiting medical personnel.")
         next_steps.append("4. Prepare a list of your current medications and health conditions for the attending team.")
@@ -97,7 +94,7 @@ def build_explanation(
         next_steps.append("3. Re-run an assessment if symptoms worsen or new concerning signs arise.")
     else: # Category 4
         next_steps.append("1. Review your responses to ensure all required questions are answered accurately.")
-        next_steps.append("2. If you are experiencing concerning symptoms, do not assume safety — contact a healthcare provider or telephone helpline (e.g. NHS 111).")
+        next_steps.append("2. If you are experiencing concerning symptoms, do not assume safety — contact a healthcare provider or telephone helpline (e.g. 104 / 112).")
         next_steps.append("3. Conduct a new assessment with full information.")
 
     # 4. Uncertainty statement
@@ -116,6 +113,9 @@ def build_explanation(
             "MODERATE UNCERTAINTY: This assessment is based solely on self-reported inputs without physical "
             "examination, diagnostic imaging, or laboratory data. Symptoms may change rapidly."
         )
+
+    if missing_data:
+        uncertainty = f"Some safety questions were not answered. Assessment confidence may be limited. {uncertainty}"
 
     clinical_limitations = DISCLAIMER_TEXT
 

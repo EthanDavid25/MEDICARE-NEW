@@ -49,6 +49,13 @@ class AppController:
         self.last_triage_result = None
         self._initialized = False
 
+        # Configure Kivy input to disable multi-touch simulation (red dots)
+        try:
+            from kivy.config import Config as KivyConfig
+            KivyConfig.set("input", "mouse", "mouse,disable_multitouch")
+        except Exception:
+            pass
+
     def initialize(self):
         """Initializes all underlying database, datasets, and clinical engines."""
         if self._initialized:
@@ -108,6 +115,7 @@ class AppController:
         KivyConfig.set("graphics", "height", "768")
         KivyConfig.set("graphics", "resizable", "1")
         KivyConfig.set("graphics", "fullscreen", "0")
+        KivyConfig.set("input", "mouse", "mouse,disable_multitouch")
         from app.ui.app import MedicareKivyApp
         app = MedicareKivyApp(self)
         return app.run()

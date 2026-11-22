@@ -7,6 +7,10 @@ import sys
 import logging
 from pathlib import Path
 
+# Configure Kivy input before any subsystem loads to disable multitouch red-dot simulation
+from kivy.config import Config as KivyConfig
+KivyConfig.set("input", "mouse", "mouse,disable_multitouch")
+
 # Ensure project root is on sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
