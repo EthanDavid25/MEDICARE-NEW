@@ -1301,11 +1301,14 @@ class MedicalReferencesScreen(BaseScreen):
         self.content = BoxLayout(orientation="vertical", spacing=12, padding=[16, 16, 16, 24], size_hint_y=None)
         self.content.bind(minimum_height=self.content.setter("height"))
 
-        self.content.add_widget(create_section_title("Local Medical References & Guidelines"))
+        self.content.add_widget(create_section_title("Local Clinical Guidelines & Medical References"))
         self.content.add_widget(create_desc_label("Official clinical references (WHO ICD-11, EAACI, Surviving Sepsis, ESI, Canadian CT Head Rule)."))
 
         refs = self.controller.dataset_loader.get_medical_references()
-        for r in refs:
+        clinical_refs = [r for r in refs if r.get("category") != "geographic_mapping"]
+        geo_refs = [r for r in refs if r.get("category") == "geographic_mapping"]
+
+        for r in clinical_refs:
             card = CardBox(orientation="vertical", spacing=6, padding=[14, 12, 14, 12], size_hint_y=None)
             card.bind(minimum_height=card.setter("height"))
 
@@ -1317,6 +1320,30 @@ class MedicalReferencesScreen(BaseScreen):
             url = r.get("url")
             if url:
                 btn_link = SecondaryButton(text="Open Official Reference ↗", size_hint_y=None, height=32)
+                btn_link.bind(on_release=lambda x, target_url=url: webbrowser.open(target_url))
+                card.add_widget(btn_link)
+
+            self.content.add_widget(card)
+
+        # 2. Offline Maps & Geographic Data References Subsection
+        self.content.add_widget(create_section_title("Offline Maps, Geographic Data & Navigation References"))
+        self.content.add_widget(create_desc_label(
+            "Genuine technical documentation and algorithmic standards utilized in MEDICARE's "
+            "offline geographic subsystem, MBTiles access, spatial indexing, and C A* routing."
+        ))
+
+        for r in geo_refs:
+            card = CardBox(orientation="vertical", spacing=6, padding=[14, 12, 14, 12], size_hint_y=None)
+            card.bind(minimum_height=card.setter("height"))
+
+            card.add_widget(WrappedLabel(text=f"[b]{r.get('title')}[/b]", font_size="13sp", color=COLOR_NAVY_PRIMARY))
+            card.add_widget(WrappedLabel(text=f"Publisher / Project: [b]{r.get('source')}[/b] | Version: {r.get('version')}", font_size="11sp", color=COLOR_TEXT_MUTED))
+            card.add_widget(WrappedLabel(text=f"Purpose: {r.get('summary', '')}", font_size="12sp", color=COLOR_NAVY_LIGHT))
+            card.add_widget(WrappedLabel(text=r.get("content", ""), font_size="11sp", color=COLOR_TEXT_DARK))
+
+            url = r.get("url")
+            if url:
+                btn_link = SecondaryButton(text="Open Technical Resource ↗", size_hint_y=None, height=32)
                 btn_link.bind(on_release=lambda x, target_url=url: webbrowser.open(target_url))
                 card.add_widget(btn_link)
 
@@ -1497,6 +1524,96 @@ class AboutScreen(BaseScreen):
             ref_card.add_widget(btn_link)
 
             content.add_widget(ref_card)
+
+        # Dedicated Offline Maps & Navigation References Section
+        content.add_widget(create_section_title("Offline Maps, Geographic Data & Navigation References"))
+        content.add_widget(create_desc_label(
+            "Technical documentation, data sources, and algorithmic references powering MEDICARE's "
+            "offline geographic subsystem, MBTiles access, spatial indexing, and C A* routing."
+        ))
+
+        geo_references_data = [
+            {
+                "title": "OpenStreetMap",
+                "org": "OpenStreetMap Foundation",
+                "purpose": "Open geographic map data used as a source for roads, settlements and geographic features.",
+                "url": "https://www.openstreetmap.org/"
+            },
+            {
+                "title": "OpenStreetMap Copyright and Attribution",
+                "org": "OpenStreetMap Foundation",
+                "purpose": "Data licensing, attribution and usage requirements.",
+                "url": "https://www.openstreetmap.org/copyright"
+            },
+            {
+                "title": "OpenStreetMap Wiki — Downloading Data",
+                "org": "OpenStreetMap Wiki Community",
+                "purpose": "Documentation about obtaining geographic data for offline processing.",
+                "url": "https://wiki.openstreetmap.org/wiki/Downloading_data"
+            },
+            {
+                "title": "MBTiles Specification",
+                "org": "Mapbox / Open Source Community",
+                "purpose": "Reference for the SQLite-based MBTiles format used to store map tiles.",
+                "url": "https://github.com/mapbox/mbtiles-spec"
+            },
+            {
+                "title": "Kivy Garden MapView",
+                "org": "Kivy Community",
+                "purpose": "Documentation for displaying interactive maps and markers in the existing Kivy application.",
+                "url": "https://mapview.readthedocs.io/"
+            },
+            {
+                "title": "SQLite Documentation",
+                "org": "SQLite Consortium",
+                "purpose": "Local database storage and management.",
+                "url": "https://www.sqlite.org/docs.html"
+            },
+            {
+                "title": "Valhalla Routing Engine",
+                "org": "Valhalla Project",
+                "purpose": "Reference for routing algorithms and road-network navigation architecture (evaluated as an architecture candidate; MEDICARE implements a dedicated C A* routing engine for local hospital road graphs).",
+                "url": "https://valhalla.github.io/valhalla/"
+            },
+            {
+                "title": "Android Location Permissions",
+                "org": "Google Android Developers",
+                "purpose": "Reference for Android device location permission handling.",
+                "url": "https://developer.android.com/develop/sensors-and-location/location/permissions"
+            },
+            {
+                "title": "C Language Documentation",
+                "org": "cppreference.com",
+                "purpose": "Reference for C language functionality used in native map processing.",
+                "url": "https://en.cppreference.com/w/c"
+            }
+        ]
+
+        for gref in geo_references_data:
+            g_card = CardBox(orientation="vertical", spacing=6, padding=[14, 12, 14, 12], size_hint_y=None)
+            g_card.bind(minimum_height=g_card.setter("height"))
+
+            g_card.add_widget(WrappedLabel(
+                text=f"[b]{gref['title']}[/b]",
+                font_size="13sp",
+                color=COLOR_NAVY_PRIMARY
+            ))
+            g_card.add_widget(WrappedLabel(
+                text=f"Project / Publisher: [b]{gref['org']}[/b]",
+                font_size="11sp",
+                color=COLOR_TEXT_MUTED
+            ))
+            g_card.add_widget(WrappedLabel(
+                text=f"Purpose: {gref['purpose']}",
+                font_size="12sp",
+                color=COLOR_TEXT_DARK
+            ))
+
+            btn_glink = SecondaryButton(text=f"Open Official Technical Reference ↗", size_hint_y=None, height=32)
+            btn_glink.bind(on_release=lambda x, target_url=gref["url"]: webbrowser.open(target_url))
+            g_card.add_widget(btn_glink)
+
+            content.add_widget(g_card)
 
         scroll.add_widget(content)
         root.add_widget(scroll)

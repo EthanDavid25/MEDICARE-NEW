@@ -55,6 +55,7 @@ All patient data is stored **locally on-device** in an encrypted SQLite database
 |-------|-----------|
 | UI / Application | Python 3.11+ · Kivy 2.3+ |
 | Triage Engine (native) | C99 · ctypes bridge (Python fallbacks included) |
+| Offline Map Engine (native) | C11 (Tile math, 2D Spatial Grid, A* routing, LRU tile cache) |
 | PDF Generation | ReportLab |
 | Database | SQLite3 (stdlib) |
 | Security | cryptography (Fernet) |
@@ -84,7 +85,9 @@ MEDICARE_OFFLINE/
 │   │   └── theme.py               # Color palette and layout helpers
 │   ├── healthcare/
 │   │   ├── location_service.py    # Location resolution + facility search orchestration
-│   │   └── maps_service.py        # Google Maps Places API + Geocoding integration
+│   │   ├── maps_service.py        # Google Maps Places API + Geocoding integration
+│   │   ├── offline_map_service.py # Spatial grid querying & offline hospital routing
+│   │   └── native_map_loader.py   # C map engine ctypes bindings & fallback
 │   ├── datasets/                  # Medical dataset loader (symptoms, rules, questions)
 │   ├── triage/                    # Triage engine (Python side)
 │   ├── patients/                  # Patient profile management
@@ -92,18 +95,20 @@ MEDICARE_OFFLINE/
 │   ├── reports/                   # PDF doctor handover generation
 │   └── security/                  # Field encryption utilities
 ├── native/
-│   ├── include/                   # C header files
-│   ├── src/                       # C source files
-│   └── build/                     # Compiled DLLs (optional)
+│   ├── include/                   # C header files (medicare_geo_types.h, medicare_map_engine.h)
+│   ├── src/                       # C source files (map_tile_engine, geo_engine, routing_engine, validator)
+│   └── build/                     # Compiled DLLs & build scripts (build_map_engine.bat, CMakeLists.txt)
 ├── data/
-│   ├── medical/                   # JSON symptom, rule, and question datasets
+│   ├── medical/                   # JSON clinical & technical geographic reference datasets
 │   └── healthcare/                # Local facility CSV directory
 ├── tests/
-│   ├── python/                    # Python unit tests (17 tests)
+│   ├── python/                    # Python unit tests (27 unit tests across core, UI, and map engines)
 │   └── integration/               # End-to-end tests
 ├── scripts/
+│   ├── benchmark_geo_engine.py    # Native vs Python geographic algorithm benchmark suite
 │   ├── capture_all_screens.py     # Screenshot all 12 screens
 │   ├── verify_demo_readiness.py   # Pre-demo audit checks
+│   ├── push_to_github.bat         # GitHub publish launcher
 │   └── run_app.bat                # Windows convenience launcher
 ├── docs/                          # Architecture guides
 ├── assets/                        # Icons, fonts

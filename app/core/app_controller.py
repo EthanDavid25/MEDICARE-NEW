@@ -17,6 +17,7 @@ from app.triage.engine import TriageEngine
 from app.security.encryption import SecurityManager
 from app.synchronization.sync_service import SyncService
 from app.healthcare.location_service import LocationService
+from app.healthcare.offline_map_service import OfflineMapService
 
 logger = logging.getLogger("medicare.controller")
 
@@ -38,6 +39,7 @@ class AppController:
         self.security: SecurityManager = None
         self.sync_service: SyncService = None
         self.location_service: LocationService = None
+        self.offline_map_service: OfflineMapService = None
         
         # Runtime State
         self.current_patient_id: int = 1
@@ -71,6 +73,7 @@ class AppController:
         self.triage_engine = TriageEngine(self.dataset_loader, self.native, self.db)
         self.sync_service = SyncService(self.config, self.db)
         self.location_service = LocationService(self.dataset_loader)
+        self.offline_map_service = OfflineMapService(self.dataset_loader)
 
         # 6. Ensure default demonstration patient profile exists
         patients = self.patient_service.get_all_patients()

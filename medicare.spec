@@ -37,6 +37,8 @@ hiddenimports = [
     'webbrowser',
     'app.healthcare.location_service',
     'app.healthcare.maps_service',
+    'app.healthcare.native_map_loader',
+    'app.healthcare.offline_map_service',
 ]
 
 a = Analysis(
