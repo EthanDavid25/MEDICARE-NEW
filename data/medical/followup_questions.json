@@ -1,400 +1,974 @@
 {
   "metadata": {
-    "dataset_name": "MEDICARE_ADAPTIVE_FOLLOWUP_QUESTIONS_V2",
-    "version": "2.0.0",
-    "source": "Clinical Triage Decision Framework & Evidence-Based Protocols - Educational",
+    "dataset_name": "MEDICARE_ADAPTIVE_FOLLOWUP_QUESTIONS_V3",
+    "version": "3.0.0",
+    "source": "Clinical Triage Decision Framework & Evidence-Based Protocols - Compact Edition",
     "clinical_review_status": "NOT_REVIEWED - For educational, navigation, and demonstration purposes only. Requires formal clinician review.",
-    "acquired_date": "2026-11-21",
-    "last_updated": "2026-11-21",
-    "record_count": 65
+    "acquired_date": "2026-11-22",
+    "last_updated": "2026-11-22",
+    "record_count": 28,
+    "max_words_per_question": 7
   },
   "questions": [
     {
       "question_id": "QID_CHEST_RADIATION",
-      "symptom_codes": ["SYM_CHEST_PAIN", "SYM_CHEST_TIGHTNESS"],
-      "symptom_categories": ["chest", "cardiovascular"],
-      "applicable_progression": ["ALL"],
+      "symptom_codes": [
+        "SYM_CHEST_PAIN",
+        "SYM_CHEST_TIGHTNESS"
+      ],
+      "symptom_categories": [
+        "chest",
+        "cardiovascular"
+      ],
+      "applicable_progression": [
+        "ALL"
+      ],
       "is_emergency_safety_check": true,
       "category": "emergency_warning",
-      "question_text": "Does the chest discomfort spread to your left arm, jaw, neck, shoulder, or upper back?",
+      "question_text": "Does chest pain spread to arm?",
       "question_type": "single_choice",
       "options": [
-        {"code": "YES", "text": "Yes, radiates to arm, jaw, neck, or back", "urgency_weight": 3, "triggers_emergency": true},
-        {"code": "NO", "text": "No, localized strictly to chest without radiation", "urgency_weight": 0, "triggers_emergency": false}
+        {
+          "code": "YES",
+          "text": "Yes, spreads to arm or jaw",
+          "urgency_weight": 3,
+          "triggers_emergency": true
+        },
+        {
+          "code": "NO",
+          "text": "No, stays in chest",
+          "urgency_weight": 0,
+          "triggers_emergency": false
+        }
       ],
       "is_required": true,
       "triggers_emergency_check": true
     },
     {
       "question_id": "QID_CHEST_ASSOCIATED_DYSPNEA",
-      "symptom_codes": ["SYM_CHEST_PAIN", "SYM_CHEST_TIGHTNESS", "SYM_PALPITATIONS"],
-      "symptom_categories": ["chest", "cardiovascular"],
-      "applicable_progression": ["ALL"],
+      "symptom_codes": [
+        "SYM_CHEST_PAIN",
+        "SYM_CHEST_TIGHTNESS",
+        "SYM_PALPITATIONS"
+      ],
+      "symptom_categories": [
+        "chest",
+        "cardiovascular"
+      ],
+      "applicable_progression": [
+        "ALL"
+      ],
       "is_emergency_safety_check": true,
       "category": "emergency_warning",
-      "question_text": "Are you experiencing shortness of breath, sudden cold sweats, nausea, or dizziness alongside the chest discomfort?",
+      "question_text": "Any shortness of breath or sweating?",
       "question_type": "single_choice",
       "options": [
-        {"code": "YES", "text": "Yes, accompanied by sweating, breathlessness, or nausea", "urgency_weight": 3, "triggers_emergency": true},
-        {"code": "NO", "text": "No other associated systemic symptoms", "urgency_weight": 0, "triggers_emergency": false}
+        {
+          "code": "YES",
+          "text": "Yes, sweating or breathless",
+          "urgency_weight": 3,
+          "triggers_emergency": true
+        },
+        {
+          "code": "NO",
+          "text": "No other symptoms",
+          "urgency_weight": 0,
+          "triggers_emergency": false
+        }
       ],
       "is_required": true,
       "triggers_emergency_check": true
     },
     {
       "question_id": "QID_CHEST_WORSENING_RAPID",
-      "symptom_codes": ["SYM_CHEST_PAIN", "SYM_CHEST_TIGHTNESS"],
-      "symptom_categories": ["chest"],
-      "applicable_progression": ["worsening"],
+      "symptom_codes": [
+        "SYM_CHEST_PAIN",
+        "SYM_CHEST_TIGHTNESS"
+      ],
+      "symptom_categories": [
+        "chest"
+      ],
+      "applicable_progression": [
+        "worsening"
+      ],
       "is_emergency_safety_check": true,
       "category": "progression_worsening",
-      "question_text": "Is the chest pain escalating rapidly in severity or occurring even while sitting completely still at rest?",
+      "question_text": "Is chest pain worsening at rest?",
       "question_type": "single_choice",
       "options": [
-        {"code": "YES", "text": "Yes, intensifying rapidly or occurring at complete rest", "urgency_weight": 3, "triggers_emergency": true},
-        {"code": "NO", "text": "No, only occurs with physical exertion", "urgency_weight": 1, "triggers_emergency": false}
+        {
+          "code": "YES",
+          "text": "Yes, worsening at rest",
+          "urgency_weight": 3,
+          "triggers_emergency": true
+        },
+        {
+          "code": "NO",
+          "text": "No, only with physical effort",
+          "urgency_weight": 1,
+          "triggers_emergency": false
+        }
       ],
       "is_required": true,
       "triggers_emergency_check": true
     },
     {
       "question_id": "QID_CHEST_UNCHANGED_DURATION",
-      "symptom_codes": ["SYM_CHEST_PAIN", "SYM_CHEST_TIGHTNESS"],
-      "symptom_categories": ["chest"],
-      "applicable_progression": ["unchanged"],
+      "symptom_codes": [
+        "SYM_CHEST_PAIN",
+        "SYM_CHEST_TIGHTNESS"
+      ],
+      "symptom_categories": [
+        "chest"
+      ],
+      "applicable_progression": [
+        "unchanged"
+      ],
       "is_emergency_safety_check": false,
       "category": "persistence",
-      "question_text": "For how long has this unchanged chest sensation been steadily present?",
+      "question_text": "How long has chest pain lasted?",
       "question_type": "single_choice",
       "options": [
-        {"code": "CONSTANT_HOURS", "text": "Constant and continuous for more than 30 minutes", "urgency_weight": 2, "triggers_emergency": false},
-        {"code": "INTERMITTENT_DAYS", "text": "Comes and goes intermittently over several days", "urgency_weight": 1, "triggers_emergency": false},
-        {"code": "POSITIONAL", "text": "Changes with body posture, deep breathing, or pressing on ribs", "urgency_weight": 0, "triggers_emergency": false}
+        {
+          "code": "CONSTANT_HOURS",
+          "text": "Constant for over 30 minutes",
+          "urgency_weight": 2,
+          "triggers_emergency": false
+        },
+        {
+          "code": "INTERMITTENT_DAYS",
+          "text": "Comes and goes over days",
+          "urgency_weight": 1,
+          "triggers_emergency": false
+        },
+        {
+          "code": "POSITIONAL",
+          "text": "Changes with posture or breathing",
+          "urgency_weight": 0,
+          "triggers_emergency": false
+        }
       ],
       "is_required": true,
       "triggers_emergency_check": false
     },
     {
       "question_id": "QID_CHEST_IMPROVING_CONFIRM",
-      "symptom_codes": ["SYM_CHEST_PAIN", "SYM_CHEST_TIGHTNESS"],
-      "symptom_categories": ["chest"],
-      "applicable_progression": ["improving"],
+      "symptom_codes": [
+        "SYM_CHEST_PAIN",
+        "SYM_CHEST_TIGHTNESS"
+      ],
+      "symptom_categories": [
+        "chest"
+      ],
+      "applicable_progression": [
+        "improving"
+      ],
       "is_emergency_safety_check": false,
       "category": "improvement_check",
-      "question_text": "Is the improvement steady, or did the pain only temporarily ease before returning?",
+      "question_text": "Is chest pain steadily improving?",
       "question_type": "single_choice",
       "options": [
-        {"code": "CONSISTENT_RESOLVING", "text": "Steadily resolving; no current pain or shortness of breath", "urgency_weight": 0, "triggers_emergency": false},
-        {"code": "FLUCTUATING", "text": "Fluctuates; subsided briefly but still uncomfortable", "urgency_weight": 1, "triggers_emergency": false}
+        {
+          "code": "CONSISTENT_RESOLVING",
+          "text": "Yes, steadily resolving",
+          "urgency_weight": 0,
+          "triggers_emergency": false
+        },
+        {
+          "code": "FLUCTUATING",
+          "text": "No, returns repeatedly",
+          "urgency_weight": 1,
+          "triggers_emergency": false
+        }
       ],
       "is_required": true,
       "triggers_emergency_check": false
     },
     {
       "question_id": "QID_PAIN_ONSET_SUDDEN",
-      "symptom_codes": ["SYM_HEADACHE", "SYM_SUDDEN_SEVERE_HEADACHE", "SYM_CHEST_PAIN", "SYM_ABDOMINAL_PAIN"],
-      "symptom_categories": ["headache", "chest", "abdominal"],
-      "applicable_progression": ["ALL"],
+      "symptom_codes": [
+        "SYM_HEADACHE",
+        "SYM_SUDDEN_SEVERE_HEADACHE",
+        "SYM_CHEST_PAIN",
+        "SYM_ABDOMINAL_PAIN"
+      ],
+      "symptom_categories": [
+        "headache",
+        "chest",
+        "abdominal"
+      ],
+      "applicable_progression": [
+        "ALL"
+      ],
       "is_emergency_safety_check": true,
       "category": "emergency_warning",
-      "question_text": "Did this pain hit suddenly like a thunderclap, reaching peak agony in seconds (worst of your life)?",
+      "question_text": "Did severe pain start suddenly?",
       "question_type": "single_choice",
       "options": [
-        {"code": "YES", "text": "Yes, explosive instant peak (thunderclap headache / catastrophic pain)", "urgency_weight": 3, "triggers_emergency": true},
-        {"code": "NO", "text": "No, it started gradually or mildly and built up over time", "urgency_weight": 0, "triggers_emergency": false}
+        {
+          "code": "YES",
+          "text": "Yes, sudden peak in seconds",
+          "urgency_weight": 3,
+          "triggers_emergency": true
+        },
+        {
+          "code": "NO",
+          "text": "No, started gradually",
+          "urgency_weight": 0,
+          "triggers_emergency": false
+        }
       ],
       "is_required": true,
       "triggers_emergency_check": true
     },
     {
       "question_id": "QID_HEADACHE_STIFF_NECK",
-      "symptom_codes": ["SYM_HEADACHE", "SYM_FEVER"],
-      "symptom_categories": ["headache", "neurological"],
-      "applicable_progression": ["ALL"],
+      "symptom_codes": [
+        "SYM_HEADACHE",
+        "SYM_FEVER"
+      ],
+      "symptom_categories": [
+        "headache",
+        "neurological"
+      ],
+      "applicable_progression": [
+        "ALL"
+      ],
       "is_emergency_safety_check": true,
       "category": "emergency_warning",
-      "question_text": "Can you comfortably bend your head forward to touch your chin directly to your chest?",
+      "question_text": "Can your chin touch your chest?",
       "question_type": "single_choice",
       "options": [
-        {"code": "NO", "text": "No, agonizing neck stiffness prevents chin from touching chest", "urgency_weight": 3, "triggers_emergency": true},
-        {"code": "YES", "text": "Yes, neck bends freely without severe pain or resistance", "urgency_weight": 0, "triggers_emergency": false}
+        {
+          "code": "NO",
+          "text": "No, neck is too stiff",
+          "urgency_weight": 3,
+          "triggers_emergency": true
+        },
+        {
+          "code": "YES",
+          "text": "Yes, neck bends freely",
+          "urgency_weight": 0,
+          "triggers_emergency": false
+        }
       ],
       "is_required": true,
       "triggers_emergency_check": true
     },
     {
       "question_id": "QID_HEADACHE_WORSENING_SIGNS",
-      "symptom_codes": ["SYM_HEADACHE"],
-      "symptom_categories": ["headache"],
-      "applicable_progression": ["worsening"],
+      "symptom_codes": [
+        "SYM_HEADACHE"
+      ],
+      "symptom_categories": [
+        "headache"
+      ],
+      "applicable_progression": [
+        "worsening"
+      ],
       "is_emergency_safety_check": true,
       "category": "progression_worsening",
-      "question_text": "As the headache worsens, are you noticing new confusion, memory loss, repeated vomiting, or visual blackout?",
+      "question_text": "Any confusion, vomiting, or vision loss?",
       "question_type": "single_choice",
       "options": [
-        {"code": "YES", "text": "Yes, experiencing confusion, repeated vomiting, or vision loss", "urgency_weight": 3, "triggers_emergency": true},
-        {"code": "NO", "text": "No neurological confusion or recurrent vomiting", "urgency_weight": 1, "triggers_emergency": false}
+        {
+          "code": "YES",
+          "text": "Yes, confusion, vomiting or blackout",
+          "urgency_weight": 3,
+          "triggers_emergency": true
+        },
+        {
+          "code": "NO",
+          "text": "No confusion or vomiting",
+          "urgency_weight": 1,
+          "triggers_emergency": false
+        }
       ],
       "is_required": true,
       "triggers_emergency_check": true
     },
     {
       "question_id": "QID_HEADACHE_UNCHANGED_NATURE",
-      "symptom_codes": ["SYM_HEADACHE"],
-      "symptom_categories": ["headache"],
-      "applicable_progression": ["unchanged"],
+      "symptom_codes": [
+        "SYM_HEADACHE"
+      ],
+      "symptom_categories": [
+        "headache"
+      ],
+      "applicable_progression": [
+        "unchanged"
+      ],
       "is_emergency_safety_check": false,
       "category": "character",
-      "question_text": "Does this unchanged headache resemble your usual past headaches or migraines?",
+      "question_text": "Is this like past headaches?",
       "question_type": "single_choice",
       "options": [
-        {"code": "USUAL_PATTERN", "text": "Yes, feels similar to my regular tension headache or migraine", "urgency_weight": 0, "triggers_emergency": false},
-        {"code": "NEW_UNUSUAL", "text": "No, this is completely new or different in character", "urgency_weight": 1, "triggers_emergency": false}
+        {
+          "code": "SIMILAR_NORMAL",
+          "text": "Yes, familiar usual headache",
+          "urgency_weight": 0,
+          "triggers_emergency": false
+        },
+        {
+          "code": "NOVEL_DIFFERENT",
+          "text": "No, feels completely new",
+          "urgency_weight": 1,
+          "triggers_emergency": false
+        }
       ],
       "is_required": true,
       "triggers_emergency_check": false
     },
     {
-      "question_id": "QID_STROKE_FAST_FACE",
-      "symptom_codes": ["SYM_CONFUSION", "SYM_DIZZINESS", "SYM_NUMBNESS", "SYM_WEAKNESS_LIMB"],
-      "symptom_categories": ["neurological"],
-      "applicable_progression": ["ALL"],
-      "is_emergency_safety_check": true,
-      "category": "emergency_warning",
-      "question_text": "Is there sudden drooping on one side of the face or an uneven, crooked smile?",
+      "question_id": "QID_HEADACHE_VISION",
+      "symptom_codes": [
+        "SYM_HEADACHE",
+        "SYM_DIZZINESS"
+      ],
+      "symptom_categories": [
+        "headache",
+        "neurological"
+      ],
+      "applicable_progression": [
+        "ALL"
+      ],
+      "is_emergency_safety_check": false,
+      "category": "neurological",
+      "question_text": "Are you having vision changes?",
       "question_type": "single_choice",
       "options": [
-        {"code": "YES", "text": "Yes, facial drooping or asymmetry present", "urgency_weight": 3, "triggers_emergency": true},
-        {"code": "NO", "text": "No facial drooping; smile is completely symmetrical", "urgency_weight": 0, "triggers_emergency": false}
+        {
+          "code": "YES",
+          "text": "Yes, blurry or double vision",
+          "urgency_weight": 2,
+          "triggers_emergency": false
+        },
+        {
+          "code": "NO",
+          "text": "No vision problems",
+          "urgency_weight": 0,
+          "triggers_emergency": false
+        }
+      ],
+      "is_required": false,
+      "triggers_emergency_check": false
+    },
+    {
+      "question_id": "QID_STROKE_FAST_FACE",
+      "symptom_codes": [
+        "SYM_CONFUSION",
+        "SYM_DIZZINESS",
+        "SYM_NUMBNESS",
+        "SYM_WEAKNESS_LIMB"
+      ],
+      "symptom_categories": [
+        "neurological"
+      ],
+      "applicable_progression": [
+        "ALL"
+      ],
+      "is_emergency_safety_check": true,
+      "category": "emergency_warning",
+      "question_text": "Is one side of face drooping?",
+      "question_type": "single_choice",
+      "options": [
+        {
+          "code": "YES",
+          "text": "Yes, face or smile droops",
+          "urgency_weight": 3,
+          "triggers_emergency": true
+        },
+        {
+          "code": "NO",
+          "text": "No facial drooping",
+          "urgency_weight": 0,
+          "triggers_emergency": false
+        }
       ],
       "is_required": true,
       "triggers_emergency_check": true
     },
     {
       "question_id": "QID_STROKE_FAST_ARM",
-      "symptom_codes": ["SYM_CONFUSION", "SYM_DIZZINESS", "SYM_NUMBNESS", "SYM_WEAKNESS_LIMB"],
-      "symptom_categories": ["neurological"],
-      "applicable_progression": ["ALL"],
+      "symptom_codes": [
+        "SYM_CONFUSION",
+        "SYM_DIZZINESS",
+        "SYM_NUMBNESS",
+        "SYM_WEAKNESS_LIMB"
+      ],
+      "symptom_categories": [
+        "neurological"
+      ],
+      "applicable_progression": [
+        "ALL"
+      ],
       "is_emergency_safety_check": true,
       "category": "emergency_warning",
-      "question_text": "When raising both arms forward for 10 seconds, does one arm drift downward or feel paralyzed?",
+      "question_text": "Does one arm drift downwards?",
       "question_type": "single_choice",
       "options": [
-        {"code": "YES", "text": "Yes, weakness or downward drift in one arm", "urgency_weight": 3, "triggers_emergency": true},
-        {"code": "NO", "text": "Both arms maintain equal strength and position", "urgency_weight": 0, "triggers_emergency": false}
+        {
+          "code": "YES",
+          "text": "Yes, one arm is weak",
+          "urgency_weight": 3,
+          "triggers_emergency": true
+        },
+        {
+          "code": "NO",
+          "text": "No weakness in either arm",
+          "urgency_weight": 0,
+          "triggers_emergency": false
+        }
       ],
       "is_required": true,
       "triggers_emergency_check": true
     },
     {
       "question_id": "QID_STROKE_FAST_SPEECH",
-      "symptom_codes": ["SYM_CONFUSION", "SYM_HEADACHE", "SYM_DIZZINESS"],
-      "symptom_categories": ["neurological"],
-      "applicable_progression": ["ALL"],
+      "symptom_codes": [
+        "SYM_CONFUSION",
+        "SYM_HEADACHE",
+        "SYM_DIZZINESS"
+      ],
+      "symptom_categories": [
+        "neurological"
+      ],
+      "applicable_progression": [
+        "ALL"
+      ],
       "is_emergency_safety_check": true,
       "category": "emergency_warning",
-      "question_text": "Is speech slurred, garbled, or are you unable to find words or understand spoken language?",
+      "question_text": "Is speech slurred or difficult?",
       "question_type": "single_choice",
       "options": [
-        {"code": "YES", "text": "Yes, slurred speech or inability to formulate words", "urgency_weight": 3, "triggers_emergency": true},
-        {"code": "NO", "text": "Speech and comprehension are completely normal", "urgency_weight": 0, "triggers_emergency": false}
+        {
+          "code": "YES",
+          "text": "Yes, speech is slurred",
+          "urgency_weight": 3,
+          "triggers_emergency": true
+        },
+        {
+          "code": "NO",
+          "text": "No, speaking normally",
+          "urgency_weight": 0,
+          "triggers_emergency": false
+        }
       ],
       "is_required": true,
       "triggers_emergency_check": true
     },
     {
       "question_id": "QID_RESP_SEVERITY",
-      "symptom_codes": ["SYM_SHORTNESS_OF_BREATH", "SYM_COUGH", "SYM_WHEEZING", "SYM_DIFFICULTY_BREATHING"],
-      "symptom_categories": ["respiratory"],
-      "applicable_progression": ["ALL"],
+      "symptom_codes": [
+        "SYM_SHORTNESS_OF_BREATH",
+        "SYM_COUGH",
+        "SYM_WHEEZING",
+        "SYM_DIFFICULTY_BREATHING"
+      ],
+      "symptom_categories": [
+        "respiratory"
+      ],
+      "applicable_progression": [
+        "ALL"
+      ],
       "is_emergency_safety_check": true,
       "category": "emergency_warning",
-      "question_text": "How severely is breathing impaired when attempting to speak?",
+      "question_text": "Can you speak full sentences?",
       "question_type": "single_choice",
       "options": [
-        {"code": "SEVERE", "text": "Can only manage single words or gasps between breaths (Severe)", "urgency_weight": 3, "triggers_emergency": true},
-        {"code": "MODERATE", "text": "Can speak in short phrases but not full sentences", "urgency_weight": 2, "triggers_emergency": false},
-        {"code": "MILD", "text": "Can speak in full continuous sentences without difficulty", "urgency_weight": 0, "triggers_emergency": false}
+        {
+          "code": "SEVERE",
+          "text": "No, only single words",
+          "urgency_weight": 3,
+          "triggers_emergency": true
+        },
+        {
+          "code": "MODERATE",
+          "text": "Short phrases with pauses",
+          "urgency_weight": 2,
+          "triggers_emergency": false
+        },
+        {
+          "code": "MILD",
+          "text": "Yes, full sentences easily",
+          "urgency_weight": 0,
+          "triggers_emergency": false
+        }
       ],
       "is_required": true,
       "triggers_emergency_check": true
     },
     {
       "question_id": "QID_RESP_STRIDOR_LIPS",
-      "symptom_codes": ["SYM_SHORTNESS_OF_BREATH", "SYM_ALLERGIC_REACTION"],
-      "symptom_categories": ["respiratory"],
-      "applicable_progression": ["ALL"],
+      "symptom_codes": [
+        "SYM_SHORTNESS_OF_BREATH",
+        "SYM_ALLERGIC_REACTION"
+      ],
+      "symptom_categories": [
+        "respiratory"
+      ],
+      "applicable_progression": [
+        "ALL"
+      ],
       "is_emergency_safety_check": true,
       "category": "emergency_warning",
-      "question_text": "Is there visible swelling of the lips, tongue, or throat, or a high-pitched crowing sound when breathing in (stridor)?",
+      "question_text": "Any lip swelling or stridor sound?",
       "question_type": "single_choice",
       "options": [
-        {"code": "YES", "text": "Yes, tongue/lip swelling or audible stridor present", "urgency_weight": 3, "triggers_emergency": true},
-        {"code": "NO", "text": "No airway noise or oral/facial swelling", "urgency_weight": 0, "triggers_emergency": false}
+        {
+          "code": "YES",
+          "text": "Yes, lip swelling or stridor",
+          "urgency_weight": 3,
+          "triggers_emergency": true
+        },
+        {
+          "code": "NO",
+          "text": "No swelling or noisy breathing",
+          "urgency_weight": 0,
+          "triggers_emergency": false
+        }
       ],
       "is_required": true,
       "triggers_emergency_check": true
     },
     {
       "question_id": "QID_RESP_WORSENING_SPEED",
-      "symptom_codes": ["SYM_SHORTNESS_OF_BREATH", "SYM_WHEEZING"],
-      "symptom_categories": ["respiratory"],
-      "applicable_progression": ["worsening"],
+      "symptom_codes": [
+        "SYM_SHORTNESS_OF_BREATH",
+        "SYM_WHEEZING"
+      ],
+      "symptom_categories": [
+        "respiratory"
+      ],
+      "applicable_progression": [
+        "worsening"
+      ],
       "is_emergency_safety_check": true,
       "category": "progression_worsening",
-      "question_text": "Did this worsening breathlessness develop abruptly within the last hour or following travel/surgery?",
+      "question_text": "Did breathlessness start within an hour?",
       "question_type": "single_choice",
       "options": [
-        {"code": "YES", "text": "Yes, sudden onset within past hour or recent flight/immobilization", "urgency_weight": 3, "triggers_emergency": true},
-        {"code": "NO", "text": "No, gradual development over days with a common cold", "urgency_weight": 1, "triggers_emergency": false}
+        {
+          "code": "YES",
+          "text": "Yes, sudden onset within hour",
+          "urgency_weight": 3,
+          "triggers_emergency": true
+        },
+        {
+          "code": "NO",
+          "text": "No, gradual over days",
+          "urgency_weight": 1,
+          "triggers_emergency": false
+        }
       ],
       "is_required": true,
       "triggers_emergency_check": true
     },
     {
       "question_id": "QID_FEVER_TEMP",
-      "symptom_codes": ["SYM_FEVER", "SYM_CHILLS"],
-      "symptom_categories": ["fever"],
-      "applicable_progression": ["ALL"],
+      "symptom_codes": [
+        "SYM_FEVER",
+        "SYM_CHILLS"
+      ],
+      "symptom_categories": [
+        "fever"
+      ],
+      "applicable_progression": [
+        "ALL"
+      ],
       "is_emergency_safety_check": false,
       "category": "fever",
-      "question_text": "What is the highest measured body temperature, if a thermometer was used?",
+      "question_text": "How high is your fever?",
       "question_type": "single_choice",
       "options": [
-        {"code": "HIGH_GRADE", "text": "High fever: Above 39.5°C (103.1°F)", "urgency_weight": 2, "triggers_emergency": false},
-        {"code": "MODERATE", "text": "Moderate fever: 38.5°C to 39.5°C (101.3°F to 103°F)", "urgency_weight": 1, "triggers_emergency": false},
-        {"code": "LOW_GRADE", "text": "Low-grade: 37.5°C to 38.4°C (99.5°F to 101.1°F)", "urgency_weight": 0, "triggers_emergency": false},
-        {"code": "NOT_MEASURED", "text": "Felt warm but temperature was not measured", "urgency_weight": 0, "triggers_emergency": false}
+        {
+          "code": "HIGH_GRADE",
+          "text": "High: Above 102\u00b0F (38.9\u00b0C)",
+          "urgency_weight": 2,
+          "triggers_emergency": false
+        },
+        {
+          "code": "MODERATE",
+          "text": "Moderate: 100\u00b0F to 102\u00b0F",
+          "urgency_weight": 1,
+          "triggers_emergency": false
+        },
+        {
+          "code": "MILD_OR_UNMEASURED",
+          "text": "Mild or unmeasured",
+          "urgency_weight": 0,
+          "triggers_emergency": false
+        }
       ],
       "is_required": true,
       "triggers_emergency_check": false
     },
     {
       "question_id": "QID_FEVER_WORSENING_DAYS",
-      "symptom_codes": ["SYM_FEVER"],
-      "symptom_categories": ["fever"],
-      "applicable_progression": ["worsening"],
+      "symptom_codes": [
+        "SYM_FEVER"
+      ],
+      "symptom_categories": [
+        "fever"
+      ],
+      "applicable_progression": [
+        "worsening"
+      ],
       "is_emergency_safety_check": false,
       "category": "progression_worsening",
-      "question_text": "How many days has the fever been actively spiking or worsening?",
+      "question_text": "How many days of fever?",
       "question_type": "single_choice",
       "options": [
-        {"code": "OVER_3_DAYS", "text": "More than 3 days of persistent worsening fever", "urgency_weight": 2, "triggers_emergency": false},
-        {"code": "1_TO_2_DAYS", "text": "Started within the past 1-2 days", "urgency_weight": 1, "triggers_emergency": false}
+        {
+          "code": "OVER_3_DAYS",
+          "text": "More than 3 days",
+          "urgency_weight": 2,
+          "triggers_emergency": false
+        },
+        {
+          "code": "1_TO_2_DAYS",
+          "text": "Past 1 to 2 days",
+          "urgency_weight": 1,
+          "triggers_emergency": false
+        }
       ],
       "is_required": true,
       "triggers_emergency_check": false
     },
     {
       "question_id": "QID_FEVER_IMMUNO_RISK",
-      "symptom_codes": ["SYM_FEVER", "SYM_FATIGUE"],
-      "symptom_categories": ["fever"],
-      "applicable_progression": ["ALL"],
+      "symptom_codes": [
+        "SYM_FEVER",
+        "SYM_FATIGUE"
+      ],
+      "symptom_categories": [
+        "fever"
+      ],
+      "applicable_progression": [
+        "ALL"
+      ],
       "is_emergency_safety_check": false,
       "category": "risk_factor",
-      "question_text": "Are you currently undergoing cancer chemotherapy or taking immune-suppressing medications?",
+      "question_text": "Are you taking immunosuppressive medicine?",
       "question_type": "single_choice",
       "options": [
-        {"code": "YES", "text": "Yes, receiving chemotherapy or immunosuppressive drugs", "urgency_weight": 2, "triggers_emergency": false},
-        {"code": "NO", "text": "No known immune system suppression", "urgency_weight": 0, "triggers_emergency": false}
+        {
+          "code": "YES",
+          "text": "Yes, chemotherapy or immunosuppressants",
+          "urgency_weight": 2,
+          "triggers_emergency": false
+        },
+        {
+          "code": "NO",
+          "text": "No immune suppression",
+          "urgency_weight": 0,
+          "triggers_emergency": false
+        }
       ],
       "is_required": false,
       "triggers_emergency_check": false
     },
     {
       "question_id": "QID_ABD_RIGIDITY",
-      "symptom_codes": ["SYM_ABDOMINAL_PAIN"],
-      "symptom_categories": ["abdominal"],
-      "applicable_progression": ["ALL"],
+      "symptom_codes": [
+        "SYM_ABDOMINAL_PAIN"
+      ],
+      "symptom_categories": [
+        "abdominal"
+      ],
+      "applicable_progression": [
+        "ALL"
+      ],
       "is_emergency_safety_check": true,
       "category": "emergency_warning",
-      "question_text": "Is your abdomen hard and rigid to the touch like a wooden board, or too agonizing to touch gently?",
+      "question_text": "Is your belly hard or rigid?",
       "question_type": "single_choice",
       "options": [
-        {"code": "YES", "text": "Yes, rigid board-like or unbearable to light touch", "urgency_weight": 3, "triggers_emergency": true},
-        {"code": "NO", "text": "Soft to touch; tolerable on gentle pressure", "urgency_weight": 0, "triggers_emergency": false}
+        {
+          "code": "YES",
+          "text": "Yes, hard like a board",
+          "urgency_weight": 3,
+          "triggers_emergency": true
+        },
+        {
+          "code": "NO",
+          "text": "No, belly feels soft",
+          "urgency_weight": 0,
+          "triggers_emergency": false
+        }
       ],
       "is_required": true,
       "triggers_emergency_check": true
     },
     {
       "question_id": "QID_BLEEDING_SIGNS",
-      "symptom_codes": ["SYM_NAUSEA_VOMITING", "SYM_ABDOMINAL_PAIN", "SYM_DIARRHEA"],
-      "symptom_categories": ["digestive", "abdominal"],
-      "applicable_progression": ["ALL"],
+      "symptom_codes": [
+        "SYM_NAUSEA_VOMITING",
+        "SYM_ABDOMINAL_PAIN",
+        "SYM_DIARRHEA"
+      ],
+      "symptom_categories": [
+        "digestive",
+        "abdominal"
+      ],
+      "applicable_progression": [
+        "ALL"
+      ],
       "is_emergency_safety_check": true,
       "category": "emergency_warning",
-      "question_text": "Have you vomited red blood or dark coffee-ground material, or passed black sticky tarry stools?",
+      "question_text": "Any vomiting blood or black stool?",
       "question_type": "single_choice",
       "options": [
-        {"code": "YES", "text": "Yes, blood in vomit or jet-black tarry stools", "urgency_weight": 3, "triggers_emergency": true},
-        {"code": "NO", "text": "No blood in vomit or bowel movements", "urgency_weight": 0, "triggers_emergency": false}
+        {
+          "code": "YES",
+          "text": "Yes, blood or black stool",
+          "urgency_weight": 3,
+          "triggers_emergency": true
+        },
+        {
+          "code": "NO",
+          "text": "No blood seen",
+          "urgency_weight": 0,
+          "triggers_emergency": false
+        }
       ],
       "is_required": true,
       "triggers_emergency_check": true
     },
     {
       "question_id": "QID_DIGEST_DEHYDRATION",
-      "symptom_codes": ["SYM_NAUSEA_VOMITING", "SYM_DIARRHEA"],
-      "symptom_categories": ["digestive"],
-      "applicable_progression": ["worsening", "unchanged"],
+      "symptom_codes": [
+        "SYM_NAUSEA_VOMITING",
+        "SYM_DIARRHEA"
+      ],
+      "symptom_categories": [
+        "digestive"
+      ],
+      "applicable_progression": [
+        "worsening",
+        "unchanged"
+      ],
       "is_emergency_safety_check": false,
       "category": "hydration",
-      "question_text": "Are you unable to keep fluids down for over 12 hours, or feeling dizzy when standing up?",
+      "question_text": "Can you keep fluids down?",
       "question_type": "single_choice",
       "options": [
-        {"code": "YES", "text": "Yes, unable to retain fluids / feeling faint on standing", "urgency_weight": 2, "triggers_emergency": false},
-        {"code": "NO", "text": "Able to drink fluids and urinating normally", "urgency_weight": 0, "triggers_emergency": false}
+        {
+          "code": "YES",
+          "text": "No, unable to keep fluids",
+          "urgency_weight": 2,
+          "triggers_emergency": false
+        },
+        {
+          "code": "NO",
+          "text": "Yes, drinking normally",
+          "urgency_weight": 0,
+          "triggers_emergency": false
+        }
       ],
       "is_required": true,
       "triggers_emergency_check": false
     },
     {
       "question_id": "QID_DIZZINESS_SYNCOPE",
-      "symptom_codes": ["SYM_DIZZINESS", "SYM_PALPITATIONS"],
-      "symptom_categories": ["dizziness", "neurological"],
-      "applicable_progression": ["ALL"],
+      "symptom_codes": [
+        "SYM_DIZZINESS",
+        "SYM_PALPITATIONS"
+      ],
+      "symptom_categories": [
+        "dizziness",
+        "neurological"
+      ],
+      "applicable_progression": [
+        "ALL"
+      ],
       "is_emergency_safety_check": true,
       "category": "emergency_warning",
-      "question_text": "Did you completely lose consciousness, black out, or collapse to the floor?",
+      "question_text": "Did you faint or collapse?",
       "question_type": "single_choice",
       "options": [
-        {"code": "YES", "text": "Yes, passed out / lost consciousness", "urgency_weight": 3, "triggers_emergency": true},
-        {"code": "NO", "text": "Felt unsteady or lightheaded, but stayed conscious", "urgency_weight": 0, "triggers_emergency": false}
+        {
+          "code": "YES",
+          "text": "Yes, blacked out or fainted",
+          "urgency_weight": 3,
+          "triggers_emergency": true
+        },
+        {
+          "code": "NO",
+          "text": "No, only felt dizzy",
+          "urgency_weight": 0,
+          "triggers_emergency": false
+        }
       ],
       "is_required": true,
       "triggers_emergency_check": true
     },
     {
       "question_id": "QID_MSK_DEFORMITY_WEIGHT",
-      "symptom_codes": ["SYM_JOINT_PAIN", "SYM_BACK_PAIN", "SYM_NECK_PAIN"],
-      "symptom_categories": ["musculoskeletal"],
-      "applicable_progression": ["ALL"],
+      "symptom_codes": [
+        "SYM_JOINT_PAIN",
+        "SYM_BACK_PAIN",
+        "SYM_NECK_PAIN"
+      ],
+      "symptom_categories": [
+        "musculoskeletal"
+      ],
+      "applicable_progression": [
+        "ALL"
+      ],
       "is_emergency_safety_check": false,
       "category": "function",
-      "question_text": "Is there visible bone deformity, inability to bear any weight on the limb, or numbness in the groin?",
+      "question_text": "Can you bear weight on limb?",
       "question_type": "single_choice",
       "options": [
-        {"code": "YES", "text": "Yes, visible deformity, unable to bear weight, or numbness in groin", "urgency_weight": 2, "triggers_emergency": false},
-        {"code": "NO", "text": "No deformity or groin numbness; can bear partial weight", "urgency_weight": 0, "triggers_emergency": false}
+        {
+          "code": "YES",
+          "text": "No, cannot bear any weight",
+          "urgency_weight": 2,
+          "triggers_emergency": false
+        },
+        {
+          "code": "NO",
+          "text": "Yes, can bear partial weight",
+          "urgency_weight": 0,
+          "triggers_emergency": false
+        }
       ],
       "is_required": true,
       "triggers_emergency_check": false
     },
     {
       "question_id": "QID_GENERAL_IMPROVEMENT_NEW_SIGNS",
-      "symptom_codes": ["ALL"],
-      "symptom_categories": ["ALL"],
-      "applicable_progression": ["improving"],
+      "symptom_codes": [
+        "ALL"
+      ],
+      "symptom_categories": [
+        "ALL"
+      ],
+      "applicable_progression": [
+        "improving"
+      ],
       "is_emergency_safety_check": false,
       "category": "improvement_check",
-      "question_text": "While your main symptom is improving, have any NEW unexplained symptoms appeared?",
+      "question_text": "Any new symptoms appearing?",
       "question_type": "single_choice",
       "options": [
-        {"code": "NO_NEW_SYMPTOMS", "text": "No, recovery is smooth with no new complaints", "urgency_weight": 0, "triggers_emergency": false},
-        {"code": "NEW_SYMPTOMS_PRESENT", "text": "Yes, experiencing a new different symptom", "urgency_weight": 1, "triggers_emergency": false}
+        {
+          "code": "NEW_SYMPTOMS_PRESENT",
+          "text": "Yes, new symptoms started",
+          "urgency_weight": 1,
+          "triggers_emergency": false
+        },
+        {
+          "code": "NO_NEW_SYMPTOMS",
+          "text": "No, feeling steadily better",
+          "urgency_weight": 0,
+          "triggers_emergency": false
+        }
       ],
       "is_required": true,
+      "triggers_emergency_check": false
+    },
+    {
+      "question_id": "QID_CALF_SWELLING",
+      "symptom_codes": [
+        "SYM_LEG_PAIN",
+        "SYM_SWELLING"
+      ],
+      "symptom_categories": [
+        "musculoskeletal",
+        "cardiovascular"
+      ],
+      "applicable_progression": [
+        "ALL"
+      ],
+      "is_emergency_safety_check": false,
+      "category": "risk_factor",
+      "question_text": "Is one calf swollen and warm?",
+      "question_type": "single_choice",
+      "options": [
+        {
+          "code": "YES",
+          "text": "Yes, calf is swollen or red",
+          "urgency_weight": 2,
+          "triggers_emergency": false
+        },
+        {
+          "code": "NO",
+          "text": "No calf swelling",
+          "urgency_weight": 0,
+          "triggers_emergency": false
+        }
+      ],
+      "is_required": false,
+      "triggers_emergency_check": false
+    },
+    {
+      "question_id": "QID_PREGNANCY_STATUS",
+      "symptom_codes": [
+        "SYM_ABDOMINAL_PAIN",
+        "SYM_PELVIC_PAIN"
+      ],
+      "symptom_categories": [
+        "abdominal"
+      ],
+      "applicable_progression": [
+        "ALL"
+      ],
+      "is_emergency_safety_check": false,
+      "category": "risk_factor",
+      "question_text": "Could you currently be pregnant?",
+      "question_type": "single_choice",
+      "options": [
+        {
+          "code": "PREGNANT",
+          "text": "Yes or possibly pregnant",
+          "urgency_weight": 2,
+          "triggers_emergency": false
+        },
+        {
+          "code": "NOT_PREGNANT",
+          "text": "No, definitely not pregnant",
+          "urgency_weight": 0,
+          "triggers_emergency": false
+        }
+      ],
+      "is_required": false,
+      "triggers_emergency_check": false
+    },
+    {
+      "question_id": "QID_TRAUMA_HEAD",
+      "symptom_codes": [
+        "SYM_HEADACHE",
+        "SYM_DIZZINESS",
+        "SYM_CONFUSION"
+      ],
+      "symptom_categories": [
+        "headache",
+        "neurological"
+      ],
+      "applicable_progression": [
+        "ALL"
+      ],
+      "is_emergency_safety_check": false,
+      "category": "trauma",
+      "question_text": "Did you suffer a head injury?",
+      "question_type": "single_choice",
+      "options": [
+        {
+          "code": "YES",
+          "text": "Yes, recent blow to head",
+          "urgency_weight": 2,
+          "triggers_emergency": false
+        },
+        {
+          "code": "NO",
+          "text": "No head injury",
+          "urgency_weight": 0,
+          "triggers_emergency": false
+        }
+      ],
+      "is_required": false,
       "triggers_emergency_check": false
     }
   ]

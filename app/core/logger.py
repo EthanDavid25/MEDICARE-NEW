@@ -16,6 +16,11 @@ def setup_logger(log_path: Path, log_level: str = "INFO") -> logging.Logger:
     logger.setLevel(getattr(logging, log_level.upper(), logging.INFO))
 
     if logger.handlers:
+        for handler in logger.handlers:
+            try:
+                handler.close()
+            except Exception:
+                pass
         logger.handlers.clear()
 
     formatter = logging.Formatter(

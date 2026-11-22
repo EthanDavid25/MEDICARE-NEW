@@ -130,6 +130,15 @@ class DatasetLoader:
     def get_warning_signs(self) -> list[dict]:
         return self._warning_signs
 
+    def get_followup_questions(self) -> list[dict]:
+        """Returns all loaded followup questions."""
+        return self._followup_questions
+
+    def get_question_engine(self):
+        """Returns an instance of AdaptiveQuestionEngine."""
+        from app.triage.question_engine import AdaptiveQuestionEngine
+        return AdaptiveQuestionEngine(self)
+
     def get_followup_questions_for_symptoms(
         self, symptom_codes: list[str], progression: str = "ALL", severity: int = 5
     ) -> list[dict]:

@@ -63,6 +63,7 @@ hiddenimports = [
     'app.healthcare.maps_service',
     'app.healthcare.native_map_loader',
     'app.healthcare.offline_map_service',
+    'app.triage.question_engine', 'app.triage.engine', 'app.triage.result', 'app.triage.explainer',
     'app.ui.screens', 'app.ui.app', 'app.ui.components',
 ]
 

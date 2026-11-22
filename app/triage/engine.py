@@ -42,6 +42,15 @@ class TriageEngine:
         
         logger.info("Initiating triage assessment for patient %s (Session %s)", patient_id, session_id)
 
+        # Normalize followup answers and map rule aliases
+        followup_answers = dict(followup_answers or {})
+        if "QID_RESP_STRIDOR_LIPS" in followup_answers and "QID_RESP_STRIDOR" not in followup_answers:
+            followup_answers["QID_RESP_STRIDOR"] = followup_answers["QID_RESP_STRIDOR_LIPS"]
+        if "QID_FEVER_IMMUNO_RISK" in followup_answers and "QID_IMMUNOSUPPRESSED" not in followup_answers:
+            followup_answers["QID_IMMUNOSUPPRESSED"] = followup_answers["QID_FEVER_IMMUNO_RISK"]
+        if "QID_DIZZINESS_SYNCOPE" in followup_answers and "QID_SYNCOPE_EPISODE" not in followup_answers:
+            followup_answers["QID_SYNCOPE_EPISODE"] = followup_answers["QID_DIZZINESS_SYNCOPE"]
+
         # 1. Clean & normalize symptoms
         processed_symptoms = []
         for s in symptoms:
