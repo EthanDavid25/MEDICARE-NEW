@@ -28,7 +28,8 @@ from app.ui.components import TopHeaderBar
 from app.ui.screens import (
     DashboardScreen, PatientProfileScreen, SymptomAssessmentScreen,
     FollowupQuestionsScreen, TriageResultsScreen, PatientHistoryScreen,
-    SymptomProgressionScreen, DoctorHandoverScreen, HealthcareDirectoryScreen,
+    SymptomProgressionScreen, DoctorHandoverScreen, HandoverDownloadsScreen,
+    PDFViewerScreen, HealthcareDirectoryScreen,
     MedicalReferencesScreen, SettingsScreen, AboutScreen
 )
 
@@ -106,6 +107,8 @@ class MedicareKivyApp(App):
             "patient_history": PatientHistoryScreen(self.controller, name="patient_history"),
             "symptom_progression": SymptomProgressionScreen(self.controller, name="symptom_progression"),
             "doctor_handover": DoctorHandoverScreen(self.controller, name="doctor_handover"),
+            "handover_downloads": HandoverDownloadsScreen(self.controller, name="handover_downloads"),
+            "pdf_viewer": PDFViewerScreen(self.controller, name="pdf_viewer"),
             "healthcare_directory": HealthcareDirectoryScreen(self.controller, name="healthcare_directory"),
             "medical_references": MedicalReferencesScreen(self.controller, name="medical_references"),
             "settings": SettingsScreen(self.controller, name="settings"),
@@ -205,16 +208,16 @@ class MedicareKivyApp(App):
         self.nav_box.bind(minimum_height=_update_anchor_height)
 
         nav_items = [
-            ("dashboard", "🏠  Dashboard"),
-            ("symptom_assessment", "🩺  New Assessment"),
-            ("patient_profile", "👤  Profile"),
-            ("patient_history", "📋  Past Assessments"),
-            ("symptom_progression", "📈  Progression"),
-            ("doctor_handover", "📄  Doctor Handover"),
-            ("healthcare_directory", "🏥  Directory"),
-            ("medical_references", "📚  References"),
-            ("settings", "⚙️  Settings"),
-            ("about", "ℹ️  About")
+            ("dashboard", "•  Dashboard"),
+            ("symptom_assessment", "•  New Assessment"),
+            ("patient_profile", "•  Patient Profile"),
+            ("patient_history", "•  Past Assessments"),
+            ("symptom_progression", "•  Progression"),
+            ("doctor_handover", "•  Doctor Handover"),
+            ("handover_downloads", "•  Handover Downloads"),
+            ("medical_references", "•  References"),
+            ("settings", "•  Settings"),
+            ("about", "•  About")
         ]
         self.nav_buttons = {}
         for scr_id, title in nav_items:
@@ -239,7 +242,7 @@ class MedicareKivyApp(App):
             ("dashboard", "Dashboard"),
             ("symptom_assessment", "Triage"),
             ("patient_history", "History"),
-            ("healthcare_directory", "Facilities"),
+            ("handover_downloads", "Handovers"),
             ("settings", "Settings")
         ]
         for scr_id, label_text in mobile_items:
@@ -259,6 +262,12 @@ class MedicareKivyApp(App):
             for sid, btn in self.nav_buttons.items():
                 btn.is_active = (sid == screen_id)
                 btn._update_canvas()
+
+    def open_pdf_viewer(self, doc_id_or_path: str):
+        viewer = self.screens.get("pdf_viewer")
+        if viewer:
+            viewer.load_document(doc_id_or_path)
+            self.navigate_to("pdf_viewer")
 
     def _on_window_resize(self, window, width, height):
         if width >= 800:

@@ -11,6 +11,7 @@ datas = [
     (str(project_dir / 'native'), 'native'),
     (str(project_dir / 'assets'), 'assets'),
 ]
+datas += collect_data_files('pypdfium2')
 
 hiddenimports = [
     'kivy',
@@ -35,6 +36,11 @@ hiddenimports = [
     'urllib.request',
     'urllib.parse',
     'webbrowser',
+    'pypdfium2',
+    'PIL',
+    'PIL.Image',
+    'app.history.handover_document_service',
+    'app.security.india_validation',
     'app.healthcare.location_service',
     'app.healthcare.maps_service',
     'app.healthcare.native_map_loader',
@@ -85,5 +91,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='MEDICARE',
+    name='MEDICARE_BUILD',
 )

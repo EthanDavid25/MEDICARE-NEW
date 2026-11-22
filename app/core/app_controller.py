@@ -13,6 +13,7 @@ from app.core.native_loader import NativeLoader
 from app.datasets.dataset_loader import DatasetLoader
 from app.patients.patient_service import PatientService
 from app.history.history_service import HistoryService
+from app.history.handover_document_service import HandoverDocumentService
 from app.triage.engine import TriageEngine
 from app.security.encryption import SecurityManager
 from app.synchronization.sync_service import SyncService
@@ -35,6 +36,7 @@ class AppController:
         self.dataset_loader: DatasetLoader = None
         self.patient_service: PatientService = None
         self.history_service: HistoryService = None
+        self.handover_service: HandoverDocumentService = None
         self.triage_engine: TriageEngine = None
         self.security: SecurityManager = None
         self.sync_service: SyncService = None
@@ -70,6 +72,7 @@ class AppController:
         # 5. Core Business Services
         self.patient_service = PatientService(self.db)
         self.history_service = HistoryService(self.db)
+        self.handover_service = HandoverDocumentService(self.db)
         self.triage_engine = TriageEngine(self.dataset_loader, self.native, self.db)
         self.sync_service = SyncService(self.config, self.db)
         self.location_service = LocationService(self.dataset_loader)
@@ -80,13 +83,13 @@ class AppController:
         if not patients:
             default_id = self.patient_service.create_patient({
                 "display_name": "Ethan (Demonstration Profile)",
-                "date_of_birth": "1990-06-15",
+                "date_of_birth": "15/06/1990",
                 "biological_sex": "male",
                 "blood_group": "A+",
                 "known_allergies": "No known drug allergies (NKDA)",
                 "chronic_conditions": "None reported",
                 "current_medications": "None",
-                "emergency_contact": "Emergency Contact (+1-555-0199)"
+                "emergency_contact": "+91-9876543210"
             })
             self.current_patient_id = default_id
         else:

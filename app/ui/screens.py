@@ -18,9 +18,12 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.slider import Slider
 from kivy.uix.popup import Popup
 from kivy.uix.button import Button
+from kivy.uix.image import Image
 from kivy.uix.widget import Widget
 from kivy.graphics import Color, RoundedRectangle, Rectangle
 from kivy.core.window import Window
+
+import pypdfium2 as pdfium
 
 from app.ui.theme import (
     COLOR_NAVY_PRIMARY, COLOR_NAVY_LIGHT, COLOR_BLUE_ACCENT,
@@ -29,8 +32,9 @@ from app.ui.theme import (
     COLOR_URGENT_EMERGENCY, COLOR_URGENT_EARLY, COLOR_URGENT_ROUTINE,
     COLOR_URGENT_INSUFF
 )
-from app.ui.components import CardBox, PrimaryButton, SecondaryButton, UrgencyBadge, WrappedLabel, SectionTitle
+from app.ui.components import CardBox, PrimaryButton, SecondaryButton, UrgencyBadge, WrappedLabel, SectionTitle, OptionButton
 from app.reports.handover_pdf import generate_doctor_handover_pdf
+from app.security.india_validation import validate_indian_mobile, validate_indian_date, format_indian_datetime
 
 
 def create_section_title(text: str) -> SectionTitle:
@@ -117,7 +121,7 @@ class DashboardScreen(BaseScreen):
         warn_card.bg_color = (1.0, 0.95, 0.95, 1.0)
         warn_card.border_color = COLOR_URGENT_EMERGENCY
         warn_card.add_widget(WrappedLabel(
-            text="⚠️ [b]Immediate Emergency Warning:[/b] If you are experiencing crushing chest pain, severe shortness of breath, sudden one-sided facial drooping or arm weakness, or uncontrollable bleeding, call [b]911 / 112 / 999[/b] or proceed immediately to the nearest emergency department.",
+            text="[b][color=#DC2626]EMERGENCY WARNING:[/color][/b] If you are experiencing crushing chest pain, severe shortness of breath, sudden one-sided facial drooping or arm weakness, or uncontrollable bleeding, call [b]112 / 102 (India)[/b] or proceed immediately to the nearest emergency department.",
             font_size="11sp",
             color=COLOR_URGENT_EMERGENCY
         ))
@@ -135,27 +139,27 @@ class DashboardScreen(BaseScreen):
         mod_grid = GridLayout(cols=2, spacing=10, size_hint_y=None)
         mod_grid.bind(minimum_height=mod_grid.setter("height"))
         
-        b_prof = SecondaryButton(text="👤 Patient Profile", size_hint_y=None, height=42)
+        b_prof = SecondaryButton(text="• Patient Profile", size_hint_y=None, height=42)
         b_prof.bind(on_release=lambda x: self._nav_to("patient_profile"))
         mod_grid.add_widget(b_prof)
 
-        b_hist = SecondaryButton(text="📋 Assessment History", size_hint_y=None, height=42)
+        b_hist = SecondaryButton(text="• Assessment History", size_hint_y=None, height=42)
         b_hist.bind(on_release=lambda x: self._nav_to("patient_history"))
         mod_grid.add_widget(b_hist)
 
-        b_prog = SecondaryButton(text="📈 Symptom Progression", size_hint_y=None, height=42)
+        b_prog = SecondaryButton(text="• Symptom Progression", size_hint_y=None, height=42)
         b_prog.bind(on_release=lambda x: self._nav_to("symptom_progression"))
         mod_grid.add_widget(b_prog)
 
-        b_hand = SecondaryButton(text="📄 Doctor Handover PDF", size_hint_y=None, height=42)
+        b_hand = SecondaryButton(text="• Doctor Handover", size_hint_y=None, height=42)
         b_hand.bind(on_release=lambda x: self._nav_to("doctor_handover"))
         mod_grid.add_widget(b_hand)
 
-        b_dir = SecondaryButton(text="🏥 Healthcare Directory", size_hint_y=None, height=42)
-        b_dir.bind(on_release=lambda x: self._nav_to("healthcare_directory"))
-        mod_grid.add_widget(b_dir)
+        b_down = SecondaryButton(text="• Handover Downloads", size_hint_y=None, height=42)
+        b_down.bind(on_release=lambda x: self._nav_to("handover_downloads"))
+        mod_grid.add_widget(b_down)
 
-        b_ref = SecondaryButton(text="📚 Medical References", size_hint_y=None, height=42)
+        b_ref = SecondaryButton(text="• Medical References", size_hint_y=None, height=42)
         b_ref.bind(on_release=lambda x: self._nav_to("medical_references"))
         mod_grid.add_widget(b_ref)
 
@@ -222,14 +226,22 @@ class PatientProfileScreen(BaseScreen):
         card.bind(minimum_height=card.setter("height"))
 
         # Form fields
-        self.in_name = self._add_field(card, "Full Display Name *", "e.g. John Doe")
-        self.in_dob = self._add_field(card, "Date of Birth (YYYY-MM-DD)", "1980-05-15")
+        self.in_name = self._add_field(card, "Full Display Name *", "e.g. Ethan (Demonstration Profile)")
+        self.in_dob = self._add_field(card, "Date of Birth (DD/MM/YYYY)", "15/06/1990")
+        self.lbl_dob_feedback = WrappedLabel(text="", font_size="11sp")
+        card.add_widget(self.lbl_dob_feedback)
+        self.in_dob.bind(text=self._on_dob_change)
+
         self.in_sex = self._add_field(card, "Biological Sex (male / female / other)", "male")
-        self.in_blood = self._add_field(card, "Blood Group", "O+")
-        self.in_allergies = self._add_field(card, "Known Allergies (Medications / Food)", "e.g. Penicillin, Peanuts")
-        self.in_conditions = self._add_field(card, "Chronic Conditions (e.g. Hypertension, Diabetes)", "e.g. Asthma")
-        self.in_meds = self._add_field(card, "Current Medications", "e.g. Albuterol inhaler")
-        self.in_emerg = self._add_field(card, "Emergency Contact Details", "Jane Doe (+1-555-0199)")
+        self.in_blood = self._add_field(card, "Blood Group", "A+")
+        self.in_allergies = self._add_field(card, "Known Allergies (Medications / Food)", "e.g. No known drug allergies (NKDA)")
+        self.in_conditions = self._add_field(card, "Chronic Conditions (e.g. Hypertension, Diabetes)", "None reported")
+        self.in_meds = self._add_field(card, "Current Medications", "None")
+        
+        self.in_emerg = self._add_field(card, "Emergency Contact (+91 Indian Mobile / 112)", "+91-98765-43210")
+        self.lbl_emerg_feedback = WrappedLabel(text="", font_size="11sp")
+        card.add_widget(self.lbl_emerg_feedback)
+        self.in_emerg.bind(text=self._on_emerg_change)
 
         # Save Button
         btn_save = PrimaryButton(text="SAVE / UPDATE PROFILE", size_hint_y=None, height=44)
@@ -282,17 +294,52 @@ class PatientProfileScreen(BaseScreen):
         parent.add_widget(box)
         return inp
 
+    def _on_dob_change(self, instance, value):
+        if not value.strip():
+            self.lbl_dob_feedback.text = ""
+            return
+        valid, norm, msg = validate_indian_date(value, allow_empty=True)
+        if valid and norm:
+            self.lbl_dob_feedback.text = f"[color=#059669]• Date format valid (DD/MM/YYYY)[/color]"
+        else:
+            self.lbl_dob_feedback.text = f"[color=#DC2626]• {msg}[/color]"
+
+    def _on_emerg_change(self, instance, value):
+        val = value.strip()
+        if not val:
+            self.lbl_emerg_feedback.text = ""
+            return
+        # Support Indian emergency services numbers (112, 102, 108)
+        if val in ("112", "102", "108"):
+            self.lbl_emerg_feedback.text = "[color=#059669]• National Emergency Helpline[/color]"
+            return
+        valid, norm, msg = validate_indian_mobile(val, allow_empty=True)
+        if valid and norm:
+            self.lbl_emerg_feedback.text = f"[color=#059669]• Valid Indian Mobile ({norm})[/color]"
+        else:
+            self.lbl_emerg_feedback.text = f"[color=#DC2626]• {msg}[/color]"
+
     def on_pre_enter(self):
         curr = self.controller.patient_service.get_patient(self.controller.current_patient_id)
         if curr:
             self.in_name.text = curr.get("display_name", "")
-            self.in_dob.text = curr.get("date_of_birth", "")
+            raw_dob = curr.get("date_of_birth", "")
+            # Normalize to DD/MM/YYYY if in YYYY-MM-DD
+            if raw_dob and "-" in raw_dob and len(raw_dob) == 10 and raw_dob[4] == "-":
+                parts = raw_dob.split("-")
+                raw_dob = f"{parts[2]}/{parts[1]}/{parts[0]}"
+            self.in_dob.text = raw_dob
             self.in_sex.text = curr.get("biological_sex", "male")
             self.in_blood.text = curr.get("blood_group", "")
             self.in_allergies.text = curr.get("known_allergies", "")
             self.in_conditions.text = curr.get("chronic_conditions", "")
             self.in_meds.text = curr.get("current_medications", "")
-            self.in_emerg.text = curr.get("emergency_contact", "")
+            raw_emerg = curr.get("emergency_contact", "")
+            if "+1-555" in raw_emerg:
+                raw_emerg = "+91-98765-43210"
+            self.in_emerg.text = raw_emerg
+            self._on_dob_change(None, self.in_dob.text)
+            self._on_emerg_change(None, self.in_emerg.text)
 
     def _save_profile(self, *args):
         name = self.in_name.text.strip()
@@ -300,18 +347,36 @@ class PatientProfileScreen(BaseScreen):
             self._show_popup("Validation Error", "Patient full display name is required.")
             return
 
+        dob = self.in_dob.text.strip()
+        if dob:
+            valid_dob, norm_dob, dob_err = validate_indian_date(dob, allow_empty=False)
+            if not valid_dob:
+                self._show_popup("Invalid Date of Birth", dob_err)
+                return
+            dob = norm_dob
+
+        emerg = self.in_emerg.text.strip()
+        if emerg and emerg not in ("112", "102", "108"):
+            valid_m, norm_m, emerg_err = validate_indian_mobile(emerg, allow_empty=False)
+            if not valid_m:
+                self._show_popup("Invalid Mobile Number", emerg_err)
+                return
+            emerg = norm_m
+
         data = {
             "display_name": name,
-            "date_of_birth": self.in_dob.text.strip(),
+            "date_of_birth": dob,
             "biological_sex": self.in_sex.text.strip().lower() or "prefer_not_to_say",
             "blood_group": self.in_blood.text.strip(),
             "known_allergies": self.in_allergies.text.strip(),
             "chronic_conditions": self.in_conditions.text.strip(),
             "current_medications": self.in_meds.text.strip(),
-            "emergency_contact": self.in_emerg.text.strip()
+            "emergency_contact": emerg
         }
         self.controller.patient_service.update_patient(self.controller.current_patient_id, data)
-        self._show_popup("Success", "Patient profile saved successfully.")
+        self.in_dob.text = dob
+        self.in_emerg.text = emerg
+        self._show_popup("Success", "Patient profile saved successfully with validated Indian contact defaults.")
 
     def _export_records(self, *args):
         data = self.controller.patient_service.export_patient_data(self.controller.current_patient_id)
@@ -402,11 +467,11 @@ class SymptomAssessmentScreen(BaseScreen):
         # Trajectory / Progression buttons
         sev_card.add_widget(WrappedLabel(text="[b]Symptom Progression / Trajectory:[/b]", font_size="12sp", color=COLOR_NAVY_PRIMARY))
         traj_box = BoxLayout(orientation="horizontal", spacing=8, size_hint_y=None, height=38)
-        self.btn_worse = Button(text="Worsening", font_size="12sp", bold=True)
+        self.btn_worse = OptionButton(text="  Worsening", size_hint_y=None, height=38)
         self.btn_worse.bind(on_release=lambda x: self._set_traj("worsening"))
-        self.btn_same = Button(text="Unchanged", font_size="12sp", bold=True)
+        self.btn_same = OptionButton(text="  Unchanged", size_hint_y=None, height=38)
         self.btn_same.bind(on_release=lambda x: self._set_traj("unchanged"))
-        self.btn_better = Button(text="Improving", font_size="12sp", bold=True)
+        self.btn_better = OptionButton(text="  Improving", size_hint_y=None, height=38)
         self.btn_better.bind(on_release=lambda x: self._set_traj("improving"))
         traj_box.add_widget(self.btn_worse)
         traj_box.add_widget(self.btn_same)
@@ -426,19 +491,21 @@ class SymptomAssessmentScreen(BaseScreen):
 
     def _set_traj(self, traj: str):
         self.current_progression = traj
-        # Visual state feedback on buttons
-        self.btn_worse.background_color = COLOR_URGENT_EMERGENCY if traj == "worsening" else (0.85, 0.85, 0.88, 1)
-        self.btn_worse.color = COLOR_WHITE if traj == "worsening" else COLOR_TEXT_DARK
-
-        self.btn_same.background_color = COLOR_BLUE_ACCENT if traj == "unchanged" else (0.85, 0.85, 0.88, 1)
-        self.btn_same.color = COLOR_WHITE if traj == "unchanged" else COLOR_TEXT_DARK
-
-        self.btn_better.background_color = COLOR_URGENT_ROUTINE if traj == "improving" else (0.85, 0.85, 0.88, 1)
-        self.btn_better.color = COLOR_WHITE if traj == "improving" else COLOR_TEXT_DARK
+        self.btn_worse.is_selected = (traj == "worsening")
+        self.btn_same.is_selected = (traj == "unchanged")
+        self.btn_better.is_selected = (traj == "improving")
 
     def _on_slider(self, instance, value):
         val = int(value)
-        self.lbl_sev.text = f"[b]Reported Pain / Severity Rating: {val} / 10[/b]"
+        if val <= 3:
+            category_text = "[color=#16A34A]Mild (Manageable discomfort)[/color]"
+        elif val <= 6:
+            category_text = "[color=#D97706]Moderate (Noticeable interference with activities)[/color]"
+        elif val <= 9:
+            category_text = "[color=#DC2626]Severe (Significant distress / high urgency)[/color]"
+        else:
+            category_text = "[color=#991B1B]Critical (Extreme / worst pain imaginable)[/color]"
+        self.lbl_sev.text = f"[b]Reported Pain / Severity Rating: {val} / 10[/b] — {category_text}"
 
     def on_pre_enter(self):
         self.in_search.text = ""
@@ -454,7 +521,7 @@ class SymptomAssessmentScreen(BaseScreen):
         for s in matches:
             btn = SecondaryButton(text=f"+ {s.get('name')} ({s.get('body_system', '')})", size_hint_y=None, height=36)
             if s.get("is_emergency_warning"):
-                btn.text = f"⚠️ {btn.text} [RED FLAG]"
+                btn.text = f"[RED FLAG] {btn.text}"
                 btn.color = COLOR_URGENT_EMERGENCY
             btn.bind(on_release=lambda x, sym=s: self._add_symptom(sym))
             self.results_box.add_widget(btn)
@@ -573,7 +640,7 @@ class FollowupQuestionsScreen(BaseScreen):
             is_emerg = bool(q.get("is_emergency_safety_check", False) or q.get("triggers_emergency_check", False))
             title_text = f"[b]{q.get('question_text')}[/b]"
             if is_emerg:
-                title_text = f"⚠️ [color=#DC2626][b]RED FLAG CHECK:[/b][/color] {title_text}"
+                title_text = f"[b][color=#DC2626]RED FLAG CHECK:[/color][/b] {title_text}"
 
             q_lbl = WrappedLabel(
                 text=title_text,
@@ -589,16 +656,12 @@ class FollowupQuestionsScreen(BaseScreen):
             btn_group = []
             for opt in q.get("options", []):
                 opt_code = opt["code"]
-                opt_btn = Button(
-                    text=f"  {opt['text']}",
+                opt_btn = OptionButton(
+                    text=f"  • {opt['text']}",
                     font_size="12sp",
-                    halign="left",
                     size_hint_y=None,
-                    height=38,
-                    background_color=(0.95, 0.95, 0.98, 1),
-                    color=COLOR_TEXT_DARK
+                    height=38
                 )
-                opt_btn.bind(size=opt_btn.setter("text_size"))
                 opt_btn.bind(on_release=lambda x, q=qid, c=opt_code, bg=btn_group, curr=opt_btn: self._select_answer(q, c, bg, curr))
                 opts_box.add_widget(opt_btn)
                 btn_group.append(opt_btn)
@@ -611,13 +674,10 @@ class FollowupQuestionsScreen(BaseScreen):
         btn_evaluate.bind(on_release=self._evaluate_triage)
         self.content.add_widget(btn_evaluate)
 
-    def _select_answer(self, qid: str, code: str, group: list, active_btn: Button):
+    def _select_answer(self, qid: str, code: str, group: list, active_btn):
         self.answers[qid] = code
         for b in group:
-            b.background_color = (0.95, 0.95, 0.98, 1)
-            b.color = COLOR_TEXT_DARK
-        active_btn.background_color = COLOR_BLUE_ACCENT
-        active_btn.color = COLOR_TEXT_LIGHT
+            b.is_selected = (b == active_btn)
 
     def _evaluate_triage(self, *args):
         staging = getattr(self.controller, "assessment_staging", {})
@@ -714,91 +774,70 @@ class TriageResultsScreen(BaseScreen):
         self.content.add_widget(just_card)
 
         # -------------------------------------------------------------
-        # SECTION 4: RECOMMENDED NEXT STEPS & SELF-CARE
+        # SECTION 4: RECOMMENDED NEXT STEPS & CLINICAL ACTIONS
         # -------------------------------------------------------------
-        self.content.add_widget(create_section_title("3. Recommended Next Steps"))
-        act_card = CardBox(orientation="vertical", spacing=6, padding=[14, 12, 14, 12], size_hint_y=None)
+        self.content.add_widget(create_section_title("3. Recommended Clinical Action Guidance"))
+        act_card = CardBox(orientation="vertical", spacing=8, padding=[16, 14, 16, 14], size_hint_y=None)
         act_card.bind(minimum_height=act_card.setter("height"))
         
-        for act in result.recommended_next_steps:
+        if cat == 1:
+            act_card.bg_color = (1.0, 0.94, 0.94, 1.0)
+            act_card.border_color = COLOR_URGENT_EMERGENCY
             act_card.add_widget(WrappedLabel(
-                text=act,
-                font_size="12sp",
-                color=COLOR_NAVY_PRIMARY
+                text="[b][color=#DC2626]CRITICAL ACTION PROTOCOL — CALL EMERGENCY SERVICES (112 / 102)[/color][/b]",
+                font_size="13sp"
             ))
+            act_card.add_widget(WrappedLabel(
+                text="• Dial 112 (National Emergency Helpline) or 102 (Ambulance Service) immediately.\n"
+                     "• Do not attempt to operate a motor vehicle yourself; arrange for emergency medical transport.\n"
+                     "• Maintain a calm posture and ensure airway is clear. Have a family member or bystander remain present.\n"
+                     "• Download and provide your MEDICARE Doctor Handover report to the incoming emergency team.",
+                font_size="12sp",
+                color=COLOR_TEXT_DARK
+            ))
+        elif cat == 2:
+            act_card.bg_color = (1.0, 0.97, 0.92, 1.0)
+            act_card.border_color = COLOR_URGENT_EARLY
+            act_card.add_widget(WrappedLabel(
+                text="[b][color=#D97706]SAME-DAY CLINICAL EVALUATION ADVISORY[/color][/b]",
+                font_size="13sp"
+            ))
+            act_card.add_widget(WrappedLabel(
+                text="• Schedule an in-person medical consultation within 12–24 hours.\n"
+                     "• Present your downloaded Doctor Handover summary to the consulting physician.\n"
+                     "• If symptoms rapidly escalate, chest pain develops, or consciousness is altered, call 112 immediately.",
+                font_size="12sp",
+                color=COLOR_TEXT_DARK
+            ))
+        else:
+            act_card.bg_color = COLOR_WHITE
+            for act in result.recommended_next_steps:
+                act_card.add_widget(WrappedLabel(
+                    text=f"• {act}",
+                    font_size="12sp",
+                    color=COLOR_NAVY_PRIMARY
+                ))
         self.content.add_widget(act_card)
 
         # -------------------------------------------------------------
-        # SECTION 5: RECOMMENDED NEARBY HEALTHCARE FACILITIES
-        # -------------------------------------------------------------
-        self.content.add_widget(create_section_title("4. Nearby Healthcare Facilities & Navigation"))
-        
-        # Location state banner
-        loc_service = self.controller.location_service
-        loc_name = loc_service.current_location_name
-        self.content.add_widget(create_desc_label(
-            f"Sorted for {result.urgency_label} relative to: {loc_name}. (Works offline with local coordinates)."
-        ))
-
-        fac_box = BoxLayout(orientation="vertical", spacing=8, size_hint_y=None)
-        fac_box.bind(minimum_height=fac_box.setter("height"))
-        
-        nearby = loc_service.get_nearby_facilities(urgency_category=cat, limit=4)
-        for fac in nearby:
-            f_card = CardBox(orientation="vertical", spacing=6, padding=[14, 10, 14, 10], size_hint_y=None)
-            f_card.bind(minimum_height=f_card.setter("height"))
-
-            # Top header row
-            f_header = BoxLayout(orientation="horizontal", size_hint_y=None, height=24)
-            f_header.add_widget(WrappedLabel(text=f"[b]{fac.get('name')}[/b]", font_size="13sp", color=COLOR_NAVY_PRIMARY))
-            
-            is_emerg = str(fac.get("has_emergency", "0")) == "1"
-            if is_emerg:
-                f_header.add_widget(WrappedLabel(text="[b]24/7 ER[/b]", font_size="11sp", color=COLOR_URGENT_EMERGENCY, size_hint_x=0.25))
-            f_card.add_widget(f_header)
-
-            # Details
-            miles = fac.get("distance_miles", 0.0)
-            km = fac.get("distance_km", 0.0)
-            f_card.add_widget(WrappedLabel(
-                text=f"📍 {fac.get('address')}, {fac.get('city')} — [b]{miles} mi / {km} km away[/b]",
-                font_size="11sp",
-                color=COLOR_TEXT_DARK
-            ))
-            f_card.add_widget(WrappedLabel(
-                text=f"📞 Phone: {fac.get('phone')} | Hours: {fac.get('operating_hours')}",
-                font_size="11sp",
-                color=COLOR_TEXT_MUTED
-            ))
-            
-            # Action button for directions
-            btn_dir = SecondaryButton(text=f"Navigate / Directions ↗ ({fac.get('name')[:20]})", size_hint_y=None, height=34)
-            btn_dir.bind(on_release=lambda x, target=fac: loc_service.open_directions(target))
-            f_card.add_widget(btn_dir)
-
-            fac_box.add_widget(f_card)
-
-        self.content.add_widget(fac_box)
-
-        # -------------------------------------------------------------
-        # SECTION 6: CLINICAL DISCLAIMER & GOVERNANCE
+        # SECTION 5: CLINICAL DISCLAIMER & GOVERNANCE
         # -------------------------------------------------------------
         disc_card = CardBox(orientation="vertical", spacing=4, padding=[12, 10, 12, 10], size_hint_y=None)
         disc_card.bind(minimum_height=disc_card.setter("height"))
         disc_card.bg_color = (0.97, 0.97, 0.98, 1)
         disc_card.add_widget(WrappedLabel(
-            text="⚠️ [b]Safety Notice:[/b] MEDICARE is an offline preliminary triage advisor and decision-support tool. It does not provide medical diagnoses, treatment prescriptions, or emergency guarantees. If your condition worsens rapidly, seek emergency medical care immediately.",
+            text="[b]Safety Notice:[/b] MEDICARE is an offline preliminary triage advisor and clinical decision-support tool. It does not provide medical diagnoses, treatment prescriptions, or emergency guarantees. If your condition worsens rapidly, seek emergency medical care immediately.",
             font_size="10sp",
             color=COLOR_TEXT_MUTED
         ))
         self.content.add_widget(disc_card)
 
         # -------------------------------------------------------------
-        # SECTION 7: HANDOVER & NAVIGATION ACTIONS
+        # SECTION 6: HANDOVER & NAVIGATION ACTIONS
         # -------------------------------------------------------------
         act_box = BoxLayout(orientation="vertical", spacing=8, size_hint_y=None, height=92)
         
-        btn_pdf = PrimaryButton(text="📄 GENERATE DOCTOR HANDOVER PDF", size_hint_y=None, height=42)
+        btn_pdf = PrimaryButton(text="GENERATE DOCTOR HANDOVER PDF", size_hint_y=None, height=42)
         btn_pdf.bind(on_release=self._generate_pdf)
         act_box.add_widget(btn_pdf)
 
@@ -817,14 +856,60 @@ class TriageResultsScreen(BaseScreen):
         out_dir.mkdir(parents=True, exist_ok=True)
         out_file = out_dir / f"Handover_{result.session_id}.pdf"
         generate_doctor_handover_pdf(patient, result.to_dict(), out_file)
+
+        # Register downloaded handover in SQLite metadata tracking library
+        symptoms_str = ", ".join(s.get("name", "") for s in result.symptoms_evaluated) if hasattr(result, "symptoms_evaluated") else "Reported symptoms"
+        pain_sev = getattr(self.controller, "assessment_staging", {}).get("severity", 5)
         
-        box = BoxLayout(orientation="vertical", padding=14, spacing=10)
-        box.add_widget(WrappedLabel(text=f"Doctor Handover PDF successfully saved:\n{out_file}", font_size="12sp"))
-        b = PrimaryButton(text="OK", size_hint_y=None, height=36)
-        p = Popup(title="PDF Report Ready", content=box, size_hint=(0.85, 0.4))
-        b.bind(on_release=p.dismiss)
-        box.add_widget(b)
+        doc_record = self.controller.handover_service.register_download(
+            session_id=result.session_id,
+            patient_id=self.controller.current_patient_id,
+            patient_name=patient.get("display_name", "Anonymous Patient"),
+            title=f"Doctor Handover — {result.session_id}",
+            main_symptoms=symptoms_str,
+            pain_severity=pain_sev,
+            triage_category=result.urgency_category,
+            triage_label=result.urgency_label,
+            file_path=out_file
+        )
+        
+        box = BoxLayout(orientation="vertical", padding=16, spacing=12)
+        box.add_widget(WrappedLabel(
+            text=f"[b]Doctor Handover Downloaded Successfully[/b]\n"
+                 f"Saved to local MEDICARE library:\n{out_file.name}\n\n"
+                 f"File Location: {out_file}",
+            font_size="12sp",
+            color=COLOR_NAVY_PRIMARY
+        ))
+        
+        p = Popup(title="Handover Document Ready", size_hint=(0.85, 0.52))
+
+        btn_view = PrimaryButton(text="Open in Document Viewer", size_hint_y=None, height=38)
+        btn_view.bind(on_release=lambda x: self._open_viewer(p, str(out_file)))
+        box.add_widget(btn_view)
+
+        btn_lib = SecondaryButton(text="View Handover Library", size_hint_y=None, height=36)
+        btn_lib.bind(on_release=lambda x: self._open_library(p))
+        box.add_widget(btn_lib)
+
+        btn_close = Button(text="Close", size_hint_y=None, height=34, background_color=(0.85, 0.85, 0.88, 1), color=COLOR_TEXT_DARK)
+        btn_close.bind(on_release=p.dismiss)
+        box.add_widget(btn_close)
+
+        p.content = box
         p.open()
+
+    def _open_viewer(self, popup, file_path):
+        popup.dismiss()
+        if "pdf_viewer" in self.manager.screen_names:
+            viewer = self.manager.get_screen("pdf_viewer")
+            viewer.load_document(file_path)
+            self.manager.current = "pdf_viewer"
+
+    def _open_library(self, popup):
+        popup.dismiss()
+        if "handover_downloads" in self.manager.screen_names:
+            self.manager.current = "handover_downloads"
 
     def _nav_to(self, screen_name: str):
         self.manager.current = screen_name
@@ -963,7 +1048,7 @@ class DoctorHandoverScreen(BaseScreen):
             color=COLOR_NAVY_PRIMARY
         ))
 
-        btn_gen = PrimaryButton(text="📄 GENERATE & EXPORT HANDOVER PDF", size_hint_y=None, height=44)
+        btn_gen = PrimaryButton(text="GENERATE & EXPORT HANDOVER PDF", size_hint_y=None, height=44)
         btn_gen.bind(on_release=self._generate_latest_pdf)
         card.add_widget(btn_gen)
         content.add_widget(card)
@@ -982,11 +1067,582 @@ class DoctorHandoverScreen(BaseScreen):
         latest_a = assessments[0]
         out_dir = Path(self.controller.config.data_dir) / "reports"
         out_dir.mkdir(parents=True, exist_ok=True)
-        out_file = out_dir / f"Handover_{latest_a.get('session_id', 'REPORT')}.pdf"
+        session_id = latest_a.get("session_id", "REPORT")
+        out_file = out_dir / f"Handover_{session_id}.pdf"
         generate_doctor_handover_pdf(patient, latest_a, out_file)
-        self._show_msg("PDF Created", f"Doctor Handover PDF generated successfully:\n{out_file}")
+
+        # Register in downloads library
+        pain_sev = latest_a.get("urgency_category", 3)
+        self.controller.handover_service.register_download(
+            session_id=session_id,
+            patient_id=self.controller.current_patient_id,
+            patient_name=patient.get("display_name", "Anonymous Patient"),
+            title=f"Doctor Handover — {session_id}",
+            main_symptoms="Prior assessment record",
+            pain_severity=5,
+            triage_category=latest_a.get("urgency_category", 3),
+            triage_label=latest_a.get("urgency_label", "Routine Care"),
+            file_path=out_file
+        )
+
+        box = BoxLayout(orientation="vertical", padding=16, spacing=12)
+        box.add_widget(WrappedLabel(
+            text=f"[b]Doctor Handover Generated & Downloaded[/b]\n"
+                 f"Saved locally to:\n{out_file}",
+            font_size="12sp",
+            color=COLOR_NAVY_PRIMARY
+        ))
+        p = Popup(title="Handover Document Ready", size_hint=(0.85, 0.52))
+
+        btn_view = PrimaryButton(text="Open in Document Viewer", size_hint_y=None, height=38)
+        btn_view.bind(on_release=lambda x: self._open_viewer(p, str(out_file)))
+        box.add_widget(btn_view)
+
+        btn_lib = SecondaryButton(text="View Handover Library", size_hint_y=None, height=36)
+        btn_lib.bind(on_release=lambda x: self._open_library(p))
+        box.add_widget(btn_lib)
+
+        btn_close = Button(text="Close", size_hint_y=None, height=34, background_color=(0.85, 0.85, 0.88, 1), color=COLOR_TEXT_DARK)
+        btn_close.bind(on_release=p.dismiss)
+        box.add_widget(btn_close)
+
+        p.content = box
+        p.open()
+
+    def _open_viewer(self, popup, file_path):
+        popup.dismiss()
+        if "pdf_viewer" in self.manager.screen_names:
+            viewer = self.manager.get_screen("pdf_viewer")
+            viewer.load_document(file_path)
+            self.manager.current = "pdf_viewer"
+
+    def _open_library(self, popup):
+        popup.dismiss()
+        if "handover_downloads" in self.manager.screen_names:
+            self.manager.current = "handover_downloads"
 
     def _show_msg(self, title, msg):
+        box = BoxLayout(orientation="vertical", padding=14, spacing=10)
+        box.add_widget(WrappedLabel(text=msg, font_size="12sp"))
+        b = PrimaryButton(text="OK", size_hint_y=None, height=36)
+        p = Popup(title=title, content=box, size_hint=(0.85, 0.4))
+        b.bind(on_release=p.dismiss)
+        box.add_widget(b)
+        p.open()
+
+
+# =========================================================================
+# 9. DOCTOR HANDOVER DOWNLOADS SCREEN (Document Library)
+# =========================================================================
+class HandoverDownloadsScreen(BaseScreen):
+    def __init__(self, controller, **kwargs):
+        super().__init__(**kwargs)
+        self.controller = controller
+        self.sort_order = "newest"
+        self._build_ui()
+
+    def _build_ui(self):
+        root = BoxLayout(orientation="vertical", spacing=0)
+        scroll = ScrollView(size_hint=(1, 1), do_scroll_x=False)
+        self.content = BoxLayout(orientation="vertical", spacing=12, padding=[16, 16, 16, 24], size_hint_y=None)
+        self.content.bind(minimum_height=self.content.setter("height"))
+
+        scroll.add_widget(self.content)
+        root.add_widget(scroll)
+        self.add_widget(root)
+
+    def on_pre_enter(self):
+        self._render_library()
+
+    def _render_library(self):
+        self.content.clear_widgets()
+
+        # Section Header
+        self.content.add_widget(create_section_title("Doctor Handover Downloads"))
+        self.content.add_widget(create_desc_label(
+            "Central offline library of downloaded clinical doctor handovers. "
+            "Inspect, view in-app, export, or manage stored medical summaries."
+        ))
+
+        # Search and Sorting Toolbar Card
+        filter_card = CardBox(orientation="vertical", spacing=8, padding=[12, 10, 12, 10], size_hint_y=None)
+        filter_card.bind(minimum_height=filter_card.setter("height"))
+        filter_card.bg_color = COLOR_WHITE
+
+        # Search Input
+        self.in_search = TextInput(
+            hint_text="Search by patient name, filename, symptoms, date...",
+            multiline=False,
+            size_hint_y=None,
+            height=38,
+            font_size="13sp",
+            padding=[10, 9, 10, 9]
+        )
+        self.in_search.bind(text=self._on_search_change)
+        filter_card.add_widget(self.in_search)
+
+        # Sort Buttons Row
+        sort_row = BoxLayout(orientation="horizontal", spacing=8, size_hint_y=None, height=34)
+        self.btn_sort_new = OptionButton(text="Newest First", size_hint_x=0.5, height=34)
+        self.btn_sort_new.is_selected = (self.sort_order == "newest")
+        self.btn_sort_new.bind(on_release=lambda x: self._change_sort("newest"))
+
+        self.btn_sort_old = OptionButton(text="Oldest First", size_hint_x=0.5, height=34)
+        self.btn_sort_old.is_selected = (self.sort_order == "oldest")
+        self.btn_sort_old.bind(on_release=lambda x: self._change_sort("oldest"))
+
+        sort_row.add_widget(self.btn_sort_new)
+        sort_row.add_widget(self.btn_sort_old)
+        filter_card.add_widget(sort_row)
+
+        self.content.add_widget(filter_card)
+
+        # Results Container
+        self.list_container = BoxLayout(orientation="vertical", spacing=10, size_hint_y=None)
+        self.list_container.bind(minimum_height=self.list_container.setter("height"))
+        self.content.add_widget(self.list_container)
+
+        self._populate_list()
+
+    def _on_search_change(self, instance, text):
+        self._populate_list()
+
+    def _change_sort(self, order):
+        self.sort_order = order
+        self.btn_sort_new.is_selected = (order == "newest")
+        self.btn_sort_old.is_selected = (order == "oldest")
+        self._populate_list()
+
+    def _populate_list(self):
+        self.list_container.clear_widgets()
+        search_query = getattr(self, "in_search", None)
+        query = search_query.text.strip() if search_query else ""
+
+        records = self.controller.handover_service.get_downloaded_handovers(
+            search_query=query,
+            sort_order=self.sort_order
+        )
+
+        if not records:
+            empty = CardBox(orientation="vertical", spacing=8, padding=[20, 18, 20, 18], size_hint_y=None)
+            empty.bind(minimum_height=empty.setter("height"))
+            empty.bg_color = COLOR_WHITE
+            if query:
+                empty.add_widget(WrappedLabel(
+                    text="[b]No matching handover reports found.[/b]\nTry clearing your search query.",
+                    font_size="13sp",
+                    color=COLOR_TEXT_MUTED
+                ))
+            else:
+                empty.add_widget(WrappedLabel(
+                    text="[b]No doctor handovers downloaded yet.[/b]\n"
+                         "When you complete a symptom evaluation, click 'Generate Doctor Handover PDF' "
+                         "to save a clinical summary to this library.",
+                    font_size="13sp",
+                    color=COLOR_TEXT_DARK
+                ))
+                b_start = PrimaryButton(text="Start New Assessment", size_hint_y=None, height=40)
+                b_start.bind(on_release=lambda x: self._nav_to("symptom_assessment"))
+                empty.add_widget(b_start)
+            self.list_container.add_widget(empty)
+            return
+
+        for doc in records:
+            card = CardBox(orientation="vertical", spacing=8, padding=[16, 14, 16, 14], size_hint_y=None)
+            card.bind(minimum_height=card.setter("height"))
+            card.bg_color = COLOR_WHITE
+
+            # Header row: Title + Triage Badge
+            h_row = BoxLayout(orientation="horizontal", size_hint_y=None, height=28, spacing=8)
+            h_row.add_widget(WrappedLabel(
+                text=f"[b]{doc.get('title', 'Doctor Handover')}[/b]",
+                font_size="14sp",
+                color=COLOR_NAVY_PRIMARY,
+                size_hint_x=0.7
+            ))
+            badge = UrgencyBadge(category=doc.get("triage_category", 3), size_hint_x=0.3)
+            h_row.add_widget(badge)
+            card.add_widget(h_row)
+
+            # Metadata details
+            dt_display = format_indian_datetime(doc.get("downloaded_at"))
+            p_name = doc.get("patient_name", "Anonymous Patient")
+            card.add_widget(WrappedLabel(
+                text=f"Patient: [b]{p_name}[/b] | Downloaded: [b]{dt_display}[/b]",
+                font_size="11sp",
+                color=COLOR_TEXT_DARK
+            ))
+
+            # Symptoms & Pain
+            syms = doc.get("main_symptoms", "Not specified")
+            pain = doc.get("pain_severity", 0)
+            card.add_widget(WrappedLabel(
+                text=f"Reported Symptoms: {syms} | Pain Rating: [b]{pain}/10[/b]",
+                font_size="11sp",
+                color=COLOR_TEXT_MUTED
+            ))
+
+            # File Status Row
+            f_size_kb = round(doc.get("file_size", 0) / 1024, 1)
+            fname = doc.get("filename", "")
+            is_avail = (doc.get("status") == "available")
+            if is_avail:
+                status_txt = "[color=#059669][b]Available Locally[/b][/color]"
+            else:
+                status_txt = "[color=#DC2626][b]File Missing on Disk[/b][/color]"
+
+            card.add_widget(WrappedLabel(
+                text=f"File: {fname} ({f_size_kb} KB) — Format: PDF | Status: {status_txt}",
+                font_size="11sp",
+                color=COLOR_TEXT_DARK
+            ))
+
+            # Action Buttons Row
+            btn_row = BoxLayout(orientation="horizontal", spacing=8, size_hint_y=None, height=36)
+            
+            btn_view = PrimaryButton(text="Open in Viewer", size_hint_x=0.4, height=36)
+            btn_view.bind(on_release=lambda x, d=doc: self._open_viewer(d))
+            btn_row.add_widget(btn_view)
+
+            btn_export = SecondaryButton(text="Export Copy", size_hint_x=0.35, height=36)
+            btn_export.bind(on_release=lambda x, d=doc: self._export_copy(d))
+            btn_row.add_widget(btn_export)
+
+            btn_del = Button(
+                text="Delete",
+                size_hint_x=0.25,
+                height=36,
+                background_color=COLOR_URGENT_EMERGENCY,
+                color=COLOR_TEXT_LIGHT,
+                bold=True,
+                font_size="12sp"
+            )
+            btn_del.bind(on_release=lambda x, d=doc: self._confirm_delete(d))
+            btn_row.add_widget(btn_del)
+
+            card.add_widget(btn_row)
+            self.list_container.add_widget(card)
+
+    def _open_viewer(self, doc):
+        if "pdf_viewer" in self.manager.screen_names:
+            viewer = self.manager.get_screen("pdf_viewer")
+            viewer.load_document(doc.get("file_path"))
+            self.manager.current = "pdf_viewer"
+
+    def _export_copy(self, doc):
+        export_dir = Path(self.controller.config.data_dir) / "exports"
+        dest = self.controller.handover_service.export_copy(doc["id"], export_dir)
+        if dest:
+            self._show_popup("Copy Exported", f"Successfully exported copy to:\n{dest}")
+        else:
+            self._show_popup("Export Failed", "Could not export copy. Source PDF file is missing on disk.")
+
+    def _confirm_delete(self, doc):
+        box = BoxLayout(orientation="vertical", padding=14, spacing=10)
+        box.add_widget(WrappedLabel(
+            text=f"Are you sure you want to delete this handover report?\n\n"
+                 f"Document: {doc.get('title')}\n"
+                 f"File: {doc.get('filename')}\n\n"
+                 f"This will permanently erase the local PDF file from your device.",
+            font_size="12sp"
+        ))
+        b_row = BoxLayout(orientation="horizontal", spacing=10, size_hint_y=None, height=36)
+        p = Popup(title="Confirm Document Deletion", content=box, size_hint=(0.85, 0.45))
+
+        btn_confirm = Button(text="Yes, Delete", background_color=COLOR_URGENT_EMERGENCY, color=COLOR_WHITE, bold=True)
+        btn_confirm.bind(on_release=lambda x: self._do_delete(p, doc["id"]))
+        b_row.add_widget(btn_confirm)
+
+        btn_cancel = SecondaryButton(text="Cancel")
+        btn_cancel.bind(on_release=p.dismiss)
+        b_row.add_widget(btn_cancel)
+
+        box.add_widget(b_row)
+        p.open()
+
+    def _do_delete(self, popup, doc_id):
+        popup.dismiss()
+        self.controller.handover_service.delete_handover(doc_id, delete_file=True)
+        self._populate_list()
+
+    def _show_popup(self, title, msg):
+        box = BoxLayout(orientation="vertical", padding=14, spacing=10)
+        box.add_widget(WrappedLabel(text=msg, font_size="12sp"))
+        b = PrimaryButton(text="OK", size_hint_y=None, height=36)
+        p = Popup(title=title, content=box, size_hint=(0.85, 0.4))
+        b.bind(on_release=p.dismiss)
+        box.add_widget(b)
+        p.open()
+
+    def _nav_to(self, screen_name: str):
+        self.manager.current = screen_name
+
+
+# =========================================================================
+# 10. INTEGRATED IN-APP PDF VIEWER SCREEN
+# =========================================================================
+class PDFViewerScreen(BaseScreen):
+    def __init__(self, controller, **kwargs):
+        super().__init__(**kwargs)
+        self.controller = controller
+        self.doc = None
+        self.current_file_path = None
+        self.current_page_idx = 0
+        self.total_pages = 0
+        self.zoom_scale = 1.5
+        self._build_ui()
+
+    def _build_ui(self):
+        root = BoxLayout(orientation="vertical", spacing=0)
+
+        # Top Bar: Back Button, Title, Page Count
+        top_bar = BoxLayout(orientation="horizontal", spacing=10, padding=[12, 8, 12, 8], size_hint_y=None, height=52)
+        top_bar.bind(pos=self._draw_bar_bg, size=self._draw_bar_bg)
+
+        btn_back = SecondaryButton(text="< Back to Downloads", size_hint=(None, None), size=(160, 36))
+        btn_back.bind(on_release=lambda x: self._nav_back())
+        top_bar.add_widget(btn_back)
+
+        self.lbl_title = WrappedLabel(
+            text="[b]Document Viewer[/b]",
+            font_size="13sp",
+            color=COLOR_NAVY_PRIMARY,
+            size_hint_x=0.7
+        )
+        top_bar.add_widget(self.lbl_title)
+        root.add_widget(top_bar)
+
+        # Control Toolbar: Page Prev/Next, Zoom -, Reset, Zoom +, Export, Delete
+        self.toolbar = BoxLayout(orientation="horizontal", spacing=8, padding=[12, 6, 12, 6], size_hint_y=None, height=44)
+        with self.toolbar.canvas.before:
+            Color(0.94, 0.96, 0.98, 1.0)
+            Rectangle(pos=self.toolbar.pos, size=self.toolbar.size)
+        self.toolbar.bind(pos=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'pos', inst.pos),
+                          size=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'size', inst.size))
+
+        self.btn_prev = SecondaryButton(text="< Prev", size_hint=(None, None), size=(72, 32))
+        self.btn_prev.bind(on_release=lambda x: self._prev_page())
+        self.toolbar.add_widget(self.btn_prev)
+
+        self.lbl_page = Label(
+            text="Page 0 of 0",
+            font_size="12sp",
+            color=COLOR_TEXT_DARK,
+            size_hint=(None, None),
+            size=(100, 32)
+        )
+        self.toolbar.add_widget(self.lbl_page)
+
+        self.btn_next = SecondaryButton(text="Next >", size_hint=(None, None), size=(72, 32))
+        self.btn_next.bind(on_release=lambda x: self._next_page())
+        self.toolbar.add_widget(self.btn_next)
+
+        # Zoom controls
+        self.btn_zoom_out = SecondaryButton(text="Zoom -", size_hint=(None, None), size=(72, 32))
+        self.btn_zoom_out.bind(on_release=lambda x: self._zoom_out())
+        self.toolbar.add_widget(self.btn_zoom_out)
+
+        self.lbl_zoom = Label(
+            text="100%",
+            font_size="12sp",
+            color=COLOR_TEXT_DARK,
+            size_hint=(None, None),
+            size=(60, 32)
+        )
+        self.toolbar.add_widget(self.lbl_zoom)
+
+        self.btn_zoom_in = SecondaryButton(text="Zoom +", size_hint=(None, None), size=(72, 32))
+        self.btn_zoom_in.bind(on_release=lambda x: self._zoom_in())
+        self.toolbar.add_widget(self.btn_zoom_in)
+
+        self.btn_fit = SecondaryButton(text="Fit Width", size_hint=(None, None), size=(82, 32))
+        self.btn_fit.bind(on_release=lambda x: self._fit_width())
+        self.toolbar.add_widget(self.btn_fit)
+
+        # Spacer
+        self.toolbar.add_widget(Widget(size_hint_x=1))
+
+        self.btn_export = SecondaryButton(text="Export Copy", size_hint=(None, None), size=(96, 32))
+        self.btn_export.bind(on_release=lambda x: self._export_current())
+        self.toolbar.add_widget(self.btn_export)
+
+        self.btn_del = Button(
+            text="Delete",
+            size_hint=(None, None),
+            size=(76, 32),
+            background_color=COLOR_URGENT_EMERGENCY,
+            color=COLOR_TEXT_LIGHT,
+            bold=True,
+            font_size="11sp"
+        )
+        self.btn_del.bind(on_release=lambda x: self._delete_current())
+        self.toolbar.add_widget(self.btn_del)
+
+        root.add_widget(self.toolbar)
+
+        # Viewport: Scrollable area containing rendered PDF page image
+        self.scroll_view = ScrollView(size_hint=(1, 1), do_scroll_x=True, do_scroll_y=True)
+        self.viewport_layout = BoxLayout(orientation="vertical", size_hint=(None, None), padding=[16, 16, 16, 16])
+        self.doc_image = Image(size_hint=(None, None), keep_ratio=True, allow_stretch=True)
+        self.viewport_layout.add_widget(self.doc_image)
+        self.scroll_view.add_widget(self.viewport_layout)
+
+        # Error view
+        self.error_card = CardBox(orientation="vertical", spacing=8, padding=[20, 20, 20, 20], size_hint=(0.8, None), height=140)
+        self.lbl_error = WrappedLabel(text="", font_size="13sp", color=COLOR_URGENT_EMERGENCY)
+        self.error_card.add_widget(self.lbl_error)
+
+        root.add_widget(self.scroll_view)
+        self.add_widget(root)
+
+    def _draw_bar_bg(self, instance, *args):
+        instance.canvas.before.clear()
+        with instance.canvas.before:
+            Color(1, 1, 1, 1)
+            Rectangle(pos=instance.pos, size=instance.size)
+            Color(*COLOR_BORDER)
+            Rectangle(pos=(instance.x, instance.y), size=(instance.width, 1))
+
+    def load_document(self, file_path_or_doc_id: str):
+        self.current_file_path = None
+        self.doc = None
+        self.current_page_idx = 0
+        self.total_pages = 0
+        self.zoom_scale = 1.5
+
+        if isinstance(file_path_or_doc_id, str) and file_path_or_doc_id.startswith("DOC_"):
+            doc_rec = self.controller.handover_service.get_handover_by_id(file_path_or_doc_id)
+            if doc_rec:
+                self.current_file_path = Path(doc_rec.get("file_path", ""))
+        else:
+            self.current_file_path = Path(file_path_or_doc_id)
+
+        if not self.current_file_path or not self.current_file_path.exists():
+            self._show_error(f"Cannot open document: file not found on disk.\n{self.current_file_path}")
+            return
+
+        try:
+            self.doc = pdfium.PdfDocument(str(self.current_file_path))
+            self.total_pages = len(self.doc)
+            self.lbl_title.text = f"[b]Handover:[/b] {self.current_file_path.name}"
+            self._render_current_page()
+        except Exception as exc:
+            self._show_error(f"Failed to parse PDF document:\n{type(exc).__name__}: {exc}")
+
+    def _render_current_page(self):
+        if not self.doc or self.total_pages == 0:
+            return
+
+        try:
+            page = self.doc[self.current_page_idx]
+            bitmap = page.render(scale=self.zoom_scale)
+            pil_img = bitmap.to_pil()
+
+            cache_dir = Path(self.controller.config.data_dir) / "cache"
+            cache_dir.mkdir(parents=True, exist_ok=True)
+            cache_path = cache_dir / f"view_{self.current_file_path.stem}_p{self.current_page_idx}_s{int(self.zoom_scale*100)}.png"
+            pil_img.save(cache_path)
+
+            self.doc_image.size = pil_img.size
+            self.viewport_layout.size = (pil_img.size[0] + 32, pil_img.size[1] + 32)
+            self.doc_image.source = str(cache_path)
+            self.doc_image.reload()
+
+            self.lbl_page.text = f"Page {self.current_page_idx + 1} of {self.total_pages}"
+            self.lbl_zoom.text = f"{int((self.zoom_scale / 1.5) * 100)}%"
+            self.btn_prev.disabled = (self.current_page_idx <= 0)
+            self.btn_next.disabled = (self.current_page_idx >= self.total_pages - 1)
+
+            if self.error_card.parent:
+                self.error_card.parent.remove_widget(self.error_card)
+            if self.scroll_view not in self.children[0].children:
+                self.children[0].add_widget(self.scroll_view)
+
+        except Exception as exc:
+            self._show_error(f"Rendering error on page {self.current_page_idx + 1}: {exc}")
+
+    def _show_error(self, message):
+        self.lbl_error.text = message
+        self.lbl_title.text = "[b]Document Error[/b]"
+        self.lbl_page.text = "Page 0 of 0"
+        if self.scroll_view in self.children[0].children:
+            self.children[0].remove_widget(self.scroll_view)
+        if self.error_card not in self.children[0].children:
+            self.children[0].add_widget(self.error_card)
+
+    def _prev_page(self):
+        if self.current_page_idx > 0:
+            self.current_page_idx -= 1
+            self._render_current_page()
+
+    def _next_page(self):
+        if self.current_page_idx < self.total_pages - 1:
+            self.current_page_idx += 1
+            self._render_current_page()
+
+    def _zoom_in(self):
+        if self.zoom_scale < 3.5:
+            self.zoom_scale += 0.3
+            self._render_current_page()
+
+    def _zoom_out(self):
+        if self.zoom_scale > 0.7:
+            self.zoom_scale -= 0.3
+            self._render_current_page()
+
+    def _fit_width(self):
+        self.zoom_scale = 1.5
+        self._render_current_page()
+
+    def _export_current(self):
+        if not self.current_file_path or not self.current_file_path.exists():
+            return
+        export_dir = Path(self.controller.config.data_dir) / "exports"
+        export_dir.mkdir(parents=True, exist_ok=True)
+        dest = export_dir / self.current_file_path.name
+        if self.current_file_path.resolve() != dest.resolve():
+            import shutil
+            shutil.copy2(self.current_file_path, dest)
+        self._show_popup("Copy Exported", f"Handover copy exported to:\n{dest}")
+
+    def _delete_current(self):
+        if not self.current_file_path:
+            return
+        box = BoxLayout(orientation="vertical", padding=14, spacing=10)
+        box.add_widget(WrappedLabel(
+            text=f"Are you sure you want to delete this document?\n{self.current_file_path.name}",
+            font_size="12sp"
+        ))
+        b_row = BoxLayout(orientation="horizontal", spacing=10, size_hint_y=None, height=36)
+        p = Popup(title="Delete Document", content=box, size_hint=(0.85, 0.4))
+
+        btn_confirm = Button(text="Delete", background_color=COLOR_URGENT_EMERGENCY, color=COLOR_WHITE, bold=True)
+        btn_confirm.bind(on_release=lambda x: self._do_delete_current(p))
+        b_row.add_widget(btn_confirm)
+
+        btn_cancel = SecondaryButton(text="Cancel")
+        btn_cancel.bind(on_release=p.dismiss)
+        b_row.add_widget(btn_cancel)
+
+        box.add_widget(b_row)
+        p.open()
+
+    def _do_delete_current(self, popup):
+        popup.dismiss()
+        if self.current_file_path and self.current_file_path.exists():
+            try:
+                self.current_file_path.unlink()
+            except Exception:
+                pass
+        self._nav_back()
+
+    def _nav_back(self):
+        if "handover_downloads" in self.manager.screen_names:
+            self.manager.current = "handover_downloads"
+        else:
+            self.manager.current = "dashboard"
+
+    def _show_popup(self, title, msg):
         box = BoxLayout(orientation="vertical", padding=14, spacing=10)
         box.add_widget(WrappedLabel(text=msg, font_size="12sp"))
         b = PrimaryButton(text="OK", size_hint_y=None, height=36)
@@ -1030,7 +1686,7 @@ class HealthcareDirectoryScreen(BaseScreen):
         loc_card.bind(minimum_height=loc_card.setter("height"))
 
         self.lbl_loc_status = WrappedLabel(
-            text="📍 Reference Location: [b]Not Set — Set location to search nearby facilities[/b]",
+            text="Reference Location: [b]Not Set — Set location to search nearby facilities[/b]",
             font_size="12sp",
             color=COLOR_NAVY_PRIMARY
         )
@@ -1038,7 +1694,7 @@ class HealthcareDirectoryScreen(BaseScreen):
 
         # Location privacy note
         loc_card.add_widget(WrappedLabel(
-            text="🔒 Privacy: Only your geographic coordinates are used for facility search. "
+            text="Privacy Notice: Only your geographic coordinates are used for facility search. "
                  "No symptoms, medical history or patient data is ever sent to external services.",
             font_size="10sp",
             color=COLOR_TEXT_MUTED
@@ -1046,7 +1702,7 @@ class HealthcareDirectoryScreen(BaseScreen):
 
         # Buttons row for location mode
         loc_btn_row = BoxLayout(orientation="horizontal", spacing=8, size_hint_y=None, height=36)
-        btn_dev_loc = PrimaryButton(text="📍 Use Device Location", size_hint_x=0.5)
+        btn_dev_loc = PrimaryButton(text="Use Device Location", size_hint_x=0.5)
         btn_dev_loc.bind(on_release=self._on_use_device_location)
         loc_btn_row.add_widget(btn_dev_loc)
 
@@ -1073,7 +1729,7 @@ class HealthcareDirectoryScreen(BaseScreen):
         search_row = BoxLayout(orientation="horizontal", spacing=6, size_hint_y=None, height=36)
         self.in_search = TextInput(hint_text="Filter by name, service, or type...", multiline=False, size_hint_x=0.7)
         self.in_search.bind(text=self._on_search)
-        btn_search = PrimaryButton(text="🔍 Search Nearby", size_hint_x=0.3)
+        btn_search = PrimaryButton(text="Search Nearby", size_hint_x=0.3)
         btn_search.bind(on_release=self._on_live_search)
         search_row.add_widget(self.in_search)
         search_row.add_widget(btn_search)
@@ -1123,14 +1779,14 @@ class HealthcareDirectoryScreen(BaseScreen):
 
     def _update_loc_label(self):
         loc = self.controller.location_service.current_location_name
-        self.lbl_loc_status.text = f"📍 Reference Location: [b]{loc}[/b]"
+        self.lbl_loc_status.text = f"Reference Location: [b]{loc}[/b]"
 
     def _update_data_source_label(self):
         source = self.controller.location_service.last_search_source
         if source == "google_maps":
-            self.lbl_data_source.text = "📡 Results: Live Google Maps data"
+            self.lbl_data_source.text = "Results: Live Google Maps data"
         elif source == "offline":
-            self.lbl_data_source.text = "📂 Results: Local offline directory (last verified with dataset)"
+            self.lbl_data_source.text = "Results: Local offline directory (last verified with dataset)"
         else:
             self.lbl_data_source.text = ""
 
@@ -1208,10 +1864,10 @@ class HealthcareDirectoryScreen(BaseScreen):
         has_emerg = fac.get("has_emergency") or str(fac.get("has_emergency", "0")) == "1"
         if has_emerg:
             top_row.add_widget(WrappedLabel(
-                text="[b]  🚨 ER[/b]",
+                text="[b]  [24/7 ER][/b]",
                 font_size="10sp",
                 color=COLOR_URGENT_EMERGENCY,
-                size_hint_x=0.2
+                size_hint_x=0.25
             ))
         card.add_widget(top_row)
 
@@ -1219,11 +1875,11 @@ class HealthcareDirectoryScreen(BaseScreen):
         source = fac.get("source", "offline")
         facility_type = fac.get("facility_type", "Healthcare Facility")
         if source == "google_maps":
-            source_badge = "[color=#1A73E8][b]📡 Google Maps[/b][/color]"
+            source_badge = "[color=#1A73E8][b]Google Maps[/b][/color]"
         else:
             is_verified = fac.get("is_verified", "1") in (True, "1", 1)
             source_badge = (
-                "[color=#059669][b]✓ Local Directory[/b][/color]" if is_verified
+                "[color=#059669][b]Local Directory[/b][/color]" if is_verified
                 else "[color=#6B7280]Local Sample[/color]"
             )
         card.add_widget(WrappedLabel(
@@ -1240,7 +1896,7 @@ class HealthcareDirectoryScreen(BaseScreen):
         miles = fac.get("distance_miles", 0.0)
         km = fac.get("distance_km", 0.0)
         card.add_widget(WrappedLabel(
-            text=f"📍 {full_addr} — [b]{miles} mi / {km} km[/b]",
+            text=f"{full_addr} — [b]{miles} mi / {km} km[/b]",
             font_size="11sp",
             color=COLOR_TEXT_DARK
         ))
@@ -1248,7 +1904,7 @@ class HealthcareDirectoryScreen(BaseScreen):
         # --- Phone ---
         phone = fac.get("phone") or fac.get("nationalPhoneNumber") or "Not listed"
         card.add_widget(WrappedLabel(
-            text=f"📞 {phone}",
+            text=f"Phone: {phone}",
             font_size="11sp",
             color=COLOR_TEXT_MUTED
         ))
@@ -1257,7 +1913,7 @@ class HealthcareDirectoryScreen(BaseScreen):
         hours = fac.get("operating_hours", "")
         if hours:
             card.add_widget(WrappedLabel(
-                text=f"🕐 {hours}",
+                text=f"Hours: {hours}",
                 font_size="10sp",
                 color=COLOR_TEXT_MUTED
             ))
@@ -1265,7 +1921,7 @@ class HealthcareDirectoryScreen(BaseScreen):
         # --- Website (Google Maps results only) ---
         website = fac.get("website", "")
         if website:
-            btn_web = SecondaryButton(text="🌐 Visit Website ↗", size_hint_y=None, height=30)
+            btn_web = SecondaryButton(text="Visit Website ↗", size_hint_y=None, height=30)
             btn_web.bind(on_release=lambda x, url=website: webbrowser.open(url))
             card.add_widget(btn_web)
 
@@ -1279,7 +1935,7 @@ class HealthcareDirectoryScreen(BaseScreen):
             ))
 
         # --- Directions button ---
-        btn_dir = SecondaryButton(text="🗺️ Open Directions in Maps ↗", size_hint_y=None, height=34)
+        btn_dir = SecondaryButton(text="Open Directions in Maps ↗", size_hint_y=None, height=34)
         btn_dir.bind(on_release=lambda x, target=fac: loc_service.open_directions(target))
         card.add_widget(btn_dir)
 

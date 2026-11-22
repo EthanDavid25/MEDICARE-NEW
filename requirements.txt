@@ -7,8 +7,10 @@ kivy-deps.angle>=0.4.0; sys_platform=="win32"
 kivy-deps.glew>=0.3.0; sys_platform=="win32"
 kivy-deps.sdl2>=0.8.0; sys_platform=="win32"
 
-# PDF report generation
+# PDF report generation and in-app viewing
 reportlab>=4.0.0
+pypdfium2>=5.15.0
+Pillow>=10.0.0
 
 # Local encryption (patient profile data)
 cryptography>=41.0.0

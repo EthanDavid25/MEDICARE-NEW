@@ -142,6 +142,25 @@ CREATE TABLE IF NOT EXISTS app_settings (
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS downloaded_handovers (
+    id                TEXT PRIMARY KEY,
+    session_id        TEXT,
+    patient_id        INTEGER,
+    patient_name      TEXT,
+    title             TEXT,
+    main_symptoms     TEXT,
+    pain_severity     INTEGER,
+    triage_category   INTEGER,
+    triage_label      TEXT,
+    filename          TEXT NOT NULL,
+    file_path         TEXT NOT NULL,
+    file_size         INTEGER DEFAULT 0,
+    created_at        TEXT NOT NULL DEFAULT (datetime('now')),
+    downloaded_at     TEXT NOT NULL DEFAULT (datetime('now')),
+    format            TEXT DEFAULT 'PDF',
+    status            TEXT DEFAULT 'available'
+);
+
 CREATE TABLE IF NOT EXISTS audit_log (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
     event_type   TEXT NOT NULL,

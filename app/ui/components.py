@@ -108,6 +108,43 @@ class SecondaryButton(Button):
             Color(*self.border_color)
             Line(rounded_rectangle=(self.x, self.y, self.width, self.height, 8), width=1)
 
+class OptionButton(Button):
+    """Clean white card option button with selection highlight and zero grey artifact."""
+    is_selected = BooleanProperty(False)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.background_color = (0, 0, 0, 0)
+        self.font_size = kwargs.get("font_size", "12sp")
+        self.halign = "left"
+        self.valign = "middle"
+        self.size_hint_y = None
+        self.height = kwargs.get("height", 42)
+        self.padding = [14, 8, 14, 8]
+        self.bind(pos=self._update_canvas, size=self._update_canvas, is_selected=self._update_canvas, state=self._update_canvas)
+        self.bind(size=self.setter("text_size"))
+
+    def _update_canvas(self, *args):
+        self.canvas.before.clear()
+        with self.canvas.before:
+            if self.is_selected:
+                Color(0.92, 0.96, 1.0, 1.0)
+                RoundedRectangle(pos=self.pos, size=self.size, radius=[6])
+                Color(*COLOR_BLUE_ACCENT)
+                Line(rounded_rectangle=(self.x, self.y, self.width, self.height, 6), width=1.5)
+                self.color = COLOR_BLUE_ACCENT
+                self.bold = True
+            else:
+                if self.state == "down":
+                    Color(0.96, 0.97, 0.99, 1.0)
+                else:
+                    Color(1.0, 1.0, 1.0, 1.0)
+                RoundedRectangle(pos=self.pos, size=self.size, radius=[6])
+                Color(*COLOR_BORDER)
+                Line(rounded_rectangle=(self.x, self.y, self.width, self.height, 6), width=1)
+                self.color = COLOR_TEXT_DARK
+                self.bold = False
+
 class UrgencyBadge(Label):
     """Colored pill badge indicating triage category."""
     category = NumericProperty(3)
