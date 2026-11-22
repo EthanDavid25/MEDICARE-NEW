@@ -130,7 +130,7 @@ class DashboardScreen(BaseScreen):
             e1 = Ellipse(pos=i1.pos, size=i1.size)
         i1.bind(pos=lambda inst, *a: setattr(e1, 'pos', inst.pos),
                 size=lambda inst, *a: setattr(e1, 'size', inst.size))
-        i1.add_widget(Label(text="👥", font_size="16sp", color=COLOR_BLUE_ACCENT))
+        i1.add_widget(CanvasIcon(icon_type="people", bg_color=(0,0,0,0), icon_color=COLOR_BLUE_ACCENT, size=(24, 24), draw_bg=False))
         self.card_total.add_widget(i1)
         
         c1_text = BoxLayout(orientation="vertical", spacing=1, pos_hint={"center_y": 0.5})
@@ -151,7 +151,7 @@ class DashboardScreen(BaseScreen):
             e2 = Ellipse(pos=i2.pos, size=i2.size)
         i2.bind(pos=lambda inst, *a: setattr(e2, 'pos', inst.pos),
                 size=lambda inst, *a: setattr(e2, 'size', inst.size))
-        i2.add_widget(Label(text="⚠️", font_size="16sp", color=COLOR_URGENT_EMERGENCY))
+        i2.add_widget(CanvasIcon(icon_type="triangle_alert", bg_color=COLOR_URGENT_EMERGENCY, icon_color=(1,1,1,1), size=(26, 26)))
         self.card_emerg.add_widget(i2)
         
         c2_text = BoxLayout(orientation="vertical", spacing=1, pos_hint={"center_y": 0.5})
@@ -172,7 +172,7 @@ class DashboardScreen(BaseScreen):
             e3 = Ellipse(pos=i3.pos, size=i3.size)
         i3.bind(pos=lambda inst, *a: setattr(e3, 'pos', inst.pos),
                 size=lambda inst, *a: setattr(e3, 'size', inst.size))
-        i3.add_widget(Label(text="✓", font_size="16sp", bold=True, color=COLOR_URGENT_ROUTINE))
+        i3.add_widget(CanvasIcon(icon_type="check", bg_color=(0,0,0,0), icon_color=COLOR_URGENT_ROUTINE, size=(24, 24), draw_bg=False))
         self.card_routine.add_widget(i3)
         
         c3_text = BoxLayout(orientation="vertical", spacing=1, pos_hint={"center_y": 0.5})
@@ -227,7 +227,7 @@ class DashboardScreen(BaseScreen):
         info_bar.bg_color = COLOR_INFO_TINT
         info_bar.border_color = (0.75, 0.85, 0.98, 1.0)
         info_bar.corner_radius = 8
-        info_bar.add_widget(Label(text="ℹ", font_size="14sp", color=COLOR_BLUE_ACCENT, size_hint=(None, None), size=(20, 22), bold=True))
+        info_bar.add_widget(CanvasIcon(icon_type="info", bg_color=COLOR_BLUE_ACCENT, icon_color=(1,1,1,1), size=(20, 20)))
         info_bar.add_widget(WrappedLabel(
             text="In case of emergency, seek immediate medical attention.",
             font_size="11.5sp",
@@ -268,8 +268,8 @@ class DashboardScreen(BaseScreen):
                 row = BoxLayout(orientation="horizontal", spacing=10, size_hint_y=None, height=44, padding=[4, 4, 4, 4])
                 
                 # Calendar icon
-                cal_lbl = Label(text="📅", font_size="13sp", size_hint=(None, None), size=(22, 22), pos_hint={"center_y": 0.5})
-                row.add_widget(cal_lbl)
+                cal_icon = CanvasIcon(icon_type="calendar", bg_color=COLOR_BLUE_ACCENT, icon_color=(1,1,1,1), size=(22, 22), pos_hint={"center_y": 0.5})
+                row.add_widget(cal_icon)
 
                 # Info text
                 info_col = BoxLayout(orientation="vertical", spacing=1, pos_hint={"center_y": 0.5})

@@ -138,6 +138,38 @@ class CanvasIcon(Widget):
                     Line(points=[cx - arm, cy, cx + arm, cy], width=lw * 1.5, cap="square")
                     Line(points=[cx, cy - arm, cx, cy + arm], width=lw * 1.5, cap="square")
 
+                elif self.icon_type == "people":
+                    # Left person (smaller, slightly behind)
+                    hr = r * 0.28
+                    hx = cx - r * 0.24
+                    hy = cy + r * 0.16
+                    Ellipse(pos=(hx - hr, hy - hr), size=(hr * 2, hr * 2))
+                    Line(ellipse=(hx - r * 0.34, cy - r * 0.50, r * 0.68, r * 0.50, 0, 180), width=lw, cap="round")
+                    # Right person (main, in front)
+                    hr2 = r * 0.30
+                    hx2 = cx + r * 0.20
+                    hy2 = cy + r * 0.20
+                    Ellipse(pos=(hx2 - hr2, hy2 - hr2), size=(hr2 * 2, hr2 * 2))
+                    Line(ellipse=(hx2 - r * 0.38, cy - r * 0.48, r * 0.76, r * 0.52, 0, 180), width=lw, cap="round")
+
+                elif self.icon_type == "calendar":
+                    # Rounded rectangle body
+                    bx = cx - r * 0.72
+                    by = cy - r * 0.65
+                    bw = r * 1.44
+                    bh = r * 1.30
+                    Line(rectangle=(bx, by, bw, bh), width=lw, cap="square")
+                    # Header divider line
+                    Line(points=[bx, by + bh * 0.68, bx + bw, by + bh * 0.68], width=lw, cap="square")
+                    # Two small binding nubs on top edge
+                    nub_r = max(1.2, r * 0.10)
+                    Ellipse(pos=(cx - r * 0.30 - nub_r, by + bh * 0.68 - nub_r), size=(nub_r * 2, nub_r * 2))
+                    Ellipse(pos=(cx + r * 0.30 - nub_r, by + bh * 0.68 - nub_r), size=(nub_r * 2, nub_r * 2))
+                    # Three horizontal grid lines (calendar rows)
+                    for row_i in range(3):
+                        ry = by + bh * (0.48 - row_i * 0.17)
+                        Line(points=[bx + bw * 0.15, ry, bx + bw * 0.85, ry], width=max(1.0, lw * 0.75), cap="round")
+
 class SectionTitle(WrappedLabel):
     """Clean prominent section header with robust height."""
     def __init__(self, text="", **kwargs):
