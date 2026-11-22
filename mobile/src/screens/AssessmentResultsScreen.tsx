@@ -13,7 +13,7 @@ import { Typography } from "../theme/typography";
 import { Spacing } from "../theme/spacing";
 import { Card } from "../components/common/Card";
 import { Button } from "../components/common/Button";
-import { AssessmentResult } from "../../shared/types";
+import { AssessmentResult } from "../types";
 
 interface AssessmentResultsScreenProps {
   route: {

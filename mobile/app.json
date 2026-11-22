@@ -28,6 +28,7 @@
         "ACCESS_FINE_LOCATION",
         "INTERNET",
         "ACCESS_NETWORK_STATE",
+        "CALL_PHONE",
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE"
       ]
@@ -36,12 +37,12 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
-      "eas": {
-        "projectId": "medicare-offline-triage"
-      },
       "apiUrl": "http://10.0.2.2:8000",
       "appVersion": "1.0.0",
-      "country": "India"
+      "country": "India",
+      "eas": {
+        "projectId": "bb435931-3ac1-4759-b2e3-2cf0d0216785"
+      }
     }
   }
 }

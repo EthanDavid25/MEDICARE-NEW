@@ -12,7 +12,7 @@ import {
   HealthcareFacility,
   PatientProfile,
   HandoverReportResponse
-} from "@shared/types";
+} from "../types";
 import { OfflineTriageEngine, OfflineQuestionEngine, QuestionSessionState } from "../clinical/offlineEngine";
 import { BUNDLED_SYMPTOMS, BUNDLED_FACILITIES } from "../clinical/datasets";
 import { StorageService } from "../storage/asyncStorage";
@@ -266,9 +266,9 @@ export class ApiClient {
         const query = params.locality.toLowerCase().trim();
         const match =
           f.name.toLowerCase().includes(query) ||
-          f.locality.toLowerCase().includes(query) ||
+          (f.locality && f.locality.toLowerCase().includes(query)) ||
           f.city.toLowerCase().includes(query) ||
-          f.district.toLowerCase().includes(query);
+          (f.district && f.district.toLowerCase().includes(query));
         if (!match && (dist === undefined || dist > (params.radiusKm || 50))) {
           continue;
         }
@@ -353,6 +353,24 @@ export class ApiClient {
     };
   }
 
+  public static async isBackendOnline(): Promise<boolean> {
+    const health = await this.checkHealth();
+    return health.online;
+  }
+
+  /**
+   * Alias: generateHandoverReport — convenience wrapper used by DoctorHandoverScreen.
+   * Delegates to generateHandoverPdf with the session_id from the payload.
+   */
+  public static async generateHandoverReport(payload: {
+    assessment_id?: string;
+    session_id?: string;
+    [key: string]: any;
+  }): Promise<HandoverReportResponse> {
+    const sessionId = payload.session_id || payload.assessment_id || "unknown";
+    return this.generateHandoverPdf(sessionId, payload as unknown as TriageEvaluationResponse);
+  }
+
   private static haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
     const toRad = (deg: number) => (deg * Math.PI) / 180;
     const R = 6371; // Earth radius in km
@@ -365,3 +383,5 @@ export class ApiClient {
     return R * c;
   }
 }
+
+export const apiClient = ApiClient;

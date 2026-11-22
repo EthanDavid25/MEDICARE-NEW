@@ -16,6 +16,8 @@ export const Colors = {
   background: "#F4F7FC",       // Clean light healthcare background
   surface: "#FFFFFF",          // Pure white card background
   surfaceSubtle: "#F8FAFC",    // Off-white secondary card
+  surfaceAlt: "#F8FAFC",       // Alternative light surface
+  white: "#FFFFFF",            // White
   border: "#E2E8F0",           // Subtle card border
   borderLight: "#CBD5E1",      // Divider border
   
@@ -26,6 +28,10 @@ export const Colors = {
   textLight: "#FFFFFF",        // Light text on dark buttons
   
   // Triage Urgency Categories
+  emergency: "#DC2626",        // Emergency Red
+  dangerTint: "#FEF2F2",       // Soft red tint
+  urgent: "#D97706",          // Urgent Amber
+  selfCare: "#10B981",        // Routine / Self-care Green
   urgentEmergency: "#DC2626",  // Category 1 - Red (Emergency)
   urgentEmergencyBg: "#FEF2F2",// Category 1 - Soft red tint
   urgentEarly: "#D97706",      // Category 2 - Amber (Early Consultation)

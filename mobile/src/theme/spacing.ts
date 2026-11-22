@@ -7,5 +7,6 @@ export const Spacing = {
   xxl: 24,
   borderRadius: 12,
   cardRadius: 14,
-  buttonRadius: 10
+  buttonRadius: 10,
+  inputRadius: 10
 };

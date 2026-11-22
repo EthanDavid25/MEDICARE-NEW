@@ -89,7 +89,7 @@ export class OfflineQuestionEngine {
     // Candidate questions matching selected symptoms
     const candidates = BUNDLED_QUESTIONS.filter(q => {
       if (state.askedOrder.includes(q.question_id)) return false;
-      return symptomCodes.has(q.symptom_code) || q.symptom_code === "ALL";
+      return q.symptom_codes?.some(sc => symptomCodes.has(sc)) || q.symptom_codes?.includes("ALL");
     });
 
     if (candidates.length === 0) {
@@ -100,7 +100,7 @@ export class OfflineQuestionEngine {
     candidates.sort((a, b) => {
       if (a.is_required && !b.is_required) return -1;
       if (!a.is_required && b.is_required) return 1;
-      return (b.priority || 1) - (a.priority || 1);
+      return ((b as any).priority || 1) - ((a as any).priority || 1);
     });
 
     return (candidates[0] as unknown) as FollowupQuestion;
@@ -196,7 +196,7 @@ export class OfflineTriageEngine {
     if (symptoms.length === 0) {
       missingCriticalData.push("No primary symptoms selected.");
     }
-    const requiredQuestions = BUNDLED_QUESTIONS.filter(q => q.is_required && symptomCodes.has(q.symptom_code));
+    const requiredQuestions = BUNDLED_QUESTIONS.filter(q => q.is_required && q.symptom_codes?.some(sc => symptomCodes.has(sc)));
     for (const rq of requiredQuestions) {
       if (!followupAnswers[rq.question_id]) {
         missingCriticalData.push(`Unanswered required safety question: ${rq.question_text}`);
@@ -312,4 +312,20 @@ export class OfflineTriageEngine {
       triage_version: "1.0.0"
     };
   }
+}
+
+export function validateIndianMobile(phone: string): { isValid: boolean; formattedNumber: string; errorMessage?: string } {
+  const cleaned = phone.replace(/[^0-9]/g, "");
+  let digits = cleaned;
+  if (digits.length === 12 && digits.startsWith("91")) {
+    digits = digits.slice(2);
+  }
+  if (digits.length !== 10) {
+    return { isValid: false, formattedNumber: phone, errorMessage: "Must be a 10-digit mobile number." };
+  }
+  if (!/^[6-9]/.test(digits)) {
+    return { isValid: false, formattedNumber: phone, errorMessage: "Indian mobile numbers must start with 6, 7, 8, or 9." };
+  }
+  const formatted = `+91-${digits.slice(0, 5)}-${digits.slice(5)}`;
+  return { isValid: true, formattedNumber: formatted };
 }

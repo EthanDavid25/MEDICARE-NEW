@@ -126,3 +126,9 @@ temp/
 *.tmp
 *.bak
 *.swp
+
+# Mobile & Expo
+.expo/
+mobile/.expo/
+mobile/node_modules/
+mobile/android_backup/

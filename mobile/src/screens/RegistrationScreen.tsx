@@ -15,7 +15,7 @@ import { Button } from "../components/common/Button";
 import { Card } from "../components/common/Card";
 import { validateIndianMobile } from "../clinical/offlineEngine";
 import { AsyncStorageWrapper } from "../storage/asyncStorage";
-import { PatientProfile } from "../../shared/types";
+import { PatientProfile } from "../types";
 
 interface RegistrationScreenProps {
   navigation: any;

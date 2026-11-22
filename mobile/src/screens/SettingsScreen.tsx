@@ -15,7 +15,7 @@ import { Card } from "../components/common/Card";
 import { Badge } from "../components/common/Badge";
 import { AsyncStorageWrapper } from "../storage/asyncStorage";
 import { apiClient } from "../api/client";
-import { PatientProfile } from "../../shared/types";
+import { PatientProfile } from "../types";
 
 interface SettingsScreenProps {
   navigation: any;
@@ -80,7 +80,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
             <View style={styles.profileBox}>
               <View style={styles.profileRow}>
                 <Text style={styles.profileName}>{profile.name}</Text>
-                <Badge text={`${profile.age} yrs • ${profile.gender.toUpperCase()}`} variant="info" size="small" />
+                <Badge text={`${profile.age} yrs • ${(profile.gender || "U").toUpperCase()}`} variant="info" size="small" />
               </View>
               <Text style={styles.profileMeta}>📱 {profile.phone}</Text>
               {profile.emergency_contact ? (

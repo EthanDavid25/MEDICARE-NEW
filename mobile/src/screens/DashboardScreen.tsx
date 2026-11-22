@@ -17,7 +17,7 @@ import { OfflineBanner } from "../components/common/OfflineBanner";
 import { EmergencyCallBanner } from "../components/hospitals/EmergencyCallBanner";
 import { AsyncStorageWrapper } from "../storage/asyncStorage";
 import { apiClient } from "../api/client";
-import { PatientProfile, AssessmentResult } from "../../shared/types";
+import { PatientProfile, AssessmentResult } from "../types";
 
 interface DashboardScreenProps {
   navigation: any;
@@ -89,7 +89,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
           {patient && (
             <View style={styles.profileBadge}>
               <Text style={styles.profileBadgeText}>
-                {patient.age}y • {patient.gender.charAt(0).toUpperCase()}
+                {patient.age}y • {(patient.gender || "U").charAt(0).toUpperCase()}
               </Text>
             </View>
           )}

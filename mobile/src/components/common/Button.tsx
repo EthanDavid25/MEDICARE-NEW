@@ -4,10 +4,12 @@ import { Colors } from "../../theme/colors";
 import { Typography } from "../../theme/typography";
 import { Spacing } from "../../theme/spacing";
 
-interface ButtonProps {
+export interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: "primary" | "secondary" | "danger" | "outline";
+  variant?: "primary" | "secondary" | "danger" | "emergency" | "outline";
+  size?: "small" | "medium" | "large";
+  fullWidth?: boolean;
   loading?: boolean;
   disabled?: boolean;
   style?: ViewStyle;
@@ -19,6 +21,8 @@ export const Button: React.FC<ButtonProps> = ({
   title,
   onPress,
   variant = "primary",
+  size = "medium",
+  fullWidth = false,
   loading = false,
   disabled = false,
   style,
@@ -30,6 +34,7 @@ export const Button: React.FC<ButtonProps> = ({
       case "secondary":
         return styles.secondaryContainer;
       case "danger":
+      case "emergency":
         return styles.dangerContainer;
       case "outline":
         return styles.outlineContainer;
@@ -43,6 +48,7 @@ export const Button: React.FC<ButtonProps> = ({
       case "secondary":
         return styles.secondaryText;
       case "danger":
+      case "emergency":
         return styles.dangerText;
       case "outline":
         return styles.outlineText;
@@ -51,21 +57,40 @@ export const Button: React.FC<ButtonProps> = ({
     }
   };
 
+  const getSizeStyle = () => {
+    switch (size) {
+      case "small":
+        return styles.sizeSmall;
+      case "large":
+        return styles.sizeLarge;
+      default:
+        return styles.sizeMedium;
+    }
+  };
+
   return (
     <TouchableOpacity
+      style={[
+        styles.baseContainer,
+        getSizeStyle(),
+        getContainerStyle(),
+        fullWidth && styles.fullWidth,
+        disabled && styles.disabledContainer,
+        style
+      ]}
       onPress={onPress}
       disabled={disabled || loading}
       activeOpacity={0.8}
-      style={[styles.baseContainer, getContainerStyle(), disabled && styles.disabledContainer, style]}
     >
       {loading ? (
-        <ActivityIndicator color={variant === "outline" ? Colors.blueAccent : Colors.textLight} size="small" />
+        <ActivityIndicator
+          size="small"
+          color={variant === "outline" ? Colors.blueAccent : Colors.textLight}
+        />
       ) : (
         <>
           {icon}
-          <Text style={[styles.baseText, getTextStyle(), disabled && styles.disabledText, textStyle]}>
-            {title}
-          </Text>
+          <Text style={[styles.baseText, getTextStyle(), textStyle]}>{title}</Text>
         </>
       )}
     </TouchableOpacity>
@@ -74,33 +99,52 @@ export const Button: React.FC<ButtonProps> = ({
 
 const styles = StyleSheet.create({
   baseContainer: {
-    height: 48,
     borderRadius: Spacing.buttonRadius,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: Spacing.lg
+    gap: Spacing.sm
+  },
+  sizeSmall: {
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    minHeight: 36
+  },
+  sizeMedium: {
+    paddingVertical: Spacing.sm + 2,
+    paddingHorizontal: Spacing.lg,
+    minHeight: 46
+  },
+  sizeLarge: {
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    minHeight: 52
+  },
+  fullWidth: {
+    width: "100%"
   },
   primaryContainer: {
-    backgroundColor: Colors.blueAccent
-  },
-  secondaryContainer: {
     backgroundColor: Colors.navyPrimary
   },
+  secondaryContainer: {
+    backgroundColor: Colors.blueAccent
+  },
   dangerContainer: {
-    backgroundColor: Colors.urgentEmergency
+    backgroundColor: Colors.emergency
   },
   outlineContainer: {
     backgroundColor: "transparent",
     borderWidth: 1.5,
-    borderColor: Colors.blueAccent
+    borderColor: Colors.navyPrimary
   },
   disabledContainer: {
     backgroundColor: Colors.disabled,
-    borderColor: Colors.disabled
+    borderColor: Colors.disabled,
+    opacity: 0.6
   },
   baseText: {
-    ...Typography.button
+    fontSize: 14,
+    fontWeight: "600"
   },
   primaryText: {
     color: Colors.textLight
@@ -112,9 +156,6 @@ const styles = StyleSheet.create({
     color: Colors.textLight
   },
   outlineText: {
-    color: Colors.blueAccent
-  },
-  disabledText: {
-    color: Colors.surfaceSubtle
+    color: Colors.navyPrimary
   }
 });

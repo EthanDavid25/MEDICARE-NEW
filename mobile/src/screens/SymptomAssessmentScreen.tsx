@@ -24,7 +24,7 @@ import {
   FollowUpQuestion,
   TriageAssessmentInput,
   AssessmentResult
-} from "../../shared/types";
+} from "../types";
 
 interface SymptomAssessmentScreenProps {
   navigation: any;
@@ -73,9 +73,9 @@ export const SymptomAssessmentScreen: React.FC<SymptomAssessmentScreenProps> = (
   const [progression, setProgression] = useState<string>("unchanged");
 
   // Adaptive questions state
-  const [activeQuestion, setActiveQuestion] = useState<FollowUpQuestion | null>(null);
+  const [activeQuestion, setActiveQuestion] = useState<any>(null);
   const [answeredQuestions, setAnsweredQuestions] = useState<{ [qId: string]: any }>({});
-  const [questionHistory, setQuestionHistory] = useState<FollowUpQuestion[]>([]);
+  const [questionHistory, setQuestionHistory] = useState<any[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
   const [currentSelectedAnswer, setCurrentSelectedAnswer] = useState<any>(null);
 
@@ -139,16 +139,18 @@ export const SymptomAssessmentScreen: React.FC<SymptomAssessmentScreenProps> = (
 
     if (!activeQuestion) return;
 
+    const qId = activeQuestion.id || activeQuestion.question_id || "q";
     const updatedAnswers = {
       ...answeredQuestions,
-      [activeQuestion.id]: currentSelectedAnswer
+      [qId]: currentSelectedAnswer
     };
     setAnsweredQuestions(updatedAnswers);
 
     setLoading(true);
     try {
       const nextQ = await apiClient.getNextQuestion(selectedSymptom, updatedAnswers);
-      if (nextQ && !updatedAnswers[nextQ.id]) {
+      const nextQId = nextQ?.id || nextQ?.question_id;
+      if (nextQ && nextQId && !updatedAnswers[nextQId]) {
         // New question returned
         const newHistory = [...questionHistory.slice(0, currentQuestionIndex + 1), nextQ];
         setQuestionHistory(newHistory);
@@ -171,9 +173,10 @@ export const SymptomAssessmentScreen: React.FC<SymptomAssessmentScreenProps> = (
     if (currentQuestionIndex > 0) {
       const prevIdx = currentQuestionIndex - 1;
       const prevQ = questionHistory[prevIdx];
+      const prevQId = prevQ?.id || prevQ?.question_id;
       setCurrentQuestionIndex(prevIdx);
       setActiveQuestion(prevQ);
-      setCurrentSelectedAnswer(answeredQuestions[prevQ.id] ?? null);
+      setCurrentSelectedAnswer(prevQId ? answeredQuestions[prevQId] ?? null : null);
     } else {
       setStep(3); // Go back to duration step
     }
@@ -208,8 +211,8 @@ export const SymptomAssessmentScreen: React.FC<SymptomAssessmentScreenProps> = (
       const patient = await AsyncStorageWrapper.getPatientProfile();
 
       const assessmentInput: TriageAssessmentInput = {
-        patient_age: patient ? patient.age : 35,
-        patient_gender: patient ? patient.gender : "other",
+        patient_age: patient?.age || 35,
+        patient_gender: patient?.gender || "other",
         chief_symptom: selectedSymptom,
         pain_severity: painLevel,
         duration_hours: durationHours,
@@ -238,7 +241,7 @@ export const SymptomAssessmentScreen: React.FC<SymptomAssessmentScreenProps> = (
   const filteredSymptoms = searchQuery.trim()
     ? allSymptoms.filter((s) =>
         s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        s.id.toLowerCase().includes(searchQuery.toLowerCase())
+        (s.id || s.code || "").toLowerCase().includes(searchQuery.toLowerCase())
       )
     : [];
 
@@ -295,7 +298,7 @@ export const SymptomAssessmentScreen: React.FC<SymptomAssessmentScreenProps> = (
                       styles.symptomCard,
                       selectedSymptom === s.id && styles.symptomCardSelected
                     ]}
-                    onPress={() => handleSelectSymptom(s.id)}
+                    onPress={() => handleSelectSymptom(s.id || s.code)}
                   >
                     <Text
                       style={[
@@ -323,7 +326,7 @@ export const SymptomAssessmentScreen: React.FC<SymptomAssessmentScreenProps> = (
                         styles.symptomTile,
                         selectedSymptom === s.id && styles.symptomTileSelected
                       ]}
-                      onPress={() => handleSelectSymptom(s.id)}
+                      onPress={() => handleSelectSymptom(s.id || s.code)}
                     >
                       <Text
                         style={[
@@ -425,12 +428,12 @@ export const SymptomAssessmentScreen: React.FC<SymptomAssessmentScreenProps> = (
             />
 
             <QuestionCard
-              questionId={activeQuestion.id}
-              prompt={activeQuestion.prompt}
+              questionId={activeQuestion?.id || activeQuestion?.question_id || "q"}
+              prompt={activeQuestion?.prompt || activeQuestion?.question_text || ""}
               subPrompt="Select the most accurate response below:"
-              options={activeQuestion.options.map((opt) => ({
-                id: opt.value,
-                label: opt.label
+              options={(activeQuestion?.options || []).map((opt: any) => ({
+                id: opt.value ?? opt.code ?? opt.label ?? opt.text,
+                label: opt.label || opt.text || ""
               }))}
               selectedOptionId={currentSelectedAnswer}
               onSelectOption={(val) => setCurrentSelectedAnswer(val)}

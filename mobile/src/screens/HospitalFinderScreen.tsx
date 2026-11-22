@@ -15,7 +15,7 @@ import { Spacing } from "../theme/spacing";
 import { HospitalCard } from "../components/hospitals/HospitalCard";
 import { EmergencyCallBanner } from "../components/hospitals/EmergencyCallBanner";
 import { apiClient } from "../api/client";
-import { HospitalFacility } from "../../shared/types";
+import { HospitalFacility } from "../types";
 
 // Default coordinates: Parel, Mumbai (central healthcare hub)
 const DEFAULT_LAT = 18.9902;
@@ -69,7 +69,7 @@ export const HospitalFinderScreen: React.FC = () => {
           h.name.toLowerCase().includes(q) ||
           h.city.toLowerCase().includes(q) ||
           (h.locality && h.locality.toLowerCase().includes(q)) ||
-          h.address.toLowerCase().includes(q)
+          (h.address && h.address.toLowerCase().includes(q))
       );
     }
 
@@ -77,11 +77,11 @@ export const HospitalFinderScreen: React.FC = () => {
     if (filter === "24/7 Emergency") {
       result = result.filter((h) => h.has_emergency);
     } else if (filter === "Government") {
-      result = result.filter((h) => h.type.toLowerCase() === "government");
+      result = result.filter((h) => h.type?.toLowerCase() === "government");
     } else if (filter === "Private") {
-      result = result.filter((h) => h.type.toLowerCase() === "private");
+      result = result.filter((h) => h.type?.toLowerCase() === "private");
     } else if (filter === "Tertiary") {
-      result = result.filter((h) => h.tier.toLowerCase() === "tertiary");
+      result = result.filter((h) => h.tier?.toLowerCase() === "tertiary");
     }
 
     setFilteredHospitals(result);

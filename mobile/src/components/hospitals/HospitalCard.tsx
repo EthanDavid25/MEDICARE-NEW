@@ -4,7 +4,7 @@ import { Colors } from "../../theme/colors";
 import { Typography } from "../../theme/typography";
 import { Spacing } from "../../theme/spacing";
 import { Badge } from "../common/Badge";
-import { HospitalFacility } from "../../../shared/types";
+import { HospitalFacility } from "../../types";
 
 interface HospitalCardProps {
   hospital: HospitalFacility;

@@ -3,7 +3,7 @@
  * Manages patient profile, assessment records, settings and offline caches.
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { PatientProfile, TriageEvaluationResponse, HealthcareFacility } from "@shared/types";
+import { PatientProfile, TriageEvaluationResponse, HealthcareFacility } from "../types";
 
 const KEYS = {
   PATIENT_PROFILE: "@medicare_patient_profile",
@@ -68,7 +68,7 @@ export class StorageService {
   }
 
   // --- Assessment History ---
-  static async getAssessmentHistory(): Promise<StoredAssessment[]> {
+  static async getAssessmentHistory(): Promise<any[]> {
     try {
       const data = await AsyncStorage.getItem(KEYS.ASSESSMENT_HISTORY);
       return data ? JSON.parse(data) : [];
@@ -136,4 +136,24 @@ export class StorageService {
       await AsyncStorage.setItem(KEYS.CACHED_FACILITIES, JSON.stringify(facilities));
     } catch {}
   }
+
+  static async addAssessmentResult(result: any): Promise<boolean> {
+    try {
+      const history = await AsyncStorage.getItem(KEYS.ASSESSMENT_HISTORY);
+      const list = history ? JSON.parse(history) : [];
+      list.unshift(result);
+      await AsyncStorage.setItem(KEYS.ASSESSMENT_HISTORY, JSON.stringify(list.slice(0, 50)));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  static async clearAssessmentHistory(): Promise<void> {
+    try {
+      await AsyncStorage.removeItem(KEYS.ASSESSMENT_HISTORY);
+    } catch {}
+  }
 }
+
+export const AsyncStorageWrapper = StorageService;

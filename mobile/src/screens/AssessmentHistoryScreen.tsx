@@ -15,7 +15,7 @@ import { Card } from "../components/common/Card";
 import { Badge } from "../components/common/Badge";
 import { Button } from "../components/common/Button";
 import { AsyncStorageWrapper } from "../storage/asyncStorage";
-import { AssessmentResult } from "../../shared/types";
+import { AssessmentResult } from "../types";
 
 interface AssessmentHistoryScreenProps {
   navigation: any;

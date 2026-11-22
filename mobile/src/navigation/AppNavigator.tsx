@@ -10,7 +10,7 @@ import { DoctorHandoverScreen } from "../screens/DoctorHandoverScreen";
 import { HospitalFinderScreen } from "../screens/HospitalFinderScreen";
 import { AssessmentHistoryScreen } from "../screens/AssessmentHistoryScreen";
 import { SettingsScreen } from "../screens/SettingsScreen";
-import { AssessmentResult } from "../../shared/types";
+import { AssessmentResult } from "../types";
 
 export type RootStackParamList = {
   Splash: undefined;
