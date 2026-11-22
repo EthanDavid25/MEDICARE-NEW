@@ -8,12 +8,23 @@ from datetime import datetime
 import json
 import logging
 
+logger = logging.getLogger(__name__)
+
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
 
-logger = logging.getLogger("medicare.reports")
+def _sanitize_pdf_text(text: str) -> str:
+    """Escapes raw XML/HTML characters and removes faulty HTML entities."""
+    if not text:
+        return ""
+    s = str(text)
+    s = s.replace("&nbsp;", " ")
+    # Replace bare & that are not part of an existing entity
+    import re
+    s = re.sub(r"&(?!(amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)", "&amp;", s)
+    return s
 
 def generate_doctor_handover_pdf(
     patient: dict,
@@ -242,8 +253,8 @@ def generate_doctor_handover_pdf(
     except (ValueError, TypeError):
         sev_display = str(sev_score)
     story.append(Paragraph(
-        f"<b>Computed Severity Metric:</b> {sev_display} &nbsp;|&nbsp; "
-        f"<b>Progression Trajectory:</b> {str(prog_trend).title()}",
+        f"<b>Computed Severity Metric:</b> {_sanitize_pdf_text(sev_display)}  |  "
+        f"<b>Progression Trajectory:</b> {_sanitize_pdf_text(str(prog_trend).title())}",
         body_style
     ))
     story.append(Spacer(1, 4))
@@ -255,9 +266,9 @@ def generate_doctor_handover_pdf(
         except Exception:
             warnings = []
     if warnings:
-        story.append(Paragraph("<b>Warning Signs & Emergency Indicators:</b>", bold_body))
+        story.append(Paragraph("<b>Warning Signs &amp; Emergency Indicators:</b>", bold_body))
         for w in warnings:
-            story.append(Paragraph(f"• <font color='#DC3545'>{w}</font>", body_style))
+            story.append(Paragraph(f"• <font color='#DC3545'>{_sanitize_pdf_text(w)}</font>", body_style))
         story.append(Spacer(1, 4))
 
     # Triggered Clinical Rules (with technical IDs)
@@ -268,7 +279,7 @@ def generate_doctor_handover_pdf(
         except Exception:
             rules = []
     if rules:
-        story.append(Paragraph("<b>Triggered Clinical Rules (Technical IDs):</b>", bold_body))
+        story.append(Paragraph("<b>Triggered Clinical Rules (Technical Factors):</b>", bold_body))
         for r in rules:
             if isinstance(r, dict):
                 rid = r.get("rule_id", "RULE")
@@ -276,20 +287,59 @@ def generate_doctor_handover_pdf(
                 r_text = f"[{rid}] {desc}" if desc else f"[{rid}]"
             else:
                 r_text = str(r)
-            story.append(Paragraph(f"• {r_text}", body_style))
+            story.append(Paragraph(f"• {_sanitize_pdf_text(r_text)}", body_style))
         story.append(Spacer(1, 4))
 
-    # Unanswered Safety Questions / Incomplete Clinical Data Points
+    # 5. Recorded Clinical Question Answers & Completeness
+    story.append(Paragraph("5. CLINICAL QUESTION ANSWERS &amp; ASSESSMENT DETAILS", section_heading))
+    answers = assessment.get("followup_answers", {})
+    if isinstance(answers, str):
+        try:
+            answers = json.loads(answers)
+        except Exception:
+            answers = {}
+
+    is_emerg = assessment.get("emergency_override", False)
     missing = assessment.get("missing_critical_data", [])
     if isinstance(missing, str):
         try:
             missing = json.loads(missing)
         except Exception:
             missing = []
+
+    ans_count = len(answers) if answers else 0
+    complete_status = "Yes (Emergency Fast-Path Activated)" if is_emerg else ("Yes" if not missing else "Preliminary (Pending Information)")
+
+    details_data = [
+        [Paragraph("<b>Questions Answered:</b>", body_style), Paragraph(f"{ans_count} question(s) recorded", body_style),
+         Paragraph("<b>Assessment Complete:</b>", body_style), Paragraph(complete_status, bold_body)]
+    ]
+    t_details = Table(details_data, colWidths=[120, 150, 120, 150])
+    t_details.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F8F9FA")),
+        ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#E0E0E0")),
+        ("INNERGRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#EEEEEE")),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("TOPPADDING", (0, 0), (-1, -1), 4),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+    ]))
+    story.append(t_details)
+    story.append(Spacer(1, 4))
+
+    if answers:
+        story.append(Paragraph("<b>Recorded Patient Answers:</b>", bold_body))
+        for q_key, a_val in answers.items():
+            # Format clean question and answer
+            clean_q = q_key.replace("QID_", "").replace("_", " ").title()
+            clean_a = str(a_val).replace("_", " ").title()
+            story.append(Paragraph(f"• <b>{clean_q}:</b> {_sanitize_pdf_text(clean_a)}", body_style))
+        story.append(Spacer(1, 4))
+
+    # Unanswered Safety Questions / Incomplete Clinical Data Points
     if missing:
-        story.append(Paragraph("<b>Unanswered Safety Questions / Incomplete Clinical Data:</b>", bold_body))
+        story.append(Paragraph("<b>Clinical Data Noted Pending:</b>", bold_body))
         for m in missing:
-            story.append(Paragraph(f"• <font color='#B45309'>{m}</font>", body_style))
+            story.append(Paragraph(f"• <font color='#B45309'>{_sanitize_pdf_text(m)}</font>", body_style))
         story.append(Spacer(1, 4))
 
     # Recommended Clinical Next Steps

@@ -6,7 +6,7 @@
     "clinical_review_status": "NOT_REVIEWED - Reference material only",
     "acquired_date": "2026-11-21",
     "last_updated": "2026-11-21",
-    "record_count": 25
+    "record_count": 8
   },
   "references": [
     {
@@ -88,105 +88,6 @@
       "source": "MEDICARE Clinical Governance Charter",
       "version": "1.0.0",
       "last_updated": "2026-11-21"
-    },
-    {
-      "ref_code": "REF_GEO_OSM",
-      "category": "geographic_mapping",
-      "title": "OpenStreetMap",
-      "summary": "Open geographic map data used as a source for roads, settlements and geographic features.",
-      "content": "OpenStreetMap (OSM) is a collaborative project providing open geographic map data used as a source for road networks, settlement landmarks, and emergency healthcare facility spatial coordinates.",
-      "source": "OpenStreetMap Foundation",
-      "url": "https://www.openstreetmap.org/",
-      "version": "ODbL 1.0",
-      "last_updated": "2026-11-22"
-    },
-    {
-      "ref_code": "REF_GEO_OSM_COPYRIGHT",
-      "category": "geographic_mapping",
-      "title": "OpenStreetMap Copyright and Attribution",
-      "summary": "Data licensing, attribution and usage requirements.",
-      "content": "Defines Open Database License (ODbL) terms, tile usage guidelines, and proper copyright attribution requirements for offline maps and extracted geographic assets.",
-      "source": "OpenStreetMap Foundation",
-      "url": "https://www.openstreetmap.org/copyright",
-      "version": "Legal Terms",
-      "last_updated": "2026-11-22"
-    },
-    {
-      "ref_code": "REF_GEO_OSM_DOWNLOADING",
-      "category": "geographic_mapping",
-      "title": "OpenStreetMap Wiki — Downloading Data",
-      "summary": "Documentation about obtaining geographic data for offline processing.",
-      "content": "Official technical guidelines on downloading, extracting, and pre-processing planet dumps, regional extracts (PBF), and administrative boundary definitions for offline geographic processing.",
-      "source": "OpenStreetMap Wiki Community",
-      "url": "https://wiki.openstreetmap.org/wiki/Downloading_data",
-      "version": "Technical Guide",
-      "last_updated": "2026-11-22"
-    },
-    {
-      "ref_code": "REF_GEO_MBTILES_SPEC",
-      "category": "geographic_mapping",
-      "title": "MBTiles Specification",
-      "summary": "Reference for the SQLite-based MBTiles format used to store map tiles.",
-      "content": "An open specification for storing tiled map data (raster PNG/JPEG and vector PBF) inside an SQLite database container with metadata and tile schema indexed by zoom_level, tile_column, and tile_row.",
-      "source": "Mapbox / Open Source Community",
-      "url": "https://github.com/mapbox/mbtiles-spec",
-      "version": "Spec 1.3",
-      "last_updated": "2026-11-22"
-    },
-    {
-      "ref_code": "REF_GEO_KIVY_MAPVIEW",
-      "category": "geographic_mapping",
-      "title": "Kivy Garden MapView",
-      "summary": "Documentation for displaying interactive maps and markers in the existing Kivy application.",
-      "content": "Interactive map display component for Kivy supporting slippy map tile layers, geographic marker placement, touch-based panning, and coordinate-to-screen projection.",
-      "source": "Kivy Community",
-      "url": "https://mapview.readthedocs.io/",
-      "version": "v1.0 Documentation",
-      "last_updated": "2026-11-22"
-    },
-    {
-      "ref_code": "REF_GEO_SQLITE_DOCS",
-      "category": "geographic_mapping",
-      "title": "SQLite Documentation",
-      "summary": "Local database storage and management.",
-      "content": "Official documentation for SQLite, the self-contained, serverless, transactional SQL engine utilized for storing patient triage records and packaging offline map tiles.",
-      "source": "SQLite Consortium",
-      "url": "https://www.sqlite.org/docs.html",
-      "version": "SQLite3 Reference",
-      "last_updated": "2026-11-22"
-    },
-    {
-      "ref_code": "REF_GEO_VALHALLA",
-      "category": "geographic_mapping",
-      "title": "Valhalla Routing Engine",
-      "summary": "Reference for routing algorithms and road-network navigation architecture. Candidate for evaluation, not as proof that its full engine is implemented in C.",
-      "content": "Open-source routing engine and road-network architecture reference. Evaluated for algorithmic routing patterns and dynamic tile-based graph partitioning; MEDICARE implements a dedicated C A* routing engine for local hospital road graphs.",
-      "source": "Valhalla Project",
-      "url": "https://valhalla.github.io/valhalla/",
-      "version": "Architecture Reference",
-      "last_updated": "2026-11-22"
-    },
-    {
-      "ref_code": "REF_GEO_ANDROID_PERMISSIONS",
-      "category": "geographic_mapping",
-      "title": "Android Location Permissions",
-      "summary": "Reference for Android device location permission handling.",
-      "content": "Android developer guidelines for runtime location permissions (ACCESS_COARSE_LOCATION and ACCESS_FINE_LOCATION), privacy safeguards, and user-initiated location disclosures.",
-      "source": "Google Android Developers",
-      "url": "https://developer.android.com/develop/sensors-and-location/location/permissions",
-      "version": "Android Platform Docs",
-      "last_updated": "2026-11-22"
-    },
-    {
-      "ref_code": "REF_GEO_CPP_REFERENCE",
-      "category": "geographic_mapping",
-      "title": "C Language Documentation",
-      "summary": "Reference for C language functionality used in native map processing.",
-      "content": "Standard C reference covering C11 library primitives, memory management, math functions, bit manipulation, and platform-independent data structures implemented in MEDICARE's native map engine.",
-      "source": "cppreference.com",
-      "url": "https://en.cppreference.com/w/c",
-      "version": "ISO/IEC 9899:2011 (C11)",
-      "last_updated": "2026-11-22"
     }
   ]
 }

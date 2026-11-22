@@ -23,7 +23,7 @@ from kivy.graphics import Color, Rectangle, RoundedRectangle, Line
 from kivy.utils import get_color_from_hex
 
 from app.ui.theme import (
-    COLOR_NAVY_PRIMARY, COLOR_NAVY_LIGHT, COLOR_BLUE_ACCENT,
+    COLOR_NAVY_DARK, COLOR_NAVY_PRIMARY, COLOR_NAVY_LIGHT, COLOR_BLUE_ACCENT,
     COLOR_BLUE_TINT, COLOR_BG_LIGHT, COLOR_WHITE, COLOR_TEXT_LIGHT, COLOR_BORDER,
     is_desktop_layout
 )
@@ -52,7 +52,7 @@ class NavButton(Button):
         self.color = COLOR_TEXT_LIGHT
         self.is_active = is_active
         self.size_hint_y = None
-        self.height = 40
+        self.height = 42
         self.halign = "left"
         self.valign = "middle"
         self.bind(pos=self._update_canvas, size=self._update_canvas)
@@ -62,11 +62,13 @@ class NavButton(Button):
         with self.canvas.before:
             if self.is_active:
                 Color(*COLOR_BLUE_ACCENT)
-                RoundedRectangle(pos=(self.x + 4, self.y + 2), size=(self.width - 8, self.height - 4), radius=[6])
+                RoundedRectangle(pos=(self.x + 8, self.y + 2), size=(self.width - 16, self.height - 4), radius=[8])
+                self.color = COLOR_WHITE
             else:
                 Color(0, 0, 0, 0)
                 Rectangle(pos=self.pos, size=self.size)
-        self.text_size = (max(self.width - 24, 50), self.height)
+                self.color = (0.85, 0.9, 0.96, 1.0)
+        self.text_size = (max(self.width - 28, 50), self.height)
 
 class MedicareKivyApp(App):
     """Main Kivy application class for MEDICARE."""
@@ -146,7 +148,7 @@ class MedicareKivyApp(App):
     def _draw_sidebar_bg(self, instance, *args):
         instance.canvas.before.clear()
         with instance.canvas.before:
-            Color(*COLOR_NAVY_PRIMARY)
+            Color(*COLOR_NAVY_DARK)
             Rectangle(pos=instance.pos, size=instance.size)
 
     def _build_sidebar_items(self):
@@ -156,18 +158,18 @@ class MedicareKivyApp(App):
         brand_card = BoxLayout(
             orientation="vertical",
             size_hint_y=None,
-            height=70,
-            padding=[16, 12, 16, 6],
-            spacing=2
+            height=76,
+            padding=[18, 14, 18, 10],
+            spacing=3
         )
         logo_lbl = Label(
             text="[b]MEDICARE[/b]",
             markup=True,
-            font_size="17sp",
+            font_size="18sp",
             bold=True,
             color=COLOR_TEXT_LIGHT,
             size_hint_y=None,
-            height=26,
+            height=28,
             halign="left",
             valign="middle"
         )
@@ -175,7 +177,7 @@ class MedicareKivyApp(App):
         brand_card.add_widget(logo_lbl)
 
         sub_lbl = Label(
-            text="Symptoms Triage Advisor",
+            text="Smart Symptom Assessment",
             font_size="11sp",
             color=COLOR_BLUE_TINT,
             size_hint_y=None,
@@ -189,7 +191,7 @@ class MedicareKivyApp(App):
         # Subtle divider under branding
         divider = Widget(size_hint_y=None, height=1)
         with divider.canvas.before:
-            Color(0.2, 0.35, 0.55, 0.5)
+            Color(0.18, 0.28, 0.42, 0.6)
             Rectangle(pos=divider.pos, size=divider.size)
         divider.bind(pos=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'pos', inst.pos),
                      size=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'size', inst.size))
@@ -201,7 +203,7 @@ class MedicareKivyApp(App):
         self.sidebar_scroll = ScrollView(size_hint=(1, 1), do_scroll_x=False, scroll_y=1)
         self.sidebar_anchor = AnchorLayout(anchor_x="center", anchor_y="top", size_hint=(1, None))
         
-        self.nav_box = BoxLayout(orientation="vertical", size_hint=(1, None), spacing=3, padding=[8, 8, 8, 8])
+        self.nav_box = BoxLayout(orientation="vertical", size_hint=(1, None), spacing=4, padding=[6, 8, 6, 8])
         self.nav_box.bind(minimum_height=self.nav_box.setter("height"))
 
         def _update_anchor_height(*args):
@@ -211,22 +213,22 @@ class MedicareKivyApp(App):
         self.nav_box.bind(minimum_height=_update_anchor_height)
 
         nav_items = [
-            ("dashboard", "•  Dashboard"),
-            ("symptom_assessment", "•  New Assessment"),
-            ("patient_profile", "•  Patient Profile"),
-            ("patient_history", "•  Past Assessments"),
-            ("symptom_progression", "•  Progression"),
-            ("doctor_handover", "•  Doctor Handover"),
-            ("handover_downloads", "•  Handover Downloads"),
-            ("medical_references", "•  References"),
-            ("settings", "•  Settings"),
-            ("about", "•  About")
+            ("dashboard", "Dashboard"),
+            ("symptom_assessment", "+  New Assessment"),
+            ("patient_profile", "Patient Profile"),
+            ("patient_history", "Past Assessments"),
+            ("symptom_progression", "Progression"),
+            ("doctor_handover", "Doctor Handover"),
+            ("handover_downloads", "Handover Downloads"),
+            ("medical_references", "References"),
+            ("settings", "Settings"),
+            ("about", "About")
         ]
         self.nav_buttons = {}
         for scr_id, title in nav_items:
             btn = NavButton(
                 scr_id,
-                f" {title}",
+                f"  {title}",
                 is_active=(scr_id == "dashboard"),
                 halign="left",
                 valign="middle"
@@ -238,6 +240,25 @@ class MedicareKivyApp(App):
         self.sidebar_anchor.add_widget(self.nav_box)
         self.sidebar_scroll.add_widget(self.sidebar_anchor)
         self.sidebar.add_widget(self.sidebar_scroll)
+
+        # 3. Bottom Offline Mode Indicator (Matching design reference)
+        bottom_box = BoxLayout(
+            orientation="horizontal",
+            size_hint_y=None,
+            height=40,
+            padding=[18, 8, 18, 12],
+            spacing=8
+        )
+        dot_lbl = Label(
+            text="[b][color=#10B981]●[/color][/b]  [color=#CBD5E1]Offline Mode[/color]",
+            markup=True,
+            font_size="11.5sp",
+            halign="left",
+            valign="middle"
+        )
+        dot_lbl.bind(size=dot_lbl.setter("text_size"))
+        bottom_box.add_widget(dot_lbl)
+        self.sidebar.add_widget(bottom_box)
 
     def _build_bottom_nav_items(self):
         self.bottom_nav.clear_widgets()
@@ -265,6 +286,12 @@ class MedicareKivyApp(App):
             for sid, btn in self.nav_buttons.items():
                 btn.is_active = (sid == screen_id)
                 btn._update_canvas()
+            if screen_id == "followup_questions":
+                self.header.height = 0
+                self.header.opacity = 0
+            else:
+                self.header.height = 54
+                self.header.opacity = 1
 
     def open_pdf_viewer(self, doc_id_or_path: str):
         viewer = self.screens.get("pdf_viewer")

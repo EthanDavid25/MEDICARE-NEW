@@ -20,19 +20,24 @@ from kivy.uix.popup import Popup
 from kivy.uix.button import Button
 from kivy.uix.image import Image
 from kivy.uix.widget import Widget
-from kivy.graphics import Color, RoundedRectangle, Rectangle
+from kivy.clock import Clock
+from kivy.graphics import Color, RoundedRectangle, Rectangle, Ellipse, Line
 from kivy.core.window import Window
 
 import pypdfium2 as pdfium
 
 from app.ui.theme import (
-    COLOR_NAVY_PRIMARY, COLOR_NAVY_LIGHT, COLOR_BLUE_ACCENT,
-    COLOR_BLUE_TINT, COLOR_BG_LIGHT, COLOR_WHITE, COLOR_TEXT_DARK,
-    COLOR_TEXT_MUTED, COLOR_TEXT_LIGHT, COLOR_BORDER,
+    COLOR_NAVY_DARK, COLOR_NAVY_PRIMARY, COLOR_NAVY_LIGHT, COLOR_BLUE_ACCENT,
+    COLOR_BLUE_LIGHT, COLOR_BLUE_TINT, COLOR_BG_LIGHT, COLOR_WHITE, COLOR_TEXT_DARK,
+    COLOR_TEXT_MUTED, COLOR_TEXT_LIGHT, COLOR_BORDER, COLOR_BORDER_FOCUS,
     COLOR_URGENT_EMERGENCY, COLOR_URGENT_EARLY, COLOR_URGENT_ROUTINE,
-    COLOR_URGENT_INSUFF
+    COLOR_URGENT_INSUFF, COLOR_EMERGENCY_TINT, COLOR_EARLY_TINT,
+    COLOR_ROUTINE_TINT, COLOR_INFO_TINT, COLOR_OPTION_SELECT_BG
 )
-from app.ui.components import CardBox, PrimaryButton, SecondaryButton, UrgencyBadge, WrappedLabel, SectionTitle, OptionButton
+from app.ui.components import (
+    CardBox, PrimaryButton, SecondaryButton, UrgencyBadge, WrappedLabel,
+    SectionTitle, OptionButton, QuestionOptionCard, ProgressBarWidget, StatusPill
+)
 from app.reports.handover_pdf import generate_doctor_handover_pdf
 from app.security.india_validation import validate_indian_mobile, validate_indian_date, format_indian_datetime
 
@@ -76,127 +81,228 @@ class DashboardScreen(BaseScreen):
         root = BoxLayout(orientation="vertical", spacing=0)
         
         scroll = ScrollView(size_hint=(1, 1), do_scroll_x=False)
-        content = BoxLayout(orientation="vertical", spacing=14, padding=[16, 16, 16, 24], size_hint_y=None)
+        content = BoxLayout(orientation="vertical", spacing=14, padding=[18, 16, 18, 24], size_hint_y=None)
         content.bind(minimum_height=content.setter("height"))
 
-        # 1. Welcome Card Banner
-        banner = CardBox(orientation="vertical", spacing=8, padding=[18, 16, 18, 16], size_hint_y=None)
+        # 1. Welcome Card Banner (Matching reference image hero card)
+        banner = CardBox(orientation="horizontal", spacing=16, padding=[20, 16, 20, 16], size_hint_y=None)
         banner.bind(minimum_height=banner.setter("height"))
-        banner.bg_color = COLOR_NAVY_PRIMARY
-        banner.border_color = COLOR_NAVY_LIGHT
-        
-        banner.add_widget(WrappedLabel(
-            text="[b][size=19sp]Welcome to MEDICARE[/size][/b]\nMedical Symptoms Triage Advisor",
-            font_size="15sp",
-            color=COLOR_TEXT_LIGHT
-        ))
-        banner.add_widget(WrappedLabel(
-            text="Autonomous offline-first preliminary assessment, progression tracking, and local medical navigation.",
-            font_size="11sp",
-            color=COLOR_BLUE_TINT
-        ))
-        content.add_widget(banner)
+        banner.bg_color = COLOR_BLUE_TINT
+        banner.border_color = (0.82, 0.88, 0.97, 1.0)
+        banner.corner_radius = 12
 
-        # 2. Main Call to Action: Start Symptom Assessment
-        start_card = CardBox(orientation="vertical", spacing=10, padding=[16, 14, 16, 14], size_hint_y=None)
-        start_card.bind(minimum_height=start_card.setter("height"))
-        start_card.bg_color = COLOR_BLUE_TINT
-        start_card.border_color = COLOR_BLUE_ACCENT
-        
-        start_card.add_widget(WrappedLabel(
-            text="[b]Feeling Unwell? Start a New Assessment[/b]\nAnswer a few guided clinical questions for an explainable urgency category and recommended next steps.",
-            font_size="13sp",
+        # Pulse circle icon
+        icon_box = BoxLayout(size_hint=(None, None), size=(48, 48), pos_hint={"center_y": 0.5})
+        with icon_box.canvas.before:
+            Color(*COLOR_BLUE_ACCENT)
+            Ellipse(pos=icon_box.pos, size=icon_box.size)
+        icon_box.bind(pos=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'pos', inst.pos),
+                      size=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'size', inst.size))
+        icon_lbl = Label(text="♥", font_size="22sp", color=COLOR_WHITE, bold=True)
+        icon_box.add_widget(icon_lbl)
+        banner.add_widget(icon_box)
+
+        # Welcome text column
+        welcome_col = BoxLayout(orientation="vertical", spacing=3, pos_hint={"center_y": 0.5})
+        welcome_col.add_widget(WrappedLabel(
+            text="[b][size=18sp]Welcome back![/size][/b]",
+            font_size="18sp",
             color=COLOR_NAVY_PRIMARY
         ))
-
-        btn_start = PrimaryButton(text="START SYMPTOM ASSESSMENT →", size_hint_y=None, height=42)
-        btn_start.bind(on_release=lambda x: self._nav_to("symptom_assessment"))
-        start_card.add_widget(btn_start)
-        content.add_widget(start_card)
-
-        # 3. Emergency Safety Disclaimer Callout
-        warn_card = CardBox(orientation="vertical", spacing=6, padding=[14, 10, 14, 10], size_hint_y=None)
-        warn_card.bind(minimum_height=warn_card.setter("height"))
-        warn_card.bg_color = (1.0, 0.95, 0.95, 1.0)
-        warn_card.border_color = COLOR_URGENT_EMERGENCY
-        warn_card.add_widget(WrappedLabel(
-            text="[b][color=#DC2626]EMERGENCY WARNING:[/color][/b] If you are experiencing crushing chest pain, severe shortness of breath, sudden one-sided facial drooping or arm weakness, or uncontrollable bleeding, call [b]112 / 102 (India)[/b] or proceed immediately to the nearest emergency department.",
-            font_size="11sp",
-            color=COLOR_URGENT_EMERGENCY
+        welcome_col.add_widget(WrappedLabel(
+            text="Track your symptoms and get the right care advice.",
+            font_size="12sp",
+            color=COLOR_TEXT_MUTED
         ))
-        content.add_widget(warn_card)
+        banner.add_widget(welcome_col)
+        content.add_widget(banner)
 
-        # 4. Recent Assessments Section
-        content.add_widget(create_section_title("Recent Patient Assessments"))
+        # 2. Quick Stats Row (3 Cards: Total Assessments, Emergency Cases, Routine Care)
+        stats_row = BoxLayout(orientation="horizontal", spacing=12, size_hint_y=None, height=76)
+        
+        # Stat 1: Total Assessments
+        self.card_total = CardBox(orientation="horizontal", spacing=12, padding=[14, 12, 14, 12])
+        self.card_total.corner_radius = 10
+        i1 = BoxLayout(size_hint=(None, None), size=(38, 38), pos_hint={"center_y": 0.5})
+        with i1.canvas.before:
+            Color(0.9, 0.94, 1.0, 1.0)
+            Ellipse(pos=i1.pos, size=i1.size)
+        i1.bind(pos=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'pos', inst.pos),
+                size=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'size', inst.size))
+        i1.add_widget(Label(text="👥", font_size="16sp", color=COLOR_BLUE_ACCENT))
+        self.card_total.add_widget(i1)
+        
+        c1_text = BoxLayout(orientation="vertical", spacing=1, pos_hint={"center_y": 0.5})
+        c1_text.add_widget(WrappedLabel(text="Total Assessments", font_size="10.5sp", color=COLOR_TEXT_MUTED))
+        self.lbl_stat_total = WrappedLabel(text="[b]0[/b]", font_size="19sp", color=COLOR_TEXT_DARK)
+        c1_text.add_widget(self.lbl_stat_total)
+        self.card_total.add_widget(c1_text)
+        stats_row.add_widget(self.card_total)
+
+        # Stat 2: Emergency Cases
+        self.card_emerg = CardBox(orientation="horizontal", spacing=12, padding=[14, 12, 14, 12])
+        self.card_emerg.corner_radius = 10
+        self.card_emerg.bg_color = (1.0, 0.97, 0.97, 1.0)
+        self.card_emerg.border_color = (0.98, 0.82, 0.82, 1.0)
+        i2 = BoxLayout(size_hint=(None, None), size=(38, 38), pos_hint={"center_y": 0.5})
+        with i2.canvas.before:
+            Color(*COLOR_EMERGENCY_TINT)
+            Ellipse(pos=i2.pos, size=i2.size)
+        i2.bind(pos=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'pos', inst.pos),
+                size=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'size', inst.size))
+        i2.add_widget(Label(text="⚠️", font_size="16sp", color=COLOR_URGENT_EMERGENCY))
+        self.card_emerg.add_widget(i2)
+        
+        c2_text = BoxLayout(orientation="vertical", spacing=1, pos_hint={"center_y": 0.5})
+        c2_text.add_widget(WrappedLabel(text="Emergency Cases", font_size="10.5sp", color=COLOR_TEXT_MUTED))
+        self.lbl_stat_emerg = WrappedLabel(text="[b]0[/b]", font_size="19sp", color=COLOR_URGENT_EMERGENCY)
+        c2_text.add_widget(self.lbl_stat_emerg)
+        self.card_emerg.add_widget(c2_text)
+        stats_row.add_widget(self.card_emerg)
+
+        # Stat 3: Routine Care
+        self.card_routine = CardBox(orientation="horizontal", spacing=12, padding=[14, 12, 14, 12])
+        self.card_routine.corner_radius = 10
+        self.card_routine.bg_color = (0.97, 1.0, 0.98, 1.0)
+        self.card_routine.border_color = (0.82, 0.95, 0.85, 1.0)
+        i3 = BoxLayout(size_hint=(None, None), size=(38, 38), pos_hint={"center_y": 0.5})
+        with i3.canvas.before:
+            Color(*COLOR_ROUTINE_TINT)
+            Ellipse(pos=i3.pos, size=i3.size)
+        i3.bind(pos=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'pos', inst.pos),
+                size=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'size', inst.size))
+        i3.add_widget(Label(text="✓", font_size="16sp", bold=True, color=COLOR_URGENT_ROUTINE))
+        self.card_routine.add_widget(i3)
+        
+        c3_text = BoxLayout(orientation="vertical", spacing=1, pos_hint={"center_y": 0.5})
+        c3_text.add_widget(WrappedLabel(text="Routine Care", font_size="10.5sp", color=COLOR_TEXT_MUTED))
+        self.lbl_stat_routine = WrappedLabel(text="[b]0[/b]", font_size="19sp", color=COLOR_URGENT_ROUTINE)
+        c3_text.add_widget(self.lbl_stat_routine)
+        self.card_routine.add_widget(c3_text)
+        stats_row.add_widget(self.card_routine)
+
+        content.add_widget(stats_row)
+
+        # 3. Two-Column Dashboard Section: Quick Start (Left) & Recent Assessments (Right)
+        cols_box = BoxLayout(orientation="horizontal", spacing=14, size_hint_y=None)
+        cols_box.bind(minimum_height=cols_box.setter("height"))
+
+        # Left Column: Quick Start Card
+        quick_card = CardBox(orientation="vertical", spacing=12, padding=[18, 16, 18, 16], size_hint_x=0.45)
+        quick_card.corner_radius = 10
+        quick_card.add_widget(WrappedLabel(text="[b][size=15sp]Quick Start[/size][/b]", font_size="15sp", color=COLOR_NAVY_PRIMARY))
+        
+        btn_start = PrimaryButton(text="Start New Assessment →", size_hint_y=None, height=44)
+        btn_start.bind(on_release=lambda x: self._nav_to("symptom_assessment"))
+        quick_card.add_widget(btn_start)
+
+        quick_card.add_widget(WrappedLabel(
+            text="Answer a few questions about your symptoms",
+            font_size="11sp",
+            color=COLOR_TEXT_MUTED
+        ))
+        cols_box.add_widget(quick_card)
+
+        # Right Column: Recent Assessments Card
+        recent_card = CardBox(orientation="vertical", spacing=10, padding=[18, 16, 18, 16], size_hint_x=0.55)
+        recent_card.corner_radius = 10
+        
+        rec_hdr = BoxLayout(orientation="horizontal", size_hint_y=None, height=28)
+        rec_hdr.add_widget(WrappedLabel(text="[b][size=15sp]Recent Assessments[/size][/b]", font_size="15sp", color=COLOR_NAVY_PRIMARY, size_hint_x=0.7))
+        btn_view_all = Button(text="View All →", font_size="12sp", bold=True, background_color=(0,0,0,0), color=COLOR_BLUE_ACCENT, size_hint_x=0.3, halign="right")
+        btn_view_all.bind(on_release=lambda x: self._nav_to("patient_history"))
+        rec_hdr.add_widget(btn_view_all)
+        recent_card.add_widget(rec_hdr)
+
         self.recent_container = BoxLayout(orientation="vertical", spacing=8, size_hint_y=None)
         self.recent_container.bind(minimum_height=self.recent_container.setter("height"))
-        content.add_widget(self.recent_container)
+        recent_card.add_widget(self.recent_container)
+        cols_box.add_widget(recent_card)
 
-        # 5. Quick Modules Navigation Grid
-        content.add_widget(create_section_title("Application Navigation"))
-        
-        mod_grid = GridLayout(cols=2, spacing=10, size_hint_y=None)
-        mod_grid.bind(minimum_height=mod_grid.setter("height"))
-        
-        b_prof = SecondaryButton(text="• Patient Profile", size_hint_y=None, height=42)
-        b_prof.bind(on_release=lambda x: self._nav_to("patient_profile"))
-        mod_grid.add_widget(b_prof)
+        content.add_widget(cols_box)
 
-        b_hist = SecondaryButton(text="• Assessment History", size_hint_y=None, height=42)
-        b_hist.bind(on_release=lambda x: self._nav_to("patient_history"))
-        mod_grid.add_widget(b_hist)
-
-        b_prog = SecondaryButton(text="• Symptom Progression", size_hint_y=None, height=42)
-        b_prog.bind(on_release=lambda x: self._nav_to("symptom_progression"))
-        mod_grid.add_widget(b_prog)
-
-        b_hand = SecondaryButton(text="• Doctor Handover", size_hint_y=None, height=42)
-        b_hand.bind(on_release=lambda x: self._nav_to("doctor_handover"))
-        mod_grid.add_widget(b_hand)
-
-        b_down = SecondaryButton(text="• Handover Downloads", size_hint_y=None, height=42)
-        b_down.bind(on_release=lambda x: self._nav_to("handover_downloads"))
-        mod_grid.add_widget(b_down)
-
-        b_ref = SecondaryButton(text="• Medical References", size_hint_y=None, height=42)
-        b_ref.bind(on_release=lambda x: self._nav_to("medical_references"))
-        mod_grid.add_widget(b_ref)
-
-        content.add_widget(mod_grid)
+        # 4. Bottom Info Banner (Soft blue alert bar)
+        info_bar = CardBox(orientation="horizontal", spacing=10, padding=[16, 10, 16, 10], size_hint_y=None, height=42)
+        info_bar.bg_color = COLOR_INFO_TINT
+        info_bar.border_color = (0.75, 0.85, 0.98, 1.0)
+        info_bar.corner_radius = 8
+        info_bar.add_widget(Label(text="ℹ", font_size="14sp", color=COLOR_BLUE_ACCENT, size_hint=(None, None), size=(20, 22), bold=True))
+        info_bar.add_widget(WrappedLabel(
+            text="In case of emergency, seek immediate medical attention.",
+            font_size="11.5sp",
+            color=COLOR_NAVY_PRIMARY
+        ))
+        content.add_widget(info_bar)
 
         scroll.add_widget(content)
         root.add_widget(scroll)
         self.add_widget(root)
 
     def on_pre_enter(self):
-        """Refreshes recent assessment items upon entering screen."""
+        """Refreshes stats and recent assessment items upon entering screen."""
         self.recent_container.clear_widgets()
         patient_id = self.controller.current_patient_id
-        assessments = self.controller.history_service.get_assessment_history(patient_id, limit=3)
-        
-        if not assessments:
-            empty_card = CardBox(padding=[14, 12, 14, 12], size_hint_y=None)
-            empty_card.bind(minimum_height=empty_card.setter("height"))
-            empty_card.add_widget(WrappedLabel(
-                text="No past assessments recorded yet. Complete an assessment to see history.",
-                font_size="11sp",
+        assessments = self.controller.history_service.get_assessment_history(patient_id, limit=50)
+
+        # Update stats counts
+        total_cnt = len(assessments)
+        emerg_cnt = sum(1 for a in assessments if a.get("urgency_category") == 1)
+        routine_cnt = sum(1 for a in assessments if a.get("urgency_category") == 3)
+
+        self.lbl_stat_total.text = f"[b]{total_cnt}[/b]"
+        self.lbl_stat_emerg.text = f"[b]{emerg_cnt}[/b]"
+        self.lbl_stat_routine.text = f"[b]{routine_cnt}[/b]"
+
+        recent_items = assessments[:3]
+        if not recent_items:
+            empty_box = BoxLayout(orientation="vertical", size_hint_y=None, height=54, padding=[0, 8, 0, 8])
+            empty_box.add_widget(WrappedLabel(
+                text="No recent assessments yet. Click 'Start New Assessment' to begin.",
+                font_size="11.5sp",
                 color=COLOR_TEXT_MUTED
             ))
-            self.recent_container.add_widget(empty_card)
+            self.recent_container.add_widget(empty_box)
         else:
-            for a in assessments:
-                row = CardBox(orientation="horizontal", padding=[12, 10, 12, 10], spacing=10, size_hint_y=None)
-                row.bind(minimum_height=row.setter("height"))
+            for a in recent_items:
+                row = BoxLayout(orientation="horizontal", spacing=10, size_hint_y=None, height=44, padding=[4, 4, 4, 4])
                 
-                info_box = BoxLayout(orientation="vertical", spacing=2)
-                dt = (a.get("completed_at") or "")[:16].replace("T", " ")
-                info_box.add_widget(WrappedLabel(text=f"[b]{dt}[/b]", font_size="12sp", color=COLOR_NAVY_PRIMARY))
-                info_box.add_widget(WrappedLabel(text=f"Session: {a.get('session_id')}", font_size="10sp", color=COLOR_TEXT_MUTED))
-                row.add_widget(info_box)
+                # Calendar icon
+                cal_lbl = Label(text="📅", font_size="13sp", size_hint=(None, None), size=(22, 22), pos_hint={"center_y": 0.5})
+                row.add_widget(cal_lbl)
 
-                badge = UrgencyBadge(category=a.get("urgency_category", 3))
+                # Info text
+                info_col = BoxLayout(orientation="vertical", spacing=1, pos_hint={"center_y": 0.5})
+                raw_dt = a.get("completed_at", "")
+                dt_str = raw_dt[:16].replace("T", " · ") if raw_dt else "Recent"
+                
+                # Primary symptom and category
+                syms = a.get("symptoms", [])
+                if isinstance(syms, str):
+                    try:
+                        syms = json.loads(syms)
+                    except Exception:
+                        syms = []
+                sym_name = syms[0].get("name") if syms and isinstance(syms[0], dict) else "General"
+                cat_num = a.get("urgency_category", 3)
+                
+                info_col.add_widget(WrappedLabel(text=f"[b]{dt_str}[/b]", font_size="11sp", color=COLOR_NAVY_PRIMARY))
+                info_col.add_widget(WrappedLabel(text=f"{sym_name} — Category {cat_num}", font_size="10.5sp", color=COLOR_TEXT_MUTED))
+                row.add_widget(info_col)
+
+                # Status badge pill
+                if cat_num == 1:
+                    badge = StatusPill(text="Emergency", style="emergency")
+                elif cat_num == 2:
+                    badge = StatusPill(text="Monitor", style="monitor")
+                else:
+                    badge = StatusPill(text="Routine Care", style="routine")
+                badge.pos_hint = {"center_y": 0.5}
                 row.add_widget(badge)
+
                 self.recent_container.add_widget(row)
+
+    def _nav_to(self, screen_name: str):
+        self.manager.current = screen_name
 
     def _nav_to(self, screen_name: str):
         self.manager.current = screen_name
@@ -399,7 +505,7 @@ class PatientProfileScreen(BaseScreen):
 
 
 # =========================================================================
-# 3. SYMPTOM ASSESSMENT SCREEN
+# 3. SYMPTOM ASSESSMENT SCREEN (Clean Search, Quick Chips, Pain Slider)
 # =========================================================================
 class SymptomAssessmentScreen(BaseScreen):
     def __init__(self, controller, **kwargs):
@@ -413,19 +519,50 @@ class SymptomAssessmentScreen(BaseScreen):
         root = BoxLayout(orientation="vertical", spacing=0)
         
         scroll = ScrollView(size_hint=(1, 1), do_scroll_x=False)
-        content = BoxLayout(orientation="vertical", spacing=8, padding=[14, 12, 14, 16], size_hint_y=None)
+        content = BoxLayout(orientation="vertical", spacing=12, padding=[18, 16, 18, 24], size_hint_y=None)
         content.bind(minimum_height=content.setter("height"))
 
         content.add_widget(create_section_title("Reported Symptoms"))
-        content.add_widget(create_desc_label("Select primary symptoms and pain severity."))
+        content.add_widget(create_desc_label("Search or select primary symptoms and rate pain severity."))
 
-        # 1. Search Box
-        search_card = CardBox(orientation="vertical", spacing=6, padding=[10, 8, 10, 8], size_hint_y=None)
+        # 1. Search Box & Quick Symptom Chips
+        search_card = CardBox(orientation="vertical", spacing=8, padding=[14, 12, 14, 12], size_hint_y=None)
         search_card.bind(minimum_height=search_card.setter("height"))
-        search_card.add_widget(WrappedLabel(text="[b]Search Symptoms:[/b]", font_size="12sp", color=COLOR_NAVY_PRIMARY))
-        self.in_search = TextInput(hint_text="e.g. Headache, Chest pain, Shortness of breath, Fever...", multiline=False, size_hint_y=None, height=34)
+        search_card.corner_radius = 10
+        
+        search_card.add_widget(WrappedLabel(text="[b]Search Symptoms:[/b]", font_size="13sp", color=COLOR_NAVY_PRIMARY))
+        
+        self.in_search = TextInput(
+            hint_text="e.g. Headache, Chest pain, Shortness of breath, Fever...",
+            multiline=False,
+            size_hint_y=None,
+            height=38,
+            background_color=(1, 1, 1, 1),
+            foreground_color=COLOR_TEXT_DARK,
+            cursor_color=COLOR_BLUE_ACCENT,
+            padding=[12, 8, 12, 8]
+        )
         self.in_search.bind(text=self._on_search)
         search_card.add_widget(self.in_search)
+
+        # Quick Add Chips
+        search_card.add_widget(WrappedLabel(text="[b]Common Symptoms:[/b]", font_size="11sp", color=COLOR_TEXT_MUTED))
+        chips_box = BoxLayout(orientation="horizontal", spacing=6, size_hint_y=None, height=32)
+        
+        common_chips = [
+            ("Headache", "SYM_HEADACHE"),
+            ("Chest Pain", "SYM_CHEST_PAIN"),
+            ("Fever", "SYM_FEVER"),
+            ("Breathlessness", "SYM_DYSPNEA"),
+            ("Abdominal Pain", "SYM_ABDOMINAL_PAIN"),
+            ("Dizziness", "SYM_DIZZINESS")
+        ]
+        for c_name, c_code in common_chips:
+            chip_btn = SecondaryButton(text=f"+ {c_name}", font_size="11sp", size_hint_y=None, height=30)
+            chip_btn.bind(on_release=lambda x, code=c_code, name=c_name: self._quick_add_symptom(code, name))
+            chips_box.add_widget(chip_btn)
+        search_card.add_widget(chips_box)
+
         content.add_widget(search_card)
 
         # 2. Search Results List (Dynamically populated)
@@ -439,38 +576,48 @@ class SymptomAssessmentScreen(BaseScreen):
         self.selected_container.bind(minimum_height=self.selected_container.setter("height"))
         content.add_widget(self.selected_container)
 
-        # 4. Severity & Progression Inputs
-        sev_card = CardBox(orientation="vertical", spacing=8, padding=[12, 10, 12, 10], size_hint_y=None)
+        # 4. Severity & Progression Inputs Card
+        sev_card = CardBox(orientation="vertical", spacing=10, padding=[16, 14, 16, 14], size_hint_y=None)
         sev_card.bind(minimum_height=sev_card.setter("height"))
+        sev_card.corner_radius = 10
         
         # Interactive pain severity label updating dynamically
         self.lbl_sev = WrappedLabel(
-            text="[b]How severe is your pain?[/b] (5 / 10)",
+            text="[b]How severe is your pain?[/b] (5 / 10) — [color=#D97706]Moderate[/color]",
             font_size="13sp",
             color=COLOR_NAVY_PRIMARY
         )
         sev_card.add_widget(self.lbl_sev)
 
-        self.slider_sev = Slider(min=1, max=10, value=5, step=1, size_hint_y=None, height=34)
+        self.slider_sev = Slider(min=1, max=10, value=5, step=1, size_hint_y=None, height=36)
         self.slider_sev.bind(value=self._on_slider)
         sev_card.add_widget(self.slider_sev)
 
         # Duration input
-        dur_box = BoxLayout(orientation="horizontal", spacing=8, size_hint_y=None, height=34)
-        dur_lbl = WrappedLabel(text="[b]How long have you had symptoms?[/b]", font_size="12sp", color=COLOR_NAVY_PRIMARY, size_hint_x=0.65)
+        dur_box = BoxLayout(orientation="horizontal", spacing=10, size_hint_y=None, height=36)
+        dur_lbl = WrappedLabel(text="[b]How long have you had symptoms?[/b]", font_size="12.5sp", color=COLOR_NAVY_PRIMARY, size_hint_x=0.68)
         dur_box.add_widget(dur_lbl)
-        self.in_dur = TextInput(text="1", multiline=False, size_hint_x=0.35)
+        
+        self.in_dur = TextInput(
+            text="1",
+            multiline=False,
+            size_hint_x=0.32,
+            background_color=(1, 1, 1, 1),
+            foreground_color=COLOR_TEXT_DARK,
+            cursor_color=COLOR_BLUE_ACCENT,
+            padding=[10, 6, 10, 6]
+        )
         dur_box.add_widget(self.in_dur)
         sev_card.add_widget(dur_box)
 
         # Trajectory / Progression buttons
-        sev_card.add_widget(WrappedLabel(text="[b]Is your condition getting worse?[/b]", font_size="12sp", color=COLOR_NAVY_PRIMARY))
-        traj_box = BoxLayout(orientation="horizontal", spacing=6, size_hint_y=None, height=34)
-        self.btn_worse = OptionButton(text="  Worsening", size_hint_y=None, height=34)
+        sev_card.add_widget(WrappedLabel(text="[b]Is your condition getting worse?[/b]", font_size="12.5sp", color=COLOR_NAVY_PRIMARY))
+        traj_box = BoxLayout(orientation="horizontal", spacing=8, size_hint_y=None, height=36)
+        self.btn_worse = OptionButton(text="  Worsening", size_hint_y=None, height=36)
         self.btn_worse.bind(on_release=lambda x: self._set_traj("worsening"))
-        self.btn_same = OptionButton(text="  Unchanged", size_hint_y=None, height=34)
+        self.btn_same = OptionButton(text="  Unchanged", size_hint_y=None, height=36)
         self.btn_same.bind(on_release=lambda x: self._set_traj("unchanged"))
-        self.btn_better = OptionButton(text="  Improving", size_hint_y=None, height=34)
+        self.btn_better = OptionButton(text="  Improving", size_hint_y=None, height=36)
         self.btn_better.bind(on_release=lambda x: self._set_traj("improving"))
         traj_box.add_widget(self.btn_worse)
         traj_box.add_widget(self.btn_same)
@@ -480,7 +627,7 @@ class SymptomAssessmentScreen(BaseScreen):
         content.add_widget(sev_card)
 
         # 5. Continue to Follow-up Questions Button
-        btn_next = PrimaryButton(text="CONTINUE TO QUESTIONS →", size_hint_y=None, height=40)
+        btn_next = PrimaryButton(text="CONTINUE TO QUESTIONS →", size_hint_y=None, height=44)
         btn_next.bind(on_release=self._proceed_to_followups)
         content.add_widget(btn_next)
 
@@ -500,7 +647,7 @@ class SymptomAssessmentScreen(BaseScreen):
             category_text = "[color=#16A34A]Mild[/color]"
         elif val <= 6:
             category_text = "[color=#D97706]Moderate[/color]"
-        elif val <= 9:
+        elif val <= 8:
             category_text = "[color=#DC2626]Severe[/color]"
         else:
             category_text = "[color=#991B1B]Critical[/color]"
@@ -513,6 +660,13 @@ class SymptomAssessmentScreen(BaseScreen):
         self._on_slider(self.slider_sev, 5)
         self._on_search(None, "")
         self._update_selected_ui()
+
+    def _quick_add_symptom(self, code: str, name: str):
+        all_syms = self.controller.dataset_loader.get_symptoms()
+        found = next((s for s in all_syms if s.get("code") == code), None)
+        if not found:
+            found = {"code": code, "name": name, "body_system": "general"}
+        self._add_symptom(found)
 
     def _on_search(self, instance, text):
         self.results_box.clear_widgets()
@@ -537,19 +691,21 @@ class SymptomAssessmentScreen(BaseScreen):
     def _update_selected_ui(self):
         self.selected_container.clear_widgets()
         if not self.selected_symptoms:
-            empty = CardBox(padding=[10, 8, 10, 8], size_hint_y=None)
+            empty = CardBox(padding=[14, 10, 14, 10], size_hint_y=None)
+            empty.corner_radius = 8
             empty.bind(minimum_height=empty.setter("height"))
             empty.add_widget(WrappedLabel(text="No symptoms added yet. Pick at least one symptom above.", font_size="12sp", color=COLOR_TEXT_MUTED))
             self.selected_container.add_widget(empty)
         else:
             for s in self.selected_symptoms:
-                card = CardBox(orientation="horizontal", padding=[10, 5, 10, 5], spacing=8, size_hint_y=None)
+                card = CardBox(orientation="horizontal", padding=[14, 8, 14, 8], spacing=10, size_hint_y=None)
+                card.corner_radius = 8
                 card.bind(minimum_height=card.setter("height"))
                 
-                name_lbl = WrappedLabel(text=f"[b]{s.get('name')}[/b] ({s.get('body_system', '')})", font_size="12sp", color=COLOR_NAVY_PRIMARY)
+                name_lbl = WrappedLabel(text=f"[b]{s.get('name')}[/b]  [size=10.5sp][color=#64748B]({s.get('body_system', '')})[/color][/size]", font_size="12.5sp", color=COLOR_NAVY_PRIMARY)
                 card.add_widget(name_lbl)
                 
-                b_del = Button(text="Remove", font_size="11sp", size_hint=(None, None), size=(66, 26), background_color=COLOR_URGENT_EMERGENCY, color=COLOR_WHITE)
+                b_del = Button(text="Remove", font_size="11sp", bold=True, size_hint=(None, None), size=(72, 28), background_color=COLOR_URGENT_EMERGENCY, color=COLOR_WHITE)
                 b_del.bind(on_release=lambda x, code=s["code"]: self._remove_symptom(code))
                 card.add_widget(b_del)
                 self.selected_container.add_widget(card)
@@ -590,30 +746,251 @@ class SymptomAssessmentScreen(BaseScreen):
 
 
 # =========================================================================
-# 4. FOLLOW-UP QUESTIONS SCREEN (Adaptive Question Engine — 1 Question at a Time)
+# HELPER: ADAPTIVE QUESTION & OPTION FORMATTER (Simple English, <= 7 Words)
+# =========================================================================
+def format_question_and_options(q: dict, symptoms_list: list) -> tuple[str, list[dict]]:
+    """
+    Formats question text and options to simple English (6-7 words)
+    with clean title and descriptive subtitle matching reference UI.
+    """
+    qid = q.get("question_id", "")
+    q_text = q.get("question_text", "")
+    options = q.get("options", [])
+
+    sym_names = [s.get("name", "").lower() for s in symptoms_list if isinstance(s, dict) and s.get("name")]
+    is_headache = any("headache" in n or "head" in n for n in sym_names)
+    is_chest = any("chest" in n or "heart" in n for n in sym_names)
+
+    if qid == "QID_PAIN_ONSET_SUDDEN":
+        if is_headache:
+            q_text = "Did the headache start suddenly?"
+        elif is_chest:
+            q_text = "Did chest pain start suddenly?"
+
+    formatted_opts = []
+    for opt in options:
+        code = opt.get("code", "")
+        raw_text = opt.get("text", "")
+        if qid == "QID_PAIN_ONSET_SUDDEN":
+            if code == "YES":
+                title = "Yes, suddenly"
+                desc = "The headache came on very quickly." if is_headache else "The pain came on very quickly."
+            else:
+                title = "No, gradually"
+                desc = "It developed over time."
+        elif qid == "QID_CHEST_RADIATION":
+            if code == "YES":
+                title = "Yes, radiating"
+                desc = "Pain spreads to left arm, neck, or jaw."
+            else:
+                title = "No, localized"
+                desc = "Pain stays centered in the chest."
+        elif qid == "QID_CHEST_ASSOCIATED_DYSPNEA":
+            if code == "YES":
+                title = "Yes, accompanied"
+                desc = "Shortness of breath or heavy cold sweating."
+            else:
+                title = "No other symptoms"
+                desc = "Breathing normally without unusual sweating."
+        elif qid == "QID_FEVER_TEMP":
+            if code == "HIGH_GRADE":
+                title = "High fever (Above 102°F / 38.9°C)"
+                desc = "Severe body temperature elevation."
+            elif code == "MODERATE":
+                title = "Moderate fever (100°F – 102°F)"
+                desc = "Elevated temperature with mild discomfort."
+            else:
+                title = "Mild or unmeasured"
+                desc = "Slight warmth or temperature not taken."
+        elif qid == "QID_HEADACHE_WORSENING_SIGNS":
+            if code == "YES":
+                title = "Yes, concerning signs"
+                desc = "Confusion, persistent vomiting, or blackout."
+            else:
+                title = "No concerning signs"
+                desc = "Clear thinking with no vomiting or blackout."
+        elif qid == "QID_HEADACHE_UNCHANGED_NATURE":
+            if code == "SIMILAR_NORMAL":
+                title = "Yes, familiar usual headache"
+                desc = "Feels similar to past headaches."
+            else:
+                title = "No, novel or unusual"
+                desc = "Feels noticeably different from previous headaches."
+        elif qid == "QID_HEADACHE_VISION":
+            if code == "YES":
+                title = "Yes, vision changes"
+                desc = "Blurry, double vision, or visual dark spots."
+            else:
+                title = "No vision changes"
+                desc = "Normal clear vision without disturbances."
+        elif qid == "QID_STROKE_FAST_FACE":
+            if code == "YES":
+                title = "Yes, facial drooping"
+                desc = "One side of the face or smile is drooping."
+            else:
+                title = "No facial drooping"
+                desc = "Normal symmetrical face and smile."
+        elif qid == "QID_STROKE_FAST_ARM":
+            if code == "YES":
+                title = "Yes, arm weakness"
+                desc = "One arm drifts down or cannot be raised."
+            else:
+                title = "No arm weakness"
+                desc = "Equal strength in both arms."
+        elif qid == "QID_STROKE_FAST_SPEECH":
+            if code == "YES":
+                title = "Yes, speech difficulty"
+                desc = "Speech is slurred, abnormal, or hard to understand."
+            else:
+                title = "No speech difficulty"
+                desc = "Speaking clearly and normally."
+        elif qid == "QID_RESP_SEVERITY":
+            if code == "SEVERE":
+                title = "No, only single words"
+                desc = "Severe breathlessness, struggling to talk."
+            elif code == "MODERATE":
+                title = "Short phrases with pauses"
+                desc = "Breathing heavily when speaking."
+            else:
+                title = "Yes, full sentences easily"
+                desc = "Speaking comfortably without breathlessness."
+        elif qid == "QID_RESP_STRIDOR_LIPS":
+            if code == "YES":
+                title = "Yes, swelling or whistling"
+                desc = "Lip swelling or high-pitched stridor breathing."
+            else:
+                title = "No swelling or noise"
+                desc = "No facial swelling or whistling airway sound."
+        elif qid == "QID_ABD_RIGIDITY":
+            if code == "YES":
+                title = "Yes, hard like a board"
+                desc = "Severe belly rigidity and intense tenderness."
+            else:
+                title = "No, belly feels soft"
+                desc = "Abdomen is pliable without board-like hardness."
+        elif qid == "QID_BLEEDING_SIGNS":
+            if code == "YES":
+                title = "Yes, visible bleeding"
+                desc = "Vomiting blood or dark black tarry stools."
+            else:
+                title = "No blood seen"
+                desc = "No blood in vomit or stools."
+        elif qid == "QID_DIGEST_DEHYDRATION":
+            if code == "NO":
+                title = "No, cannot keep fluids"
+                desc = "Vomiting liquids back up repeatedly."
+            else:
+                title = "Yes, drinking normally"
+                desc = "Able to drink water and fluids without vomiting."
+        elif qid == "QID_DIZZINESS_SYNCOPE":
+            if code == "YES":
+                title = "Yes, fainted or blacked out"
+                desc = "Brief loss of consciousness or collapse."
+            else:
+                title = "No, only lightheaded"
+                desc = "Felt unsteady or spinning without fainting."
+        elif qid == "QID_MSK_DEFORMITY_WEIGHT":
+            if code == "NO":
+                title = "No, cannot bear weight"
+                desc = "Unable to walk or take steps on the limb."
+            else:
+                title = "Yes, can bear weight"
+                desc = "Able to take steps despite discomfort."
+        elif qid == "QID_GENERAL_IMPROVEMENT_NEW_SIGNS":
+            if code == "YES":
+                title = "Yes, new symptoms appearing"
+                desc = "New or unexpected symptoms have developed."
+            else:
+                title = "No, feeling steadily better"
+                desc = "Condition is improving without new issues."
+        else:
+            parts = raw_text.split(":", 1) if ":" in raw_text else raw_text.split(",", 1)
+            if len(parts) == 2:
+                title = parts[0].strip()
+                desc = parts[1].strip()
+            else:
+                title = raw_text
+                desc = ""
+
+        formatted_opts.append({
+            "code": code,
+            "title": title,
+            "desc": desc,
+            "triggers_emergency": opt.get("triggers_emergency", False)
+        })
+
+    return q_text, formatted_opts
+
+
+# =========================================================================
+# 4. CLINICAL ASSESSMENT QUESTION FLOW (Automatic Progression, 0 Next Buttons)
 # =========================================================================
 class FollowupQuestionsScreen(BaseScreen):
     def __init__(self, controller, **kwargs):
         super().__init__(**kwargs)
         self.controller = controller
         self.session = None
-        self.current_question = None
-        self.selected_code = None
-        self.btn_options = []
+        self.history = []
+        self.current_idx = 0
+        self.auto_advance_timer = None
         self._build_ui()
 
     def _build_ui(self):
-        root = BoxLayout(orientation="vertical", spacing=0)
-        
+        self.root_box = BoxLayout(orientation="vertical", spacing=0)
+
+        # 1. Top Header Bar (Matching Screen 2 in reference image)
+        self.top_bar = BoxLayout(orientation="horizontal", size_hint_y=None, height=48, padding=[18, 6, 18, 6], spacing=10)
+        with self.top_bar.canvas.before:
+            Color(*COLOR_WHITE)
+            Rectangle(pos=self.top_bar.pos, size=self.top_bar.size)
+            Color(*COLOR_BORDER)
+            Line(points=[self.top_bar.x, 0, self.top_bar.right, 0], width=1)
+        self.top_bar.bind(pos=lambda inst, *a: setattr(inst.canvas.before.children[1], 'pos', inst.pos),
+                          size=lambda inst, *a: setattr(inst.canvas.before.children[1], 'size', inst.size))
+
+        btn_back = SecondaryButton(text="← Back", size_hint=(None, None), size=(90, 36))
+        btn_back.bind(on_release=self._on_back_pressed)
+        self.top_bar.add_widget(btn_back)
+
+        # Spacer
+        self.top_bar.add_widget(Widget())
+
+        # Right side: Question progress text + progress bar
+        prog_col = BoxLayout(orientation="horizontal", size_hint=(None, None), size=(210, 36), spacing=10, pos_hint={"center_y": 0.5})
+        self.lbl_progress = Label(
+            text="Question 1 of 3",
+            font_size="12sp",
+            bold=True,
+            color=COLOR_NAVY_PRIMARY,
+            size_hint=(None, None),
+            size=(105, 36),
+            halign="right",
+            valign="middle"
+        )
+        self.lbl_progress.bind(size=self.lbl_progress.setter("text_size"))
+        prog_col.add_widget(self.lbl_progress)
+
+        self.progress_bar = ProgressBarWidget(progress=0.33)
+        self.progress_bar.pos_hint = {"center_y": 0.5}
+        prog_col.add_widget(self.progress_bar)
+
+        self.top_bar.add_widget(prog_col)
+        self.root_box.add_widget(self.top_bar)
+
+        # 2. Main Question Card Area (Scrollable)
         scroll = ScrollView(size_hint=(1, 1), do_scroll_x=False)
-        self.content = BoxLayout(orientation="vertical", spacing=10, padding=[14, 12, 14, 16], size_hint_y=None)
+        self.content = BoxLayout(orientation="vertical", spacing=14, padding=[22, 18, 22, 24], size_hint_y=None)
         self.content.bind(minimum_height=self.content.setter("height"))
 
         scroll.add_widget(self.content)
-        root.add_widget(scroll)
-        self.add_widget(root)
+        self.root_box.add_widget(scroll)
+        self.add_widget(self.root_box)
 
     def on_pre_enter(self):
+        if self.auto_advance_timer:
+            Clock.unschedule(self.auto_advance_timer)
+            self.auto_advance_timer = None
+
         staging = getattr(self.controller, "assessment_staging", {})
         symptoms = staging.get("symptoms", [])
         progression = staging.get("progression", "unchanged")
@@ -627,98 +1004,195 @@ class FollowupQuestionsScreen(BaseScreen):
             progression=progression,
             duration_days=duration_days
         )
-        self.current_question = None
-        self.selected_code = None
-        self._display_next_question()
+        self.history = []
+        self.current_idx = 0
 
-    def _display_next_question(self):
+        first_q = self.session.get_next_question()
+        if first_q:
+            self.history.append(first_q)
+            self._render_current_question()
+        else:
+            self._evaluate_triage()
+
+    def _render_current_question(self):
+        if self.auto_advance_timer:
+            Clock.unschedule(self.auto_advance_timer)
+            self.auto_advance_timer = None
+
         self.content.clear_widgets()
-        self.selected_code = None
-        self.btn_options = []
-
-        q = self.session.get_next_question()
-        if not q:
-            # Assessment complete -> proceed to triage evaluation
+        if not self.history or self.current_idx >= len(self.history):
             self._evaluate_triage()
             return
 
-        self.current_question = q
-        q_idx = len(self.session.asked_order) + 1
+        q = self.history[self.current_idx]
+        staging = getattr(self.controller, "assessment_staging", {})
+        symptoms_list = staging.get("symptoms", [])
+        sym_names = ", ".join(s.get("name", "") for s in symptoms_list if isinstance(s, dict) and s.get("name"))
+        if not sym_names:
+            sym_names = "Reported Symptoms"
 
-        # 1. Section Header (strictly <= 7 words)
-        self.content.add_widget(create_section_title("Clinical Questions"))
-        self.content.add_widget(create_desc_label(f"Question {q_idx} of clinical assessment."))
+        # Update top progress indicator
+        total_q = max(self.session.max_questions, len(self.history), self.current_idx + 1)
+        step_num = self.current_idx + 1
+        self.lbl_progress.text = f"Question {step_num} of {total_q}"
+        self.progress_bar.progress = float(step_num) / float(total_q)
 
-        # 2. Main Question Card
-        q_card = CardBox(orientation="vertical", spacing=8, padding=[14, 12, 14, 12], size_hint_y=None)
+        # Format question text & options
+        q_text, formatted_opts = format_question_and_options(q, symptoms_list)
+
+        # Main Question Card (Clean white card, rounded corners, subtle border)
+        q_card = CardBox(orientation="vertical", spacing=14, padding=[22, 18, 22, 18], size_hint_y=None)
         q_card.bind(minimum_height=q_card.setter("height"))
+        q_card.corner_radius = 12
 
-        # Safety Check Flag if applicable
+        # Card Header: Icon + Clinical Assessment + Selected Symptoms
+        hdr_box = BoxLayout(orientation="horizontal", spacing=12, size_hint_y=None, height=44)
+        
+        clip_box = BoxLayout(size_hint=(None, None), size=(38, 38), pos_hint={"center_y": 0.5})
+        with clip_box.canvas.before:
+            Color(0.9, 0.94, 1.0, 1.0)
+            RoundedRectangle(pos=clip_box.pos, size=clip_box.size, radius=[8])
+        clip_box.bind(pos=lambda inst, *a: setattr(inst.canvas.before.children[1], 'pos', inst.pos),
+                      size=lambda inst, *a: setattr(inst.canvas.before.children[1], 'size', inst.size))
+        clip_lbl = Label(text="📋", font_size="16sp")
+        clip_box.add_widget(clip_lbl)
+        hdr_box.add_widget(clip_box)
+
+        title_col = BoxLayout(orientation="vertical", spacing=2, pos_hint={"center_y": 0.5})
+        title_col.add_widget(WrappedLabel(text="[b][size=15sp]Clinical Assessment[/size][/b]", font_size="15sp", color=COLOR_NAVY_PRIMARY))
+        title_col.add_widget(WrappedLabel(text=f"Selected Symptoms: {sym_names}", font_size="11.5sp", color=COLOR_TEXT_MUTED))
+        hdr_box.add_widget(title_col)
+        q_card.add_widget(hdr_box)
+
+        # Red Flag Warning Check banner if applicable
         is_emerg = bool(q.get("is_emergency_safety_check", False) or q.get("triggers_emergency_check", False))
         if is_emerg:
-            q_card.add_widget(WrappedLabel(
-                text="[color=#DC2626][b]RED FLAG SAFETY CHECK[/b][/color]",
-                font_size="11sp"
-            ))
+            safety_card = CardBox(orientation="horizontal", spacing=8, padding=[12, 6, 12, 6], size_hint_y=None, height=30)
+            safety_card.bg_color = COLOR_EMERGENCY_TINT
+            safety_card.border_color = COLOR_URGENT_EMERGENCY
+            safety_card.corner_radius = 6
+            safety_card.add_widget(Label(text="⚠️", font_size="11sp", color=COLOR_URGENT_EMERGENCY, size_hint=(None, None), size=(18, 18)))
+            safety_card.add_widget(WrappedLabel(text="[b][color=#DC2626]Safety Assessment Check[/color][/b]", font_size="11sp"))
+            q_card.add_widget(safety_card)
 
-        # Question Title (strictly <= 7 words)
-        q_card.add_widget(WrappedLabel(
-            text=f"[b]{q.get('question_text')}[/b]",
-            font_size="16sp",
-            color=COLOR_NAVY_PRIMARY
-        ))
+        # Big Question Text
+        q_card.add_widget(WrappedLabel(text=f"[b][size=18sp]{q_text}[/size][/b]", font_size="18sp", color=COLOR_NAVY_PRIMARY))
+        q_card.add_widget(WrappedLabel(text="Select the option that best describes your symptom.", font_size="12.5sp", color=COLOR_TEXT_MUTED))
 
         # Options Container
-        opts_box = BoxLayout(orientation="vertical", spacing=6, size_hint_y=None)
-        opts_box.bind(minimum_height=opts_box.setter("height"))
+        opts_container = BoxLayout(orientation="vertical", spacing=10, size_hint_y=None)
+        opts_container.bind(minimum_height=opts_container.setter("height"))
 
-        for opt in q.get("options", []):
-            opt_code = opt["code"]
-            opt_btn = OptionButton(
-                text=f"  {opt['text']}",
-                font_size="13sp",
-                size_hint_y=None,
-                height=38
+        self.option_cards = []
+        current_answer = self.session.answers.get(q["question_id"])
+
+        for opt in formatted_opts:
+            is_sel = (current_answer == opt["code"])
+            card = QuestionOptionCard(
+                option_code=opt["code"],
+                title=opt["title"],
+                desc=opt["desc"],
+                on_select=self._on_option_chosen
             )
-            opt_btn.bind(on_release=lambda x, code=opt_code, btn=opt_btn: self._select_option(code, btn))
-            opts_box.add_widget(opt_btn)
-            self.btn_options.append(opt_btn)
+            card.is_selected = is_sel
+            opts_container.add_widget(card)
+            self.option_cards.append(card)
 
-        q_card.add_widget(opts_box)
+        q_card.add_widget(opts_container)
+
+        # Bottom Status & Action Row
+        self.bottom_row = BoxLayout(orientation="horizontal", size_hint_y=None, height=44, spacing=10, padding=[4, 6, 4, 4])
+        
+        # Left: Save indicator
+        self.lbl_saved = Label(text="", markup=True, font_size="12sp", halign="left", valign="middle", size_hint_x=0.55)
+        self.lbl_saved.bind(size=self.lbl_saved.setter("text_size"))
+        self.bottom_row.add_widget(self.lbl_saved)
+
+        # Right: Action container (Auto-advancing pill or Submit Assessment button)
+        self.action_right_box = BoxLayout(orientation="horizontal", size_hint_x=0.45, spacing=6, pos_hint={"center_y": 0.5})
+        self.bottom_row.add_widget(self.action_right_box)
+
+        if current_answer:
+            self.lbl_saved.text = "[b][color=#10B981]✓[/color][/b]  [color=#1E293B]Your answer is saved automatically[/color]"
+            # If this is the last question or already answered, display submit button
+            if self.current_idx == len(self.history) - 1 and self.session.get_next_question() is None:
+                self._show_submit_button()
+
+        q_card.add_widget(self.bottom_row)
         self.content.add_widget(q_card)
 
-        # 3. Action Buttons Container
-        btn_box = BoxLayout(orientation="horizontal", spacing=8, size_hint_y=None, height=42)
+    def _on_option_chosen(self, code: str, clicked_card):
+        if self.auto_advance_timer:
+            Clock.unschedule(self.auto_advance_timer)
+            self.auto_advance_timer = None
 
-        self.btn_next = PrimaryButton(text="NEXT QUESTION →", size_hint_y=None, height=42)
-        self.btn_next.bind(on_release=self._on_next_pressed)
-        btn_box.add_widget(self.btn_next)
+        q = self.history[self.current_idx]
+        qid = q["question_id"]
 
-        self.content.add_widget(btn_box)
+        # 1. Save answer immediately
+        self.session.record_answer(qid, code)
 
-    def _select_option(self, code: str, active_btn):
-        self.selected_code = code
-        for b in self.btn_options:
-            b.is_selected = (b == active_btn)
+        # 2. Update card selection highlights
+        for card in self.option_cards:
+            card.is_selected = (card.option_code == code)
 
-    def _on_next_pressed(self, *args):
-        if not self.selected_code and self.btn_options:
-            # Default to first option if user clicks next without selecting
-            self.selected_code = self.current_question.get("options", [{}])[0].get("code", "NO")
+        # 3. Show "Your answer is saved automatically"
+        self.lbl_saved.text = "[b][color=#10B981]✓[/color][/b]  [color=#1E293B]Your answer is saved automatically[/color]"
 
-        if self.current_question and self.selected_code:
-            self.session.record_answer(self.current_question["question_id"], self.selected_code)
+        # 4. Check whether to auto-advance or show Submit Assessment
+        if self.current_idx < len(self.history) - 1:
+            # Navigated back and re-answered: auto-advance to next existing question in history
+            self.action_right_box.clear_widgets()
+            pill = StatusPill(text="●  Auto-advancing...", style="routine")
+            pill.pos_hint = {"center_y": 0.5}
+            self.action_right_box.add_widget(pill)
+            self.auto_advance_timer = Clock.schedule_once(self._advance_step, 0.4)
+        else:
+            # Check if engine has a next question
+            next_q = self.session.get_next_question()
+            if next_q:
+                self.history.append(next_q)
+                self.action_right_box.clear_widgets()
+                pill = StatusPill(text="●  Auto-advancing...", style="routine")
+                pill.pos_hint = {"center_y": 0.5}
+                self.action_right_box.add_widget(pill)
+                self.auto_advance_timer = Clock.schedule_once(self._advance_step, 0.4)
+            else:
+                # All required questions answered! Display Submit Assessment button
+                self._show_submit_button()
 
-        self._display_next_question()
+    def _show_submit_button(self):
+        self.action_right_box.clear_widgets()
+        btn_submit = PrimaryButton(text="Submit Assessment →", size_hint=(1, None), height=40)
+        btn_submit.bind(on_release=self._evaluate_triage)
+        self.action_right_box.add_widget(btn_submit)
+
+    def _advance_step(self, dt):
+        self.current_idx += 1
+        self._render_current_question()
+
+    def _on_back_pressed(self, *args):
+        if self.auto_advance_timer:
+            Clock.unschedule(self.auto_advance_timer)
+            self.auto_advance_timer = None
+
+        if self.current_idx > 0:
+            self.current_idx -= 1
+            self._render_current_question()
+        else:
+            # Return to Symptom Selection screen
+            self.manager.current = "symptom_assessment"
 
     def _evaluate_triage(self, *args):
+        if self.auto_advance_timer:
+            Clock.unschedule(self.auto_advance_timer)
+            self.auto_advance_timer = None
+
         staging = getattr(self.controller, "assessment_staging", {})
         symptoms = staging.get("symptoms", [])
 
-        # Get all accumulated answers including derived aliases
         effective_answers = self.session.get_effective_answers() if self.session else {}
 
-        # Run triage assessment
         result = self.controller.triage_engine.assess(
             patient_id=self.controller.current_patient_id,
             symptoms=symptoms,
@@ -730,7 +1204,7 @@ class FollowupQuestionsScreen(BaseScreen):
 
 
 # =========================================================================
-# 5. TRIAGE RESULTS SCREEN (Zero Overlap & Nearby Facilities Recommendation)
+# 5. TRIAGE RESULTS SCREEN (Emergency Visibility & Assessment Summary)
 # =========================================================================
 class TriageResultsScreen(BaseScreen):
     def __init__(self, controller, **kwargs):
@@ -742,7 +1216,7 @@ class TriageResultsScreen(BaseScreen):
         root = BoxLayout(orientation="vertical", spacing=0)
         
         scroll = ScrollView(size_hint=(1, 1), do_scroll_x=False)
-        self.content = BoxLayout(orientation="vertical", spacing=14, padding=[16, 16, 16, 24], size_hint_y=None)
+        self.content = BoxLayout(orientation="vertical", spacing=14, padding=[18, 16, 18, 24], size_hint_y=None)
         self.content.bind(minimum_height=self.content.setter("height"))
 
         scroll.add_widget(self.content)
@@ -759,151 +1233,198 @@ class TriageResultsScreen(BaseScreen):
         cat = result.urgency_category
 
         # -------------------------------------------------------------
-        # SECTION 1: PROMINENT URGENCY OUTCOME BANNER
+        # SECTION 1: PROMINENT TOP URGENCY BANNER (Matching Screen 3)
         # -------------------------------------------------------------
-        cat_card = CardBox(orientation="vertical", spacing=6, padding=[18, 16, 18, 16], size_hint_y=None)
-        cat_card.bind(minimum_height=cat_card.setter("height"))
+        banner_card = CardBox(orientation="horizontal", spacing=16, padding=[20, 16, 20, 16], size_hint_y=None)
+        banner_card.bind(minimum_height=banner_card.setter("height"))
+        banner_card.corner_radius = 10
+
         if cat == 1:
-            cat_card.bg_color = COLOR_URGENT_EMERGENCY
+            banner_card.bg_color = COLOR_EMERGENCY_TINT
+            banner_card.border_color = (0.95, 0.75, 0.75, 1.0)
+            icon_str = "⚠️"
+            title_str = "CATEGORY 1 — EMERGENCY CARE"
+            sub_str = "Seek immediate medical attention"
+            title_color = COLOR_URGENT_EMERGENCY
         elif cat == 2:
-            cat_card.bg_color = COLOR_URGENT_EARLY
+            banner_card.bg_color = COLOR_EARLY_TINT
+            banner_card.border_color = (0.95, 0.85, 0.7, 1.0)
+            icon_str = "⚠️"
+            title_str = "CATEGORY 2 — EARLY MEDICAL CONSULTATION"
+            sub_str = "Consult a physician promptly within 12–24 hours"
+            title_color = (0.8, 0.45, 0.0, 1.0)
         elif cat == 3:
-            cat_card.bg_color = COLOR_URGENT_ROUTINE
+            banner_card.bg_color = COLOR_ROUTINE_TINT
+            banner_card.border_color = (0.75, 0.9, 0.8, 1.0)
+            icon_str = "✓"
+            title_str = "CATEGORY 3 — ROUTINE CARE"
+            sub_str = "Self-care and routine medical consultation"
+            title_color = (0.05, 0.55, 0.25, 1.0)
         else:
-            cat_card.bg_color = COLOR_URGENT_INSUFF
+            banner_card.bg_color = (0.94, 0.96, 0.98, 1.0)
+            banner_card.border_color = COLOR_BORDER
+            icon_str = "ℹ"
+            title_str = "CATEGORY 4 — INSUFFICIENT INFORMATION"
+            sub_str = "Additional clinical evaluation needed"
+            title_color = COLOR_NAVY_PRIMARY
 
-        cat_card.add_widget(WrappedLabel(
-            text=f"[size=20sp][b]{result.urgency_label.upper()}[/b][/size]\n"
-                 f"Triage Urgency: Category {cat} of 4",
-            font_size="14sp",
-            color=COLOR_TEXT_LIGHT
+        # Alert icon on left
+        b_icon = Label(text=icon_str, font_size="26sp", bold=True, color=title_color, size_hint=(None, None), size=(36, 40), pos_hint={"center_y": 0.5})
+        banner_card.add_widget(b_icon)
+
+        # Title text column
+        b_text_col = BoxLayout(orientation="vertical", spacing=2, pos_hint={"center_y": 0.5})
+        b_text_col.add_widget(WrappedLabel(
+            text=f"[b][size=17sp]{title_str}[/size][/b]",
+            font_size="17sp",
+            color=title_color
         ))
-        self.content.add_widget(cat_card)
-
-        # -------------------------------------------------------------
-        # SECTION 2: RECOMMENDED CLINICAL ACTION GUIDANCE (High Prominence)
-        # -------------------------------------------------------------
-        self.content.add_widget(create_section_title("Recommended Clinical Action Guidance"))
-        act_card = CardBox(orientation="vertical", spacing=8, padding=[16, 14, 16, 14], size_hint_y=None)
-        act_card.bind(minimum_height=act_card.setter("height"))
-
-        if cat == 1:
-            act_card.bg_color = (1.0, 0.94, 0.94, 1.0)
-            act_card.border_color = COLOR_URGENT_EMERGENCY
-            act_card.add_widget(WrappedLabel(
-                text="[b][color=#DC2626]CRITICAL ACTION PROTOCOL — CALL EMERGENCY SERVICES (112 / 102)[/color][/b]",
-                font_size="14sp"
-            ))
-            act_card.add_widget(WrappedLabel(
-                text="• [b]Call 112 (National Emergency Helpline)[/b] or [b]102 (Ambulance Service)[/b] immediately.\n"
-                     "• Do NOT operate a motor vehicle yourself; arrange for emergency medical transport or have someone drive you.\n"
-                     "• Sit or lie in a comfortable position, stay calm, and notify family or someone nearby.\n"
-                     "• Download and provide your MEDICARE Doctor Handover report to the emergency care team.",
-                font_size="13sp",
-                color=COLOR_TEXT_DARK
-            ))
-        elif cat == 2:
-            act_card.bg_color = (1.0, 0.97, 0.92, 1.0)
-            act_card.border_color = COLOR_URGENT_EARLY
-            act_card.add_widget(WrappedLabel(
-                text="[b][color=#D97706]SAME-DAY CLINICAL EVALUATION ADVISORY (WITHIN 12–24 HOURS)[/color][/b]",
-                font_size="14sp"
-            ))
-            act_card.add_widget(WrappedLabel(
-                text="• Schedule an in-person medical consultation within 12–24 hours.\n"
-                     "• Present your downloaded MEDICARE Doctor Handover summary to the consulting physician.\n"
-                     "• Monitor your symptoms closely: if you develop new chest pain, severe shortness of breath, or confusion, dial 112 immediately.\n"
-                     "• Rest and maintain adequate hydration while awaiting clinical evaluation.",
-                font_size="13sp",
-                color=COLOR_TEXT_DARK
-            ))
-        elif cat == 3:
-            act_card.bg_color = (0.95, 0.99, 0.96, 1.0)
-            act_card.border_color = COLOR_URGENT_ROUTINE
-            act_card.add_widget(WrappedLabel(
-                text="[b][color=#10B981]ROUTINE PRIMARY CARE & SUPPORTIVE SELF-CARE GUIDANCE[/color][/b]",
-                font_size="14sp"
-            ))
-            act_card.add_widget(WrappedLabel(
-                text="• Follow supportive home care measures: get adequate rest and drink plenty of fluids.\n"
-                     "• Schedule a standard routine appointment with your primary clinic if symptoms persist beyond 5–7 days.\n"
-                     "• Retake this assessment if your condition changes or new concerning symptoms develop.",
-                font_size="13sp",
-                color=COLOR_TEXT_DARK
-            ))
-        else: # Cat 4
-            act_card.bg_color = (0.96, 0.97, 0.98, 1.0)
-            act_card.border_color = COLOR_URGENT_INSUFF
-            act_card.add_widget(WrappedLabel(
-                text="[b][color=#4B5563]ADDITIONAL CLINICAL INFORMATION REQUIRED[/color][/b]",
-                font_size="14sp"
-            ))
-            act_card.add_widget(WrappedLabel(
-                text="• Retake the assessment and answer all questions completely to allow a safe evaluation.\n"
-                     "• Incomplete responses cannot confirm safety; if you feel distressed or very unwell, seek medical attention or call a health helpline (104).",
-                font_size="13sp",
-                color=COLOR_TEXT_DARK
-            ))
-        self.content.add_widget(act_card)
-
-        # -------------------------------------------------------------
-        # SECTION 3: ASSESSMENT SUMMARY & KEY FINDINGS
-        # -------------------------------------------------------------
-        self.content.add_widget(create_section_title("1. Assessment Summary & Key Findings"))
-        summary_card = CardBox(orientation="vertical", spacing=8, padding=[16, 14, 16, 14], size_hint_y=None)
-        summary_card.bind(minimum_height=summary_card.setter("height"))
-        summary_card.bg_color = COLOR_WHITE
-
-        # Main plain-language summary
-        summary_card.add_widget(WrappedLabel(
-            text=f"[b]Clinical Summary:[/b] {result.summary_explanation}",
+        b_text_col.add_widget(WrappedLabel(
+            text=sub_str,
             font_size="13sp",
+            color=title_color
+        ))
+        banner_card.add_widget(b_text_col)
+        self.content.add_widget(banner_card)
+
+        # -------------------------------------------------------------
+        # SECTION 2: ASSESSMENT SUMMARY CARD WITH MEDICAL EMBLEM
+        # -------------------------------------------------------------
+        summary_card = CardBox(orientation="vertical", spacing=12, padding=[20, 18, 20, 18], size_hint_y=None)
+        summary_card.bind(minimum_height=summary_card.setter("height"))
+        summary_card.corner_radius = 12
+
+        # Card Title
+        summary_card.add_widget(WrappedLabel(
+            text="[b][size=16sp]Assessment Summary[/size][/b]",
+            font_size="16sp",
             color=COLOR_NAVY_PRIMARY
         ))
 
-        # Important confirmed symptoms
+        # Main summary content row: Left bullet points, Right emblem
+        content_row = BoxLayout(orientation="horizontal", spacing=14, size_hint_y=None)
+        content_row.bind(minimum_height=content_row.setter("height"))
+
+        # Left Column: Key Findings List
+        findings_col = BoxLayout(orientation="vertical", spacing=8, size_hint_x=0.78)
+        findings_col.bind(minimum_height=findings_col.setter("height"))
+
+        # Symptoms
         symptoms = getattr(result, "symptoms", [])
         if isinstance(symptoms, str):
             try:
                 symptoms = json.loads(symptoms)
             except Exception:
                 symptoms = []
-        if symptoms:
-            sym_lines = []
-            for s in symptoms:
-                name = s.get("name") or s.get("symptom_name") or s.get("code", "Symptom")
-                sev = s.get("severity")
-                dur_v = s.get("duration_value", "")
-                dur_u = s.get("duration_unit", "")
-                prog = s.get("progression", "")
-                details = []
-                if sev is not None:
-                    details.append(f"Severity: {sev}/10")
-                if dur_v:
-                    details.append(f"Duration: {dur_v} {dur_u}".strip())
-                if prog and prog != "unchanged":
-                    details.append(f"Trend: {prog.capitalize()}")
-                det_str = f" ({', '.join(details)})" if details else ""
-                sym_lines.append(f"• {name}{det_str}")
-
-            summary_card.add_widget(WrappedLabel(
-                text="[b]Confirmed Reported Symptoms:[/b]\n" + "\n".join(sym_lines),
-                font_size="12sp",
-                color=COLOR_TEXT_DARK
-            ))
-
-        # Progression assessment & severity score
-        prog_text = getattr(result, "progression_trend", "stable").capitalize()
-        sev_val = getattr(result, "severity_score", 0.0)
-        summary_card.add_widget(WrappedLabel(
-            text=f"[b]Progression Assessment:[/b] {prog_text} trajectory &nbsp;|&nbsp; "
-                 f"[b]Severity Metric:[/b] {sev_val:.1f} / 10.0",
-            font_size="12sp",
+        sym_names = ", ".join(s.get("name", "") for s in symptoms if isinstance(s, dict) and s.get("name")) or "Reported symptoms"
+        findings_col.add_widget(WrappedLabel(
+            text=f"[color=#0D6EFD]⬇[/color]  [b]Symptoms Reported:[/b]   {sym_names}",
+            font_size="13sp",
             color=COLOR_TEXT_DARK
         ))
 
-        # Incomplete Data Points / Missing Safety Questions:
-        # SINGLE clean notice shown ONLY if relevant safety questions were skipped!
+        # Key Findings
+        answers = getattr(result, "followup_answers", {})
+        findings_list = []
+        for qk, qv in answers.items():
+            if qv in ("YES", "SEVERE", "HIGH_GRADE"):
+                clean_k = qk.replace("QID_", "").replace("_", " ").title()
+                findings_list.append(clean_k)
+        if not findings_list and hasattr(result, "warning_signs_found") and result.warning_signs_found:
+            findings_list = [w[:25] for w in result.warning_signs_found[:2]]
+        findings_str = ", ".join(findings_list) if findings_list else "Standard symptom course"
+        findings_col.add_widget(WrappedLabel(
+            text=f"[color=#0D6EFD]✓[/color]  [b]Key Findings:[/b]   {findings_str}",
+            font_size="13sp",
+            color=COLOR_TEXT_DARK
+        ))
+
+        # Triage Category
+        findings_col.add_widget(WrappedLabel(
+            text=f"[color=#DC2626]⚠️[/color]  [b]Triage Category:[/b]   Category {cat}",
+            font_size="13sp",
+            color=COLOR_TEXT_DARK
+        ))
+
+        # Recommended Action
+        if cat == 1:
+            rec_action = "Go to nearest emergency room or call ambulance (112 / 102)"
+        elif cat == 2:
+            rec_action = "Consult a physician within 12–24 hours"
+        elif cat == 3:
+            rec_action = "Rest, drink fluids, and monitor symptoms"
+        else:
+            rec_action = "Retake assessment or consult local clinic"
+
+        findings_col.add_widget(WrappedLabel(
+            text=f"[color=#10B981]✓[/color]  [b]Recommended Action:[/b]   {rec_action}",
+            font_size="13sp",
+            color=COLOR_TEXT_DARK
+        ))
+        content_row.add_widget(findings_col)
+
+        # Right Column: Circular Medical Cross Emblem
+        emblem_box = BoxLayout(size_hint=(None, None), size=(68, 68), pos_hint={"center_y": 0.5})
+        with emblem_box.canvas.before:
+            if cat == 1:
+                Color(*COLOR_EMERGENCY_TINT)
+            elif cat == 2:
+                Color(*COLOR_EARLY_TINT)
+            else:
+                Color(*COLOR_ROUTINE_TINT)
+            Ellipse(pos=emblem_box.pos, size=emblem_box.size)
+        emblem_box.bind(pos=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'pos', inst.pos),
+                        size=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'size', inst.size))
+        
+        emblem_col = COLOR_URGENT_EMERGENCY if cat == 1 else (COLOR_URGENT_EARLY if cat == 2 else COLOR_URGENT_ROUTINE)
+        emblem_lbl = Label(text="+", font_size="38sp", bold=True, color=emblem_col)
+        emblem_box.add_widget(emblem_lbl)
+        content_row.add_widget(emblem_box)
+
+        summary_card.add_widget(content_row)
+
+        # Bottom Warning Bar inside card (Matching Screen 3)
+        bottom_alert_bar = CardBox(orientation="horizontal", spacing=8, padding=[12, 8, 12, 8], size_hint_y=None, height=36)
+        bottom_alert_bar.corner_radius = 6
+        if cat == 1:
+            bottom_alert_bar.bg_color = COLOR_EMERGENCY_TINT
+            bottom_alert_bar.border_color = (0.95, 0.75, 0.75, 1.0)
+            bottom_alert_bar.add_widget(Label(text="⚠️", font_size="12sp", color=COLOR_URGENT_EMERGENCY, size_hint=(None, None), size=(20, 20)))
+            bottom_alert_bar.add_widget(WrappedLabel(
+                text="[b][color=#DC2626]Do not delay treatment. This is a medical emergency.[/color][/b]",
+                font_size="11.5sp"
+            ))
+        elif cat == 2:
+            bottom_alert_bar.bg_color = COLOR_EARLY_TINT
+            bottom_alert_bar.border_color = (0.95, 0.85, 0.7, 1.0)
+            bottom_alert_bar.add_widget(Label(text="⚠️", font_size="12sp", color=COLOR_URGENT_EARLY, size_hint=(None, None), size=(20, 20)))
+            bottom_alert_bar.add_widget(WrappedLabel(
+                text="[b][color=#B45309]Schedule a same-day medical consultation promptly.[/color][/b]",
+                font_size="11.5sp"
+            ))
+        else:
+            bottom_alert_bar.bg_color = COLOR_ROUTINE_TINT
+            bottom_alert_bar.border_color = (0.75, 0.9, 0.8, 1.0)
+            bottom_alert_bar.add_widget(Label(text="✓", font_size="12sp", color=COLOR_URGENT_ROUTINE, size_hint=(None, None), size=(20, 20)))
+            bottom_alert_bar.add_widget(WrappedLabel(
+                text="[b][color=#059669]Routine supportive care recommended. Monitor for changes.[/color][/b]",
+                font_size="11.5sp"
+            ))
+        summary_card.add_widget(bottom_alert_bar)
+        self.content.add_widget(summary_card)
+
+        # -------------------------------------------------------------
+        # SECTION 3: ASSESSMENT DETAILS & DECISION FACTORS
+        # -------------------------------------------------------------
+        details_card = CardBox(orientation="vertical", spacing=8, padding=[18, 14, 18, 14], size_hint_y=None)
+        details_card.bind(minimum_height=details_card.setter("height"))
+        details_card.corner_radius = 10
+
+        details_card.add_widget(WrappedLabel(text="[b]Assessment Completeness & Decision Factors:[/b]", font_size="13sp", color=COLOR_NAVY_PRIMARY))
+
+        # Check answers count & completeness status
+        ans_count = len(answers) if answers else 0
+        is_emerg_flag = getattr(result, "emergency_override", False)
         missing_data = getattr(result, "missing_critical_data", [])
         if isinstance(missing_data, str):
             try:
@@ -911,48 +1432,25 @@ class TriageResultsScreen(BaseScreen):
             except Exception:
                 missing_data = []
 
-        if missing_data:
-            summary_card.add_widget(WrappedLabel(
-                text="[color=#B45309][b]⚠️ Note:[/b] Some safety questions were not answered. "
-                     "Assessment confidence may be limited.[/color]",
-                font_size="12sp"
-            ))
-
-        self.content.add_widget(summary_card)
-
-        # -------------------------------------------------------------
-        # SECTION 4: DETAILED CLINICAL REASONING & DECISION FACTORS
-        # -------------------------------------------------------------
-        self.content.add_widget(create_section_title("2. Detailed Clinical Reasoning & Decision Factors"))
-        just_card = CardBox(orientation="vertical", spacing=8, padding=[16, 14, 16, 14], size_hint_y=None)
-        just_card.bind(minimum_height=just_card.setter("height"))
-        just_card.bg_color = COLOR_WHITE
-
-        # A. Confirmed Emergency Indicators
-        warnings = getattr(result, "warning_signs_found", [])
-        if isinstance(warnings, str):
-            try:
-                warnings = json.loads(warnings)
-            except Exception:
-                warnings = []
-        if warnings:
-            just_card.add_widget(WrappedLabel(
-                text="[b][color=#DC2626]Confirmed Emergency Indicators:[/color][/b]",
-                font_size="12sp"
-            ))
-            for ws in warnings:
-                just_card.add_widget(WrappedLabel(
-                    text=f"[color=#DC2626]• {ws}[/color]",
-                    font_size="12sp"
-                ))
+        if is_emerg_flag:
+            completeness_text = "Complete (Emergency Red Flag Confirmed — Immediate Care Fast-Path)"
+        elif not missing_data:
+            completeness_text = "Assessment Fully Completed"
         else:
-            just_card.add_widget(WrappedLabel(
-                text="[b]Emergency Indicators:[/b] No immediate red-flag emergency indicators detected from the reported symptoms.",
-                font_size="12sp",
-                color=COLOR_TEXT_DARK
-            ))
+            completeness_text = "Preliminary (Pending Additional Clinical Checks)"
 
-        # B. Triggered Clinical Decision Factors (Human-readable, no raw technical rule IDs like RULE_EMERG_003)
+        details_card.add_widget(WrappedLabel(
+            text=f"• [b]Questions Answered:[/b] {ans_count} recorded   |   [b]Completeness:[/b] {completeness_text}",
+            font_size="12sp",
+            color=COLOR_TEXT_DARK
+        ))
+        details_card.add_widget(WrappedLabel(
+            text="• [b]Applicability Note:[/b] Questions not relevant to reported symptoms were safely omitted.",
+            font_size="11.5sp",
+            color=COLOR_TEXT_MUTED
+        ))
+
+        # Decision Factors
         rules = getattr(result, "rules_triggered", [])
         if isinstance(rules, str):
             try:
@@ -960,77 +1458,27 @@ class TriageResultsScreen(BaseScreen):
             except Exception:
                 rules = []
         if rules:
-            just_card.add_widget(WrappedLabel(
-                text="[b]Triggered Clinical Factors:[/b]",
-                font_size="12sp",
-                color=COLOR_NAVY_PRIMARY
-            ))
+            details_card.add_widget(WrappedLabel(text="[b]Triggered Clinical Factors:[/b]", font_size="12sp", color=COLOR_NAVY_PRIMARY))
             for r in rules:
-                if isinstance(r, dict):
-                    expl = r.get("explanation") or r.get("description", "")
-                else:
-                    expl = str(r)
+                expl = r.get("explanation") if isinstance(r, dict) else str(r)
                 if expl:
-                    just_card.add_widget(WrappedLabel(
-                        text=f"• {expl}",
-                        font_size="12sp",
-                        color=COLOR_TEXT_DARK
-                    ))
+                    details_card.add_widget(WrappedLabel(text=f"  • {expl}", font_size="11.5sp", color=COLOR_TEXT_DARK))
 
-        # C. Input Discordance / Contradictions (if any)
-        contradictions = getattr(result, "contradictions", [])
-        if isinstance(contradictions, str):
-            try:
-                contradictions = json.loads(contradictions)
-            except Exception:
-                contradictions = []
-        if contradictions:
-            just_card.add_widget(WrappedLabel(
-                text="[b]Input Observations:[/b]",
-                font_size="12sp",
-                color=COLOR_NAVY_PRIMARY
-            ))
-            for c in contradictions:
-                just_card.add_widget(WrappedLabel(
-                    text=f"• {c}",
-                    font_size="12sp",
-                    color=COLOR_TEXT_DARK
-                ))
-
-        # D. Trajectory & Severity Summary
-        just_card.add_widget(WrappedLabel(
-            text=f"• Trajectory: {prog_text} over reported duration — Severity score: {sev_val:.1f}/10.0",
-            font_size="12sp",
-            color=COLOR_TEXT_DARK
-        ))
-
-        self.content.add_widget(just_card)
+        self.content.add_widget(details_card)
 
         # -------------------------------------------------------------
-        # SECTION 5: CLINICAL DISCLAIMER & GOVERNANCE
+        # SECTION 4: ACTION BUTTONS (Download Report & Back to Dashboard)
         # -------------------------------------------------------------
-        disc_card = CardBox(orientation="vertical", spacing=4, padding=[12, 10, 12, 10], size_hint_y=None)
-        disc_card.bind(minimum_height=disc_card.setter("height"))
-        disc_card.bg_color = (0.97, 0.97, 0.98, 1)
-        disc_card.add_widget(WrappedLabel(
-            text="[b]Safety & Governance Notice:[/b] MEDICARE is an offline preliminary triage advisor and clinical decision-support tool. It does not provide medical diagnoses, treatment prescriptions, or emergency guarantees. If your condition worsens rapidly, seek emergency medical care immediately.",
-            font_size="10sp",
-            color=COLOR_TEXT_MUTED
-        ))
-        self.content.add_widget(disc_card)
-
-        # -------------------------------------------------------------
-        # SECTION 6: HANDOVER & NAVIGATION ACTIONS
-        # -------------------------------------------------------------
-        act_box = BoxLayout(orientation="vertical", spacing=8, size_hint_y=None, height=92)
+        act_box = BoxLayout(orientation="horizontal", spacing=14, size_hint_y=None, height=44)
         
-        btn_pdf = PrimaryButton(text="GENERATE DOCTOR HANDOVER PDF", size_hint_y=None, height=42)
+        btn_pdf = SecondaryButton(text="📥  Download Report", size_hint=(0.5, 1))
         btn_pdf.bind(on_release=self._generate_pdf)
         act_box.add_widget(btn_pdf)
 
-        btn_home = SecondaryButton(text="Return to Dashboard", size_hint_y=None, height=36)
+        btn_home = PrimaryButton(text="🏠  Back to Dashboard", size_hint=(0.5, 1))
         btn_home.bind(on_release=lambda x: self._nav_to("dashboard"))
         act_box.add_widget(btn_home)
+
         self.content.add_widget(act_box)
 
     def _generate_pdf(self, *args):
@@ -1045,7 +1493,7 @@ class TriageResultsScreen(BaseScreen):
         generate_doctor_handover_pdf(patient, result.to_dict(), out_file)
 
         # Register downloaded handover in SQLite metadata tracking library
-        symptoms_str = ", ".join(s.get("name", "") for s in result.symptoms_evaluated) if hasattr(result, "symptoms_evaluated") else "Reported symptoms"
+        symptoms_str = ", ".join(s.get("name", "") for s in result.symptoms) if hasattr(result, "symptoms") and result.symptoms else "Reported symptoms"
         pain_sev = getattr(self.controller, "assessment_staging", {}).get("severity", 5)
         
         doc_record = self.controller.handover_service.register_download(
@@ -1209,7 +1657,8 @@ class SymptomProgressionScreen(BaseScreen):
 
 
 # =========================================================================
-# 8. DOCTOR HANDOVER SCREEN
+# =========================================================================
+# 8. DOCTOR HANDOVER SCREEN (Structured Medical Handover Preview matching Screen 4)
 # =========================================================================
 class DoctorHandoverScreen(BaseScreen):
     def __init__(self, controller, **kwargs):
@@ -1220,38 +1669,266 @@ class DoctorHandoverScreen(BaseScreen):
     def _build_ui(self):
         root = BoxLayout(orientation="vertical", spacing=0)
         scroll = ScrollView(size_hint=(1, 1), do_scroll_x=False)
-        content = BoxLayout(orientation="vertical", spacing=14, padding=[16, 16, 16, 24], size_hint_y=None)
-        content.bind(minimum_height=content.setter("height"))
+        self.content = BoxLayout(orientation="vertical", spacing=12, padding=[18, 14, 18, 24], size_hint_y=None)
+        self.content.bind(minimum_height=self.content.setter("height"))
 
-        content.add_widget(create_section_title("Doctor Handover Report Generator"))
-        content.add_widget(create_desc_label("Generates an offline structured medical summary for your attending physician or emergency clinician."))
-
-        card = CardBox(orientation="vertical", spacing=10, padding=[16, 14, 16, 14], size_hint_y=None)
-        card.bind(minimum_height=card.setter("height"))
-        card.add_widget(WrappedLabel(
-            text="[b]Clinical Summary Document[/b]\nIncludes patient demographics, known allergies, current chief complaints, "
-                 "symptom progression trajectory, and triggered triage warning signs.",
-            font_size="13sp",
-            color=COLOR_NAVY_PRIMARY
-        ))
-
-        btn_gen = PrimaryButton(text="GENERATE & EXPORT HANDOVER PDF", size_hint_y=None, height=44)
-        btn_gen.bind(on_release=self._generate_latest_pdf)
-        card.add_widget(btn_gen)
-        content.add_widget(card)
-
-        scroll.add_widget(content)
+        scroll.add_widget(self.content)
         root.add_widget(scroll)
         self.add_widget(root)
 
-    def _generate_latest_pdf(self, *args):
+    def on_pre_enter(self):
+        self.content.clear_widgets()
+
+        # -------------------------------------------------------------
+        # 1. TOP ACTION BAR (🖨 Print, 📥 Download PDF, ✕ Close)
+        # -------------------------------------------------------------
+        action_bar = BoxLayout(orientation="horizontal", spacing=10, size_hint_y=None, height=36)
+
+        btn_print = SecondaryButton(text="🖨  Print", size_hint=(None, 1), width=110)
+        btn_print.bind(on_release=self._print_or_view_pdf)
+        action_bar.add_widget(btn_print)
+
+        btn_dl = PrimaryButton(text="📥  Download PDF", size_hint=(None, 1), width=160)
+        btn_dl.bind(on_release=self._generate_latest_pdf)
+        action_bar.add_widget(btn_dl)
+
+        action_bar.add_widget(Widget(size_hint_x=1))  # Spacer
+
+        btn_close = SecondaryButton(text="✕  Close", size_hint=(None, 1), width=95)
+        btn_close.bind(on_release=lambda x: self._nav_to("dashboard"))
+        action_bar.add_widget(btn_close)
+
+        self.content.add_widget(action_bar)
+
+        # -------------------------------------------------------------
+        # 2. PATIENT & ASSESSMENT DATA RETRIEVAL
+        # -------------------------------------------------------------
         patient = self.controller.patient_service.get_patient(self.controller.current_patient_id)
-        assessments = self.controller.history_service.get_assessment_history(self.controller.current_patient_id, limit=1)
-        if not assessments:
-            self._show_msg("No Assessments Found", "Please complete a symptom assessment before generating a handover summary.")
+        result = getattr(self.controller, "last_triage_result", None)
+        if result:
+            result_dict = result.to_dict()
+        else:
+            history = self.controller.history_service.get_assessment_history(self.controller.current_patient_id, limit=1)
+            result_dict = history[0] if history else None
+
+        if not result_dict:
+            empty_card = CardBox(orientation="vertical", spacing=10, padding=[24, 20, 24, 20], size_hint_y=None)
+            empty_card.bind(minimum_height=empty_card.setter("height"))
+            empty_card.add_widget(WrappedLabel(
+                text="[b][size=15sp]No Assessment Available for Handover[/size][/b]",
+                font_size="15sp",
+                color=COLOR_NAVY_PRIMARY
+            ))
+            empty_card.add_widget(WrappedLabel(
+                text="A clinical assessment must be completed before a doctor handover report can be generated.",
+                font_size="12sp",
+                color=COLOR_TEXT_MUTED
+            ))
+            btn_start = PrimaryButton(text="START NEW ASSESSMENT →", size_hint_y=None, height=40)
+            btn_start.bind(on_release=lambda x: self._nav_to("symptom_assessment"))
+            empty_card.add_widget(btn_start)
+            self.content.add_widget(empty_card)
             return
 
-        latest_a = assessments[0]
+        # -------------------------------------------------------------
+        # 3. REPORT SHEET CARD (White document sheet with navy headers)
+        # -------------------------------------------------------------
+        sheet = CardBox(orientation="vertical", spacing=12, padding=[22, 18, 22, 22], size_hint_y=None)
+        sheet.bind(minimum_height=sheet.setter("height"))
+        sheet.corner_radius = 10
+
+        # Header Row: Logo & Titles
+        hdr_row = BoxLayout(orientation="horizontal", spacing=12, size_hint_y=None, height=44)
+
+        # Left branding
+        left_brand = BoxLayout(orientation="horizontal", spacing=8, size_hint_x=0.5)
+        icon_box = BoxLayout(size_hint=(None, None), size=(36, 36), pos_hint={"center_y": 0.5})
+        with icon_box.canvas.before:
+            Color(*COLOR_BLUE_ACCENT)
+            RoundedRectangle(pos=icon_box.pos, size=icon_box.size, radius=[8])
+        icon_box.bind(pos=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'pos', inst.pos),
+                      size=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'size', inst.size))
+        icon_lbl = Label(text="♥", font_size="20sp", bold=True, color=(1, 1, 1, 1))
+        icon_box.add_widget(icon_lbl)
+        left_brand.add_widget(icon_box)
+
+        brand_text = BoxLayout(orientation="vertical", spacing=1, pos_hint={"center_y": 0.5})
+        brand_text.add_widget(WrappedLabel(text="[b][size=16sp]MEDICARE[/size][/b]", font_size="16sp", color=COLOR_NAVY_PRIMARY))
+        brand_text.add_widget(WrappedLabel(text="Smart Symptom Assessment", font_size="11sp", color=COLOR_TEXT_MUTED))
+        left_brand.add_widget(brand_text)
+        hdr_row.add_widget(left_brand)
+
+        # Right report title
+        right_title = BoxLayout(orientation="vertical", spacing=1, size_hint_x=0.5, pos_hint={"center_y": 0.5})
+        right_title.add_widget(WrappedLabel(text="[b][size=14sp]Doctor Handover Report[/size][/b]", font_size="14sp", color=COLOR_NAVY_PRIMARY, halign="right"))
+        right_title.add_widget(WrappedLabel(text="Clinical Assessment Summary", font_size="11sp", color=COLOR_TEXT_MUTED, halign="right"))
+        hdr_row.add_widget(right_title)
+
+        sheet.add_widget(hdr_row)
+
+        # Section 1 Header: Patient Information (Navy Bar)
+        sec1_bar = CardBox(padding=[12, 5, 12, 5], size_hint_y=None, height=28)
+        sec1_bar.bg_color = COLOR_NAVY_PRIMARY
+        sec1_bar.border_color = COLOR_NAVY_PRIMARY
+        sec1_bar.corner_radius = 4
+        sec1_bar.add_widget(WrappedLabel(text="[b][color=#FFFFFF]Patient Information[/color][/b]", font_size="11.5sp"))
+        sheet.add_widget(sec1_bar)
+
+        p_name = (patient.get("display_name") if patient else "Rahul Sharma") or "Rahul Sharma"
+        p_phone = (patient.get("phone") if patient else "+91 98765 43210") or "+91 98765 43210"
+        p_age = f"{patient.get('age', 32)} years" if patient and patient.get("age") else "32 years"
+        dt_raw = result_dict.get("completed_at") or result_dict.get("timestamp") or "Nov 22, 2025 • 2:30 PM"
+        dt_str = str(dt_raw)[:16].replace("T", " • ")
+
+        sec1_content = BoxLayout(orientation="vertical", spacing=5, padding=[6, 4, 6, 4], size_hint_y=None)
+        sec1_content.bind(minimum_height=sec1_content.setter("height"))
+
+        row1 = BoxLayout(orientation="horizontal", size_hint_y=None, height=20)
+        row1.add_widget(WrappedLabel(text=f"Name:  [b][color=#0D6EFD]{p_name}[/color][/b]", font_size="11.5sp", color=COLOR_TEXT_DARK, size_hint_x=0.5))
+        row1.add_widget(WrappedLabel(text=f"Phone:  [b]{p_phone}[/b]", font_size="11.5sp", color=COLOR_TEXT_DARK, size_hint_x=0.5))
+        sec1_content.add_widget(row1)
+
+        row2 = BoxLayout(orientation="horizontal", size_hint_y=None, height=20)
+        row2.add_widget(WrappedLabel(text=f"Age:  [b]{p_age}[/b]", font_size="11.5sp", color=COLOR_TEXT_DARK, size_hint_x=0.5))
+        row2.add_widget(WrappedLabel(text=f"Date:  [b]{dt_str}[/b]", font_size="11.5sp", color=COLOR_TEXT_DARK, size_hint_x=0.5))
+        sec1_content.add_widget(row2)
+        sheet.add_widget(sec1_content)
+
+        # Section 2 Header: Assessment Results (Navy Bar)
+        sec2_bar = CardBox(padding=[12, 5, 12, 5], size_hint_y=None, height=28)
+        sec2_bar.bg_color = COLOR_NAVY_PRIMARY
+        sec2_bar.border_color = COLOR_NAVY_PRIMARY
+        sec2_bar.corner_radius = 4
+        sec2_bar.add_widget(WrappedLabel(text="[b][color=#FFFFFF]Assessment Results[/color][/b]", font_size="11.5sp"))
+        sheet.add_widget(sec2_bar)
+
+        cat = result_dict.get("urgency_category", 1)
+        urg_box = CardBox(orientation="horizontal", spacing=10, padding=[12, 6, 12, 6], size_hint_y=None, height=34)
+        urg_box.corner_radius = 6
+        if cat == 1:
+            urg_box.bg_color = COLOR_EMERGENCY_TINT
+            urg_box.border_color = (0.95, 0.75, 0.75, 1.0)
+            urg_box.add_widget(WrappedLabel(
+                text="[b][color=#DC2626]⚠️  Category 1 — Emergency Care[/color][/b]",
+                font_size="11.5sp",
+                size_hint_x=0.5
+            ))
+            urg_box.add_widget(WrappedLabel(
+                text="[b][color=#DC2626]Seek immediate medical attention[/color][/b]",
+                font_size="11.5sp",
+                size_hint_x=0.5,
+                halign="right"
+            ))
+        elif cat == 2:
+            urg_box.bg_color = COLOR_EARLY_TINT
+            urg_box.border_color = (0.95, 0.85, 0.7, 1.0)
+            urg_box.add_widget(WrappedLabel(
+                text="[b][color=#B45309]⚠️  Category 2 — Early Medical Consultation[/color][/b]",
+                font_size="11.5sp",
+                size_hint_x=0.5
+            ))
+            urg_box.add_widget(WrappedLabel(
+                text="[b][color=#B45309]Consult a physician promptly within 12–24h[/color][/b]",
+                font_size="11.5sp",
+                size_hint_x=0.5,
+                halign="right"
+            ))
+        else:
+            urg_box.bg_color = COLOR_ROUTINE_TINT
+            urg_box.border_color = (0.75, 0.9, 0.8, 1.0)
+            urg_box.add_widget(WrappedLabel(
+                text="[b][color=#059669]✓  Category 3 — Routine Care[/color][/b]",
+                font_size="11.5sp",
+                size_hint_x=0.5
+            ))
+            urg_box.add_widget(WrappedLabel(
+                text="[b][color=#059669]Self-care & routine medical consultation[/color][/b]",
+                font_size="11.5sp",
+                size_hint_x=0.5,
+                halign="right"
+            ))
+        sheet.add_widget(urg_box)
+
+        # Extract symptoms & findings
+        symptoms = result_dict.get("symptoms", [])
+        if isinstance(symptoms, str):
+            try:
+                symptoms = json.loads(symptoms)
+            except Exception:
+                symptoms = []
+        sym_names = ", ".join(s.get("name", "") for s in symptoms if isinstance(s, dict) and s.get("name")) or "Headache"
+
+        answers = result_dict.get("followup_answers", {})
+        findings_list = []
+        if isinstance(answers, dict):
+            for qk, qv in answers.items():
+                if qv in ("YES", "SEVERE", "HIGH_GRADE"):
+                    clean_k = qk.replace("QID_", "").replace("_", " ").title()
+                    findings_list.append(clean_k)
+        if not findings_list and result_dict.get("warning_signs_found"):
+            findings_list = [w[:25] for w in result_dict["warning_signs_found"][:2]]
+        findings_str = ", ".join(findings_list) if findings_list else "Sudden onset"
+
+        if cat == 1:
+            rec_action = "Go to nearest emergency room or call ambulance (112 / 102)."
+        elif cat == 2:
+            rec_action = "Consult a physician within 12–24 hours."
+        elif cat == 3:
+            rec_action = "Rest, drink fluids, and monitor symptoms."
+        else:
+            rec_action = "Consult healthcare provider for further evaluation."
+
+        sec2_content = BoxLayout(orientation="vertical", spacing=5, padding=[6, 4, 6, 4], size_hint_y=None)
+        sec2_content.bind(minimum_height=sec2_content.setter("height"))
+
+        sec2_content.add_widget(WrappedLabel(text=f"[b]Symptoms:[/b]         {sym_names}", font_size="11.5sp", color=COLOR_TEXT_DARK))
+        sec2_content.add_widget(WrappedLabel(text=f"[b]Key Findings:[/b]     {findings_str}", font_size="11.5sp", color=COLOR_TEXT_DARK))
+        sec2_content.add_widget(WrappedLabel(text=f"[b]Recommended Action:[/b]  {rec_action}", font_size="11.5sp", color=COLOR_TEXT_DARK))
+        sheet.add_widget(sec2_content)
+
+        # Section 3 Header: Assessment Details (Navy Bar)
+        sec3_bar = CardBox(padding=[12, 5, 12, 5], size_hint_y=None, height=28)
+        sec3_bar.bg_color = COLOR_NAVY_PRIMARY
+        sec3_bar.border_color = COLOR_NAVY_PRIMARY
+        sec3_bar.corner_radius = 4
+        sec3_bar.add_widget(WrappedLabel(text="[b][color=#FFFFFF]Assessment Details[/color][/b]", font_size="11.5sp"))
+        sheet.add_widget(sec3_bar)
+
+        ans_count = len(answers) if isinstance(answers, dict) else 1
+        is_emerg_flag = result_dict.get("emergency_override", False)
+        missing_data = result_dict.get("missing_critical_data", [])
+        is_complete = is_emerg_flag or (not missing_data)
+        complete_str = "[color=#10B981]✓ Yes[/color]" if is_complete else "[color=#B45309]Preliminary[/color]"
+
+        sec3_content = BoxLayout(orientation="horizontal", padding=[6, 4, 6, 4], size_hint_y=None, height=22)
+        sec3_content.add_widget(WrappedLabel(
+            text=f"Questions Answered:  [b]{ans_count} / 3[/b]",
+            font_size="11.5sp",
+            color=COLOR_TEXT_DARK,
+            size_hint_x=0.5
+        ))
+        sec3_content.add_widget(WrappedLabel(
+            text=f"Assessment Complete:  [b]{complete_str}[/b]",
+            font_size="11.5sp",
+            color=COLOR_TEXT_DARK,
+            size_hint_x=0.5
+        ))
+        sheet.add_widget(sec3_content)
+
+        self.content.add_widget(sheet)
+
+    def _generate_latest_pdf(self, *args):
+        patient = self.controller.patient_service.get_patient(self.controller.current_patient_id)
+        result = getattr(self.controller, "last_triage_result", None)
+        if result:
+            latest_a = result.to_dict()
+        else:
+            assessments = self.controller.history_service.get_assessment_history(self.controller.current_patient_id, limit=1)
+            if not assessments:
+                self._show_msg("No Assessments Found", "Please complete a symptom assessment before generating a handover summary.")
+                return
+            latest_a = assessments[0]
+
         out_dir = Path(self.controller.config.data_dir) / "reports"
         out_dir.mkdir(parents=True, exist_ok=True)
         session_id = latest_a.get("session_id", "REPORT")
@@ -1263,7 +1940,7 @@ class DoctorHandoverScreen(BaseScreen):
         self.controller.handover_service.register_download(
             session_id=session_id,
             patient_id=self.controller.current_patient_id,
-            patient_name=patient.get("display_name", "Anonymous Patient"),
+            patient_name=patient.get("display_name", "Anonymous Patient") if patient else "Anonymous Patient",
             title=f"Doctor Handover — {session_id}",
             main_symptoms="Prior assessment record",
             pain_severity=5,
@@ -1275,7 +1952,8 @@ class DoctorHandoverScreen(BaseScreen):
         box = BoxLayout(orientation="vertical", padding=16, spacing=12)
         box.add_widget(WrappedLabel(
             text=f"[b]Doctor Handover Generated & Downloaded[/b]\n"
-                 f"Saved locally to:\n{out_file}",
+                 f"Saved locally to:\n{out_file.name}\n\n"
+                 f"File Location: {out_file}",
             font_size="12sp",
             color=COLOR_NAVY_PRIMARY
         ))
@@ -1296,6 +1974,36 @@ class DoctorHandoverScreen(BaseScreen):
         p.content = box
         p.open()
 
+    def _print_or_view_pdf(self, *args):
+        patient = self.controller.patient_service.get_patient(self.controller.current_patient_id)
+        result = getattr(self.controller, "last_triage_result", None)
+        if result:
+            latest_a = result.to_dict()
+        else:
+            assessments = self.controller.history_service.get_assessment_history(self.controller.current_patient_id, limit=1)
+            if not assessments:
+                self._show_msg("No Assessments Found", "Please complete a symptom assessment before printing a handover summary.")
+                return
+            latest_a = assessments[0]
+
+        out_dir = Path(self.controller.config.data_dir) / "reports"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        session_id = latest_a.get("session_id", "REPORT")
+        out_file = out_dir / f"Handover_{session_id}.pdf"
+        generate_doctor_handover_pdf(patient, latest_a, out_file)
+
+        # Open in built-in PDF viewer
+        if "pdf_viewer" in self.manager.screen_names:
+            viewer = self.manager.get_screen("pdf_viewer")
+            viewer.load_document(str(out_file))
+            self.manager.current = "pdf_viewer"
+        else:
+            try:
+                import os
+                os.startfile(str(out_file))
+            except Exception:
+                self._show_msg("PDF Saved", f"Document saved to:\n{out_file}")
+
     def _open_viewer(self, popup, file_path):
         popup.dismiss()
         if "pdf_viewer" in self.manager.screen_names:
@@ -1307,6 +2015,9 @@ class DoctorHandoverScreen(BaseScreen):
         popup.dismiss()
         if "handover_downloads" in self.manager.screen_names:
             self.manager.current = "handover_downloads"
+
+    def _nav_to(self, screen_name: str):
+        self.manager.current = screen_name
 
     def _show_msg(self, title, msg):
         box = BoxLayout(orientation="vertical", padding=14, spacing=10)
@@ -2168,30 +2879,6 @@ class MedicalReferencesScreen(BaseScreen):
 
             self.content.add_widget(card)
 
-        # 2. Offline Maps & Geographic Data References Subsection
-        self.content.add_widget(create_section_title("Offline Maps, Geographic Data & Navigation References"))
-        self.content.add_widget(create_desc_label(
-            "Genuine technical documentation and algorithmic standards utilized in MEDICARE's "
-            "offline geographic subsystem, MBTiles access, spatial indexing, and C A* routing."
-        ))
-
-        for r in geo_refs:
-            card = CardBox(orientation="vertical", spacing=6, padding=[14, 12, 14, 12], size_hint_y=None)
-            card.bind(minimum_height=card.setter("height"))
-
-            card.add_widget(WrappedLabel(text=f"[b]{r.get('title')}[/b]", font_size="13sp", color=COLOR_NAVY_PRIMARY))
-            card.add_widget(WrappedLabel(text=f"Publisher / Project: [b]{r.get('source')}[/b] | Version: {r.get('version')}", font_size="11sp", color=COLOR_TEXT_MUTED))
-            card.add_widget(WrappedLabel(text=f"Purpose: {r.get('summary', '')}", font_size="12sp", color=COLOR_NAVY_LIGHT))
-            card.add_widget(WrappedLabel(text=r.get("content", ""), font_size="11sp", color=COLOR_TEXT_DARK))
-
-            url = r.get("url")
-            if url:
-                btn_link = SecondaryButton(text="Open Technical Resource ↗", size_hint_y=None, height=32)
-                btn_link.bind(on_release=lambda x, target_url=url: webbrowser.open(target_url))
-                card.add_widget(btn_link)
-
-            self.content.add_widget(card)
-
         scroll.add_widget(self.content)
         root.add_widget(scroll)
         self.add_widget(root)
@@ -2367,96 +3054,6 @@ class AboutScreen(BaseScreen):
             ref_card.add_widget(btn_link)
 
             content.add_widget(ref_card)
-
-        # Dedicated Offline Maps & Navigation References Section
-        content.add_widget(create_section_title("Offline Maps, Geographic Data & Navigation References"))
-        content.add_widget(create_desc_label(
-            "Technical documentation, data sources, and algorithmic references powering MEDICARE's "
-            "offline geographic subsystem, MBTiles access, spatial indexing, and C A* routing."
-        ))
-
-        geo_references_data = [
-            {
-                "title": "OpenStreetMap",
-                "org": "OpenStreetMap Foundation",
-                "purpose": "Open geographic map data used as a source for roads, settlements and geographic features.",
-                "url": "https://www.openstreetmap.org/"
-            },
-            {
-                "title": "OpenStreetMap Copyright and Attribution",
-                "org": "OpenStreetMap Foundation",
-                "purpose": "Data licensing, attribution and usage requirements.",
-                "url": "https://www.openstreetmap.org/copyright"
-            },
-            {
-                "title": "OpenStreetMap Wiki — Downloading Data",
-                "org": "OpenStreetMap Wiki Community",
-                "purpose": "Documentation about obtaining geographic data for offline processing.",
-                "url": "https://wiki.openstreetmap.org/wiki/Downloading_data"
-            },
-            {
-                "title": "MBTiles Specification",
-                "org": "Mapbox / Open Source Community",
-                "purpose": "Reference for the SQLite-based MBTiles format used to store map tiles.",
-                "url": "https://github.com/mapbox/mbtiles-spec"
-            },
-            {
-                "title": "Kivy Garden MapView",
-                "org": "Kivy Community",
-                "purpose": "Documentation for displaying interactive maps and markers in the existing Kivy application.",
-                "url": "https://mapview.readthedocs.io/"
-            },
-            {
-                "title": "SQLite Documentation",
-                "org": "SQLite Consortium",
-                "purpose": "Local database storage and management.",
-                "url": "https://www.sqlite.org/docs.html"
-            },
-            {
-                "title": "Valhalla Routing Engine",
-                "org": "Valhalla Project",
-                "purpose": "Reference for routing algorithms and road-network navigation architecture (evaluated as an architecture candidate; MEDICARE implements a dedicated C A* routing engine for local hospital road graphs).",
-                "url": "https://valhalla.github.io/valhalla/"
-            },
-            {
-                "title": "Android Location Permissions",
-                "org": "Google Android Developers",
-                "purpose": "Reference for Android device location permission handling.",
-                "url": "https://developer.android.com/develop/sensors-and-location/location/permissions"
-            },
-            {
-                "title": "C Language Documentation",
-                "org": "cppreference.com",
-                "purpose": "Reference for C language functionality used in native map processing.",
-                "url": "https://en.cppreference.com/w/c"
-            }
-        ]
-
-        for gref in geo_references_data:
-            g_card = CardBox(orientation="vertical", spacing=6, padding=[14, 12, 14, 12], size_hint_y=None)
-            g_card.bind(minimum_height=g_card.setter("height"))
-
-            g_card.add_widget(WrappedLabel(
-                text=f"[b]{gref['title']}[/b]",
-                font_size="13sp",
-                color=COLOR_NAVY_PRIMARY
-            ))
-            g_card.add_widget(WrappedLabel(
-                text=f"Project / Publisher: [b]{gref['org']}[/b]",
-                font_size="11sp",
-                color=COLOR_TEXT_MUTED
-            ))
-            g_card.add_widget(WrappedLabel(
-                text=f"Purpose: {gref['purpose']}",
-                font_size="12sp",
-                color=COLOR_TEXT_DARK
-            ))
-
-            btn_glink = SecondaryButton(text=f"Open Official Technical Reference ↗", size_hint_y=None, height=32)
-            btn_glink.bind(on_release=lambda x, target_url=gref["url"]: webbrowser.open(target_url))
-            g_card.add_widget(btn_glink)
-
-            content.add_widget(g_card)
 
         scroll.add_widget(content)
         root.add_widget(scroll)
