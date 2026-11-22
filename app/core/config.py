@@ -30,32 +30,72 @@ def _get_resource_root() -> Path:
     return Path(__file__).resolve().parent.parent.parent
 
 
+def _is_writable(path: Path) -> bool:
+    """Safely check if *path* can be created and written to."""
+    try:
+        path.mkdir(parents=True, exist_ok=True)
+        test_file = path / f".write_test_{os.getpid()}.tmp"
+        test_file.write_text("ok", encoding="utf-8")
+        test_file.unlink()
+        return True
+    except Exception:
+        return False
+
+
 def _get_user_data_root() -> Path:
     """Return the per-user writable data directory for MEDICARE.
 
     Priority order:
     1. ``MEDICARE_DATA_HOME`` env var — allows tests / CI / sandbox to override.
-    2. ``%LOCALAPPDATA%\\MEDICARE`` on Windows.
-    3. ``~/Library/Application Support/MEDICARE`` on macOS.
-    4. ``$XDG_DATA_HOME/MEDICARE`` or ``~/.local/share/MEDICARE`` on Linux.
+    2. Writable ``MEDICARE_Data`` folder beside the executable (portable mode).
+    3. ``%LOCALAPPDATA%\\MEDICARE`` on Windows.
+    4. ``%APPDATA%\\MEDICARE`` on Windows.
+    5. ``Documents\\MEDICARE`` on Windows.
+    6. System temp directory (``%TEMP%\\MEDICARE``) — guaranteed writable.
     """
-    # Test / CI / sandbox override
+    import tempfile
+
+    # 1. Test / CI / sandbox override
     override = os.environ.get("MEDICARE_DATA_HOME")
-    if override:
+    if override and _is_writable(Path(override)):
         return Path(override)
-    localappdata = os.environ.get("LOCALAPPDATA")
-    if localappdata:
-        return Path(localappdata) / "MEDICARE"
-    # macOS
-    home = Path.home()
-    lib = home / "Library" / "Application Support"
-    if lib.exists():
-        return lib / "MEDICARE"
-    # Linux / other
-    xdg = os.environ.get("XDG_DATA_HOME")
-    if xdg:
-        return Path(xdg) / "MEDICARE"
-    return home / ".local" / "share" / "MEDICARE"
+
+    candidates: list[Path] = []
+
+    # 2. Portable mode: beside the executable if writable
+    if getattr(sys, "frozen", False):
+        try:
+            exe_dir = Path(sys.executable).parent
+            candidates.append(exe_dir / "MEDICARE_Data")
+        except Exception:
+            pass
+
+    # 3. Platform-specific user data paths
+    if sys.platform == "win32":
+        for env_var in ("LOCALAPPDATA", "APPDATA"):
+            root = os.environ.get(env_var)
+            if root:
+                candidates.append(Path(root) / "MEDICARE")
+        try:
+            candidates.append(Path.home() / "Documents" / "MEDICARE")
+        except Exception:
+            pass
+    elif sys.platform == "darwin":
+        candidates.append(Path.home() / "Library" / "Application Support" / "MEDICARE")
+    else:
+        xdg = os.environ.get("XDG_DATA_HOME")
+        if xdg:
+            candidates.append(Path(xdg) / "MEDICARE")
+        candidates.append(Path.home() / ".local" / "share" / "MEDICARE")
+
+    # 4. Fallback: temp directory (guaranteed writable on all platforms)
+    candidates.append(Path(tempfile.gettempdir()) / "MEDICARE")
+
+    for candidate in candidates:
+        if _is_writable(candidate):
+            return candidate
+
+    return Path(tempfile.gettempdir()) / "MEDICARE"
 
 
 # Module-level singletons computed once at import time.
@@ -107,14 +147,24 @@ class MedicareConfig:
     log_level: str = "INFO"
 
     def ensure_directories(self):
-        """Create required directories if they do not exist."""
+        """Create required directories if they do not exist.
+
+        Wrapped in individual try/except so a PermissionError on one writable path
+        (e.g. OneDrive-redirected LOCALAPPDATA on Windows) does not block the others.
+        """
         for d in (
             self.db_path.parent,
             self.log_path.parent,
             self.reports_dir,
             self.downloads_dir,
         ):
-            d.mkdir(parents=True, exist_ok=True)
+            try:
+                d.mkdir(parents=True, exist_ok=True)
+            except (PermissionError, OSError):
+                # Non-fatal: the directory may already exist or be accessible via
+                # a different code path.  Log to stderr only (logger not yet set up).
+                import sys as _sys
+                print(f"[MEDICARE] WARNING: Could not create directory: {d}", file=_sys.stderr)
 
     def to_dict(self) -> dict:
         return {k: str(v) if isinstance(v, Path) else v for k, v in self.__dict__.items()}
@@ -135,6 +185,14 @@ class MedicareConfig:
         return cls(**kwargs)
 
 
+def _safe_exists(p: Path) -> bool:
+    """Like Path.exists() but returns False instead of raising PermissionError."""
+    try:
+        return p.exists()
+    except (PermissionError, OSError):
+        return False
+
+
 def load_config(config_file: Path = None) -> MedicareConfig:
     """Load config from JSON file or return defaults."""
     if config_file is None:
@@ -142,11 +200,11 @@ def load_config(config_file: Path = None) -> MedicareConfig:
         config_file = _USER_DATA_ROOT / "config.json"
         # Fallback: check the old resource-root location so existing
         # developer machines with a checked-in config.json still work.
-        if not config_file.exists():
+        if not _safe_exists(config_file):
             legacy = _RESOURCE_ROOT / "config.json"
-            if legacy.exists():
+            if _safe_exists(legacy):
                 config_file = legacy
-    if config_file.exists():
+    if _safe_exists(config_file):
         try:
             with open(config_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
@@ -160,7 +218,10 @@ def save_config(config: MedicareConfig, config_file: Path = None):
     """Save config to JSON file (always to the writable user-data location)."""
     if config_file is None:
         config_file = _USER_DATA_ROOT / "config.json"
-    config_file.parent.mkdir(parents=True, exist_ok=True)
-    with open(config_file, "w", encoding="utf-8") as f:
-        json.dump(config.to_dict(), f, indent=2)
+    try:
+        config_file.parent.mkdir(parents=True, exist_ok=True)
+        with open(config_file, "w", encoding="utf-8") as f:
+            json.dump(config.to_dict(), f, indent=2)
+    except (PermissionError, OSError):
+        pass  # Non-fatal — config is optional, defaults are always available
 

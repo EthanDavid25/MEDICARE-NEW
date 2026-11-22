@@ -1,7 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 # medicare_portable.spec — PyInstaller ONEFILE spec for MEDICARE_PORTABLE.exe
 # Output: dist\MEDICARE_PORTABLE.exe  (single self-extracting file)
-# User data stored in %LOCALAPPDATA%\MEDICARE  (never inside the temp extraction dir)
 #
 # Build command (run from MEDICARE_OFFLINE directory):
 #   $env:KIVY_HOME = "$PWD\.kivy_home"
@@ -40,10 +39,12 @@ hiddenimports = [
     'kivy.graphics.vertex_instructions', 'kivy.graphics.transformation',
     'kivy.app', 'kivy.clock', 'kivy.properties',
     'kivy.lang', 'kivy.lang.builder',
+    'kivy.uix.behaviors', 'kivy.uix.behaviors.button',
     # Standard library
     'sqlite3', 'json', 'csv', 'pathlib', 'os', 'sys', 'io',
     'urllib.request', 'urllib.parse', 'webbrowser',
-    'ctypes', 'ctypes.util',
+    'ctypes', 'ctypes.util', 'tempfile', 'logging', 'logging.handlers',
+    'datetime', 'traceback',
     # PDF / imaging
     'pypdfium2', 'PIL', 'PIL.Image', 'PIL.ImageDraw', 'PIL.ImageFont',
     # Reporting
@@ -55,16 +56,33 @@ hiddenimports = [
     # Crypto
     'cryptography', 'cryptography.fernet', 'cryptography.hazmat',
     'cryptography.hazmat.primitives', 'cryptography.hazmat.backends',
-    # App modules
+    'cryptography.hazmat.primitives.hashes',
+    'cryptography.hazmat.primitives.kdf.pbkdf2',
+    # App modules — core
+    'app', 'app.main',
     'app.core.config', 'app.core.database', 'app.core.app_controller',
+    'app.core.logger', 'app.core.native_loader',
+    # App modules — data
+    'app.datasets.dataset_loader',
+    # App modules — services
+    'app.patients.patient_service',
+    'app.history.history_service',
     'app.history.handover_document_service',
+    'app.security.encryption',
     'app.security.india_validation',
     'app.healthcare.location_service',
     'app.healthcare.maps_service',
     'app.healthcare.native_map_loader',
     'app.healthcare.offline_map_service',
-    'app.triage.question_engine', 'app.triage.engine', 'app.triage.result', 'app.triage.explainer',
-    'app.ui.screens', 'app.ui.app', 'app.ui.components',
+    'app.synchronization.sync_service',
+    # App modules — triage
+    'app.triage.question_engine', 'app.triage.engine',
+    'app.triage.result', 'app.triage.explainer',
+    # App modules — reports
+    'app.reports.handover_pdf',
+    # App modules — UI
+    'app.ui.theme', 'app.ui.components',
+    'app.ui.screens', 'app.ui.app',
 ]
 
 a = Analysis(
@@ -75,7 +93,7 @@ a = Analysis(
     hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
-    runtime_hooks=[],
+    runtime_hooks=['rthook_medicare.py'],
     excludes=[
         'PySide6', 'PyQt5', 'PyQt6', 'tkinter', 'wx',
         'matplotlib', 'pandas', 'numpy', 'scipy',
@@ -109,7 +127,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    runtime_tmpdir=None,      # Let PyInstaller choose; use None not a fixed path
+    runtime_tmpdir=None,
     icon=None,
 )
 # NOTE: No COLLECT block — onefile builds embed everything in the EXE.

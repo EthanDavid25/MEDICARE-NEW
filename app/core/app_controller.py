@@ -27,8 +27,15 @@ class AppController:
 
     def __init__(self, config: MedicareConfig = None):
         self.config = config or load_config()
+        # ensure_directories is non-fatal — it swallows PermissionError internally
         self.config.ensure_directories()
-        self.logger = setup_logger(self.config.log_path, self.config.log_level)
+        # Logger: if the log path is not writable, fall back to a temp-dir log
+        try:
+            self.logger = setup_logger(self.config.log_path, self.config.log_level)
+        except (PermissionError, OSError):
+            import tempfile, os
+            fallback_log = Path(tempfile.gettempdir()) / "medicare.log"
+            self.logger = setup_logger(fallback_log, self.config.log_level)
         
         # Subsystems
         self.db: SQLiteDatabase = None
@@ -67,8 +74,10 @@ class AppController:
         self.db = SQLiteDatabase(self.config.db_path)
         self.db.initialize()
 
-        # 2. Security Manager
-        self.security = SecurityManager(self.config.data_dir / ".medicare.key")
+        # 2. Security Manager — key file must live in the writable user-data dir,
+        #    NOT in config.data_dir which may point to _MEIPASS (read-only in onefile).
+        security_key_path = self.config.db_path.parent / ".medicare.key"
+        self.security = SecurityManager(security_key_path)
 
         # 3. Native C Modules
         self.native = NativeLoader(self.config.native_dir)
