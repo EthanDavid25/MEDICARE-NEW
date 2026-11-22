@@ -192,9 +192,9 @@ class MedicareKivyApp(App):
         divider = Widget(size_hint_y=None, height=1)
         with divider.canvas.before:
             Color(0.18, 0.28, 0.42, 0.6)
-            Rectangle(pos=divider.pos, size=divider.size)
-        divider.bind(pos=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'pos', inst.pos),
-                     size=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'size', inst.size))
+            div_rect = Rectangle(pos=divider.pos, size=divider.size)
+        divider.bind(pos=lambda inst, *a: setattr(div_rect, 'pos', inst.pos),
+                     size=lambda inst, *a: setattr(div_rect, 'size', inst.size))
         brand_card.add_widget(divider)
 
         self.sidebar.add_widget(brand_card)

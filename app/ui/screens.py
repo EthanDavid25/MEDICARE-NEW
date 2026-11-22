@@ -95,9 +95,9 @@ class DashboardScreen(BaseScreen):
         icon_box = BoxLayout(size_hint=(None, None), size=(48, 48), pos_hint={"center_y": 0.5})
         with icon_box.canvas.before:
             Color(*COLOR_BLUE_ACCENT)
-            Ellipse(pos=icon_box.pos, size=icon_box.size)
-        icon_box.bind(pos=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'pos', inst.pos),
-                      size=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'size', inst.size))
+            icon_ellipse = Ellipse(pos=icon_box.pos, size=icon_box.size)
+        icon_box.bind(pos=lambda inst, *a: setattr(icon_ellipse, 'pos', inst.pos),
+                      size=lambda inst, *a: setattr(icon_ellipse, 'size', inst.size))
         icon_lbl = Label(text="♥", font_size="22sp", color=COLOR_WHITE, bold=True)
         icon_box.add_widget(icon_lbl)
         banner.add_widget(icon_box)
@@ -126,9 +126,9 @@ class DashboardScreen(BaseScreen):
         i1 = BoxLayout(size_hint=(None, None), size=(38, 38), pos_hint={"center_y": 0.5})
         with i1.canvas.before:
             Color(0.9, 0.94, 1.0, 1.0)
-            Ellipse(pos=i1.pos, size=i1.size)
-        i1.bind(pos=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'pos', inst.pos),
-                size=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'size', inst.size))
+            e1 = Ellipse(pos=i1.pos, size=i1.size)
+        i1.bind(pos=lambda inst, *a: setattr(e1, 'pos', inst.pos),
+                size=lambda inst, *a: setattr(e1, 'size', inst.size))
         i1.add_widget(Label(text="👥", font_size="16sp", color=COLOR_BLUE_ACCENT))
         self.card_total.add_widget(i1)
         
@@ -147,9 +147,9 @@ class DashboardScreen(BaseScreen):
         i2 = BoxLayout(size_hint=(None, None), size=(38, 38), pos_hint={"center_y": 0.5})
         with i2.canvas.before:
             Color(*COLOR_EMERGENCY_TINT)
-            Ellipse(pos=i2.pos, size=i2.size)
-        i2.bind(pos=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'pos', inst.pos),
-                size=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'size', inst.size))
+            e2 = Ellipse(pos=i2.pos, size=i2.size)
+        i2.bind(pos=lambda inst, *a: setattr(e2, 'pos', inst.pos),
+                size=lambda inst, *a: setattr(e2, 'size', inst.size))
         i2.add_widget(Label(text="⚠️", font_size="16sp", color=COLOR_URGENT_EMERGENCY))
         self.card_emerg.add_widget(i2)
         
@@ -168,9 +168,9 @@ class DashboardScreen(BaseScreen):
         i3 = BoxLayout(size_hint=(None, None), size=(38, 38), pos_hint={"center_y": 0.5})
         with i3.canvas.before:
             Color(*COLOR_ROUTINE_TINT)
-            Ellipse(pos=i3.pos, size=i3.size)
-        i3.bind(pos=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'pos', inst.pos),
-                size=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'size', inst.size))
+            e3 = Ellipse(pos=i3.pos, size=i3.size)
+        i3.bind(pos=lambda inst, *a: setattr(e3, 'pos', inst.pos),
+                size=lambda inst, *a: setattr(e3, 'size', inst.size))
         i3.add_widget(Label(text="✓", font_size="16sp", bold=True, color=COLOR_URGENT_ROUTINE))
         self.card_routine.add_widget(i3)
         
@@ -942,11 +942,16 @@ class FollowupQuestionsScreen(BaseScreen):
         self.top_bar = BoxLayout(orientation="horizontal", size_hint_y=None, height=48, padding=[18, 6, 18, 6], spacing=10)
         with self.top_bar.canvas.before:
             Color(*COLOR_WHITE)
-            Rectangle(pos=self.top_bar.pos, size=self.top_bar.size)
+            self.top_bar_rect = Rectangle(pos=self.top_bar.pos, size=self.top_bar.size)
             Color(*COLOR_BORDER)
-            Line(points=[self.top_bar.x, 0, self.top_bar.right, 0], width=1)
-        self.top_bar.bind(pos=lambda inst, *a: setattr(inst.canvas.before.children[1], 'pos', inst.pos),
-                          size=lambda inst, *a: setattr(inst.canvas.before.children[1], 'size', inst.size))
+            self.top_bar_line = Line(points=[self.top_bar.x, 0, self.top_bar.right, 0], width=1)
+
+        def _update_top_bar(inst, *args):
+            self.top_bar_rect.pos = inst.pos
+            self.top_bar_rect.size = inst.size
+            self.top_bar_line.points = [inst.x, inst.y, inst.right, inst.y]
+
+        self.top_bar.bind(pos=_update_top_bar, size=_update_top_bar)
 
         btn_back = SecondaryButton(text="← Back", size_hint=(None, None), size=(90, 36))
         btn_back.bind(on_release=self._on_back_pressed)
@@ -1051,9 +1056,9 @@ class FollowupQuestionsScreen(BaseScreen):
         clip_box = BoxLayout(size_hint=(None, None), size=(38, 38), pos_hint={"center_y": 0.5})
         with clip_box.canvas.before:
             Color(0.9, 0.94, 1.0, 1.0)
-            RoundedRectangle(pos=clip_box.pos, size=clip_box.size, radius=[8])
-        clip_box.bind(pos=lambda inst, *a: setattr(inst.canvas.before.children[1], 'pos', inst.pos),
-                      size=lambda inst, *a: setattr(inst.canvas.before.children[1], 'size', inst.size))
+            clip_rect = RoundedRectangle(pos=clip_box.pos, size=clip_box.size, radius=[8])
+        clip_box.bind(pos=lambda inst, *a: setattr(clip_rect, 'pos', inst.pos),
+                      size=lambda inst, *a: setattr(clip_rect, 'size', inst.size))
         clip_lbl = Label(text="📋", font_size="16sp")
         clip_box.add_widget(clip_lbl)
         hdr_box.add_widget(clip_box)
@@ -1372,9 +1377,9 @@ class TriageResultsScreen(BaseScreen):
                 Color(*COLOR_EARLY_TINT)
             else:
                 Color(*COLOR_ROUTINE_TINT)
-            Ellipse(pos=emblem_box.pos, size=emblem_box.size)
-        emblem_box.bind(pos=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'pos', inst.pos),
-                        size=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'size', inst.size))
+            emblem_ellipse = Ellipse(pos=emblem_box.pos, size=emblem_box.size)
+        emblem_box.bind(pos=lambda inst, *a: setattr(emblem_ellipse, 'pos', inst.pos),
+                        size=lambda inst, *a: setattr(emblem_ellipse, 'size', inst.size))
         
         emblem_col = COLOR_URGENT_EMERGENCY if cat == 1 else (COLOR_URGENT_EARLY if cat == 2 else COLOR_URGENT_ROUTINE)
         emblem_lbl = Label(text="+", font_size="38sp", bold=True, color=emblem_col)
@@ -1745,9 +1750,9 @@ class DoctorHandoverScreen(BaseScreen):
         icon_box = BoxLayout(size_hint=(None, None), size=(36, 36), pos_hint={"center_y": 0.5})
         with icon_box.canvas.before:
             Color(*COLOR_BLUE_ACCENT)
-            RoundedRectangle(pos=icon_box.pos, size=icon_box.size, radius=[8])
-        icon_box.bind(pos=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'pos', inst.pos),
-                      size=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'size', inst.size))
+            icon_round_rect = RoundedRectangle(pos=icon_box.pos, size=icon_box.size, radius=[8])
+        icon_box.bind(pos=lambda inst, *a: setattr(icon_round_rect, 'pos', inst.pos),
+                      size=lambda inst, *a: setattr(icon_round_rect, 'size', inst.size))
         icon_lbl = Label(text="♥", font_size="20sp", bold=True, color=(1, 1, 1, 1))
         icon_box.add_widget(icon_lbl)
         left_brand.add_widget(icon_box)
@@ -2314,9 +2319,9 @@ class PDFViewerScreen(BaseScreen):
         self.toolbar = BoxLayout(orientation="horizontal", spacing=8, padding=[12, 6, 12, 6], size_hint_y=None, height=44)
         with self.toolbar.canvas.before:
             Color(0.94, 0.96, 0.98, 1.0)
-            Rectangle(pos=self.toolbar.pos, size=self.toolbar.size)
-        self.toolbar.bind(pos=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'pos', inst.pos),
-                          size=lambda inst, *a: setattr(inst.canvas.before.children[-1], 'size', inst.size))
+            toolbar_rect = Rectangle(pos=self.toolbar.pos, size=self.toolbar.size)
+        self.toolbar.bind(pos=lambda inst, *a: setattr(toolbar_rect, 'pos', inst.pos),
+                          size=lambda inst, *a: setattr(toolbar_rect, 'size', inst.size))
 
         self.btn_prev = SecondaryButton(text="< Prev", size_hint=(None, None), size=(72, 32))
         self.btn_prev.bind(on_release=lambda x: self._prev_page())
