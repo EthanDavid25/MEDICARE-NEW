@@ -128,8 +128,8 @@ MEDICARE_OFFLINE/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/EthanDavid25/Medical-Triage-.git
-cd Medical-Triage-
+git clone https://github.com/EthanDavid25/MEDICARE-NEW.git
+cd MEDICARE-NEW
 ```
 
 ### 2. Create a virtual environment (recommended)
