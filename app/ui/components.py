@@ -8,7 +8,7 @@ from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.widget import Widget
 from kivy.uix.behaviors import ButtonBehavior
-from kivy.graphics import Color, RoundedRectangle, Line, Rectangle, Ellipse
+from kivy.graphics import Color, RoundedRectangle, Line, Rectangle, Ellipse, Mesh
 from kivy.properties import ListProperty, NumericProperty, StringProperty, BooleanProperty
 
 from app.ui.theme import (
@@ -42,6 +42,101 @@ class WrappedLabel(Label):
 
     def _update_height(self, instance, value):
         self.height = max(value[1] + 4, 18)
+
+class CanvasIcon(Widget):
+    """
+    Pure Kivy vector graphics icon widget.
+    Zero external font or glyph dependencies; eliminates .notdef box-with-X glyph bugs.
+    Supports icons:
+      - 'check': circular badge with vector checkmark
+      - 'alert' or 'exclamation': circular badge with vector exclamation mark
+      - 'triangle_alert': filled emergency warning triangle with exclamation mark
+      - 'arrow_down': circular badge with downward arrow
+      - 'info': circular badge with informational 'i'
+      - 'cross': medical plus sign
+    """
+    icon_type = StringProperty("check")
+    icon_color = ListProperty([1.0, 1.0, 1.0, 1.0])
+    bg_color = ListProperty([0.05, 0.43, 0.99, 1.0])
+    draw_bg = BooleanProperty(True)
+
+    def __init__(self, icon_type="check", bg_color=None, icon_color=(1.0, 1.0, 1.0, 1.0), size=(22, 22), draw_bg=True, **kwargs):
+        super().__init__(**kwargs)
+        self.size_hint = (None, None)
+        self.size = size
+        self.icon_type = icon_type
+        if bg_color is not None:
+            self.bg_color = bg_color
+        self.icon_color = icon_color
+        self.draw_bg = draw_bg
+        self.bind(pos=self._redraw, size=self._redraw, icon_type=self._redraw, bg_color=self._redraw, icon_color=self._redraw)
+        self._redraw()
+
+    def _redraw(self, *args):
+        self.canvas.clear()
+        w, h = self.size
+        if w <= 0 or h <= 0:
+            return
+        x, y = self.pos
+        cx = x + w / 2.0
+        cy = y + h / 2.0
+        r = min(w, h) / 2.0
+
+        with self.canvas:
+            if self.icon_type == "triangle_alert":
+                Color(*self.bg_color)
+                p_top = (cx, y + h * 0.90)
+                p_left = (x + w * 0.08, y + h * 0.12)
+                p_right = (x + w * 0.92, y + h * 0.12)
+                Mesh(
+                    vertices=[p_top[0], p_top[1], 0, 0,
+                              p_left[0], p_left[1], 0, 0,
+                              p_right[0], p_right[1], 0, 0],
+                    indices=[0, 1, 2],
+                    mode="triangles"
+                )
+                Color(*self.icon_color)
+                Line(points=[cx, y + h * 0.65, cx, y + h * 0.38], width=max(2.0, w * 0.08), cap="round")
+                dot_r = max(1.8, w * 0.05)
+                Ellipse(pos=(cx - dot_r, y + h * 0.22 - dot_r), size=(dot_r * 2, dot_r * 2))
+
+            else:
+                if self.draw_bg:
+                    Color(*self.bg_color)
+                    Ellipse(pos=(cx - r, cy - r), size=(2 * r, 2 * r))
+
+                Color(*self.icon_color)
+                lw = max(1.8, r * 0.18)
+
+                if self.icon_type == "check":
+                    p1 = (cx - r * 0.42, cy - r * 0.04)
+                    p2 = (cx - r * 0.10, cy - r * 0.38)
+                    p3 = (cx + r * 0.44, cy + r * 0.36)
+                    Line(points=[p1[0], p1[1], p2[0], p2[1], p3[0], p3[1]], width=lw, cap="round", joint="round")
+
+                elif self.icon_type in ("alert", "exclamation"):
+                    Line(points=[cx, cy + r * 0.44, cx, cy - r * 0.06], width=lw, cap="round")
+                    dot_r = max(1.4, r * 0.14)
+                    Ellipse(pos=(cx - dot_r, cy - r * 0.38 - dot_r), size=(dot_r * 2, dot_r * 2))
+
+                elif self.icon_type == "arrow_down":
+                    Line(points=[cx, cy + r * 0.44, cx, cy - r * 0.38], width=lw, cap="round")
+                    ah_w = r * 0.36
+                    ah_h = r * 0.32
+                    p_left = (cx - ah_w, cy - r * 0.38 + ah_h)
+                    p_tip = (cx, cy - r * 0.38)
+                    p_right = (cx + ah_w, cy - r * 0.38 + ah_h)
+                    Line(points=[p_left[0], p_left[1], p_tip[0], p_tip[1], p_right[0], p_right[1]], width=lw, cap="round", joint="round")
+
+                elif self.icon_type == "info":
+                    dot_r = max(1.4, r * 0.14)
+                    Ellipse(pos=(cx - dot_r, cy + r * 0.36 - dot_r), size=(dot_r * 2, dot_r * 2))
+                    Line(points=[cx, cy + r * 0.10, cx, cy - r * 0.44], width=lw, cap="round")
+
+                elif self.icon_type == "cross":
+                    arm = r * 0.55
+                    Line(points=[cx - arm, cy, cx + arm, cy], width=lw * 1.5, cap="square")
+                    Line(points=[cx, cy - arm, cx, cy + arm], width=lw * 1.5, cap="square")
 
 class SectionTitle(WrappedLabel):
     """Clean prominent section header with robust height."""

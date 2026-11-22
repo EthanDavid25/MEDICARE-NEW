@@ -36,7 +36,8 @@ from app.ui.theme import (
 )
 from app.ui.components import (
     CardBox, PrimaryButton, SecondaryButton, UrgencyBadge, WrappedLabel,
-    SectionTitle, OptionButton, QuestionOptionCard, ProgressBarWidget, StatusPill
+    SectionTitle, OptionButton, QuestionOptionCard, ProgressBarWidget, StatusPill,
+    CanvasIcon
 )
 from app.reports.handover_pdf import generate_doctor_handover_pdf
 from app.security.india_validation import validate_indian_mobile, validate_indian_date, format_indian_datetime
@@ -1247,35 +1248,33 @@ class TriageResultsScreen(BaseScreen):
         if cat == 1:
             banner_card.bg_color = COLOR_EMERGENCY_TINT
             banner_card.border_color = (0.95, 0.75, 0.75, 1.0)
-            icon_str = "⚠️"
+            banner_icon = CanvasIcon(icon_type="triangle_alert", bg_color=COLOR_URGENT_EMERGENCY, icon_color=COLOR_WHITE, size=(38, 38), pos_hint={"center_y": 0.5})
             title_str = "CATEGORY 1 — EMERGENCY CARE"
             sub_str = "Seek immediate medical attention"
             title_color = COLOR_URGENT_EMERGENCY
         elif cat == 2:
             banner_card.bg_color = COLOR_EARLY_TINT
             banner_card.border_color = (0.95, 0.85, 0.7, 1.0)
-            icon_str = "⚠️"
+            banner_icon = CanvasIcon(icon_type="triangle_alert", bg_color=COLOR_URGENT_EARLY, icon_color=COLOR_WHITE, size=(38, 38), pos_hint={"center_y": 0.5})
             title_str = "CATEGORY 2 — EARLY MEDICAL CONSULTATION"
             sub_str = "Consult a physician promptly within 12–24 hours"
             title_color = (0.8, 0.45, 0.0, 1.0)
         elif cat == 3:
             banner_card.bg_color = COLOR_ROUTINE_TINT
             banner_card.border_color = (0.75, 0.9, 0.8, 1.0)
-            icon_str = "✓"
+            banner_icon = CanvasIcon(icon_type="check", bg_color=COLOR_URGENT_ROUTINE, icon_color=COLOR_WHITE, size=(36, 36), pos_hint={"center_y": 0.5})
             title_str = "CATEGORY 3 — ROUTINE CARE"
             sub_str = "Self-care and routine medical consultation"
             title_color = (0.05, 0.55, 0.25, 1.0)
         else:
             banner_card.bg_color = (0.94, 0.96, 0.98, 1.0)
             banner_card.border_color = COLOR_BORDER
-            icon_str = "ℹ"
+            banner_icon = CanvasIcon(icon_type="info", bg_color=COLOR_BLUE_ACCENT, icon_color=COLOR_WHITE, size=(36, 36), pos_hint={"center_y": 0.5})
             title_str = "CATEGORY 4 — INSUFFICIENT INFORMATION"
             sub_str = "Additional clinical evaluation needed"
             title_color = COLOR_NAVY_PRIMARY
 
-        # Alert icon on left
-        b_icon = Label(text=icon_str, font_size="26sp", bold=True, color=title_color, size_hint=(None, None), size=(36, 40), pos_hint={"center_y": 0.5})
-        banner_card.add_widget(b_icon)
+        banner_card.add_widget(banner_icon)
 
         # Title text column
         b_text_col = BoxLayout(orientation="vertical", spacing=2, pos_hint={"center_y": 0.5})
@@ -1295,24 +1294,34 @@ class TriageResultsScreen(BaseScreen):
         # -------------------------------------------------------------
         # SECTION 2: ASSESSMENT SUMMARY CARD WITH MEDICAL EMBLEM
         # -------------------------------------------------------------
-        summary_card = CardBox(orientation="vertical", spacing=12, padding=[20, 18, 20, 18], size_hint_y=None)
-        summary_card.bind(minimum_height=summary_card.setter("height"))
+        summary_card = CardBox(orientation="vertical", spacing=14, padding=[20, 18, 20, 18], size_hint_y=None)
         summary_card.corner_radius = 12
 
-        # Card Title
-        summary_card.add_widget(WrappedLabel(
+        # Dedicated Heading Layout Container (Eliminates vertical overlap)
+        heading_box = BoxLayout(orientation="horizontal", size_hint_y=None, height=26)
+        heading_box.add_widget(WrappedLabel(
             text="[b][size=16sp]Assessment Summary[/size][/b]",
             font_size="16sp",
             color=COLOR_NAVY_PRIMARY
         ))
+        summary_card.add_widget(heading_box)
 
         # Main summary content row: Left bullet points, Right emblem
         content_row = BoxLayout(orientation="horizontal", spacing=14, size_hint_y=None)
-        content_row.bind(minimum_height=content_row.setter("height"))
 
         # Left Column: Key Findings List
-        findings_col = BoxLayout(orientation="vertical", spacing=8, size_hint_x=0.78)
+        findings_col = BoxLayout(orientation="vertical", spacing=10, size_hint_x=0.78, size_hint_y=None)
         findings_col.bind(minimum_height=findings_col.setter("height"))
+
+        def create_finding_row(icon_type, icon_bg, label_text):
+            row = BoxLayout(orientation="horizontal", spacing=10, size_hint_y=None)
+            badge = CanvasIcon(icon_type=icon_type, bg_color=icon_bg, icon_color=COLOR_WHITE, size=(20, 20), pos_hint={"top": 0.95})
+            lbl = WrappedLabel(text=label_text, font_size="13sp", color=COLOR_TEXT_DARK, size_hint_x=1.0)
+            row.add_widget(badge)
+            row.add_widget(lbl)
+            lbl.bind(height=lambda inst, val, r=row: setattr(r, "height", max(val, 24)))
+            row.height = max(lbl.height, 24)
+            return row
 
         # Symptoms
         symptoms = getattr(result, "symptoms", [])
@@ -1322,11 +1331,12 @@ class TriageResultsScreen(BaseScreen):
             except Exception:
                 symptoms = []
         sym_names = ", ".join(s.get("name", "") for s in symptoms if isinstance(s, dict) and s.get("name")) or "Reported symptoms"
-        findings_col.add_widget(WrappedLabel(
-            text=f"[color=#0D6EFD]⬇[/color]  [b]Symptoms Reported:[/b]   {sym_names}",
-            font_size="13sp",
-            color=COLOR_TEXT_DARK
-        ))
+        row_sym = create_finding_row(
+            icon_type="arrow_down",
+            icon_bg=COLOR_BLUE_ACCENT,
+            label_text=f"[b]Symptoms Reported:[/b]   {sym_names}"
+        )
+        findings_col.add_widget(row_sym)
 
         # Key Findings
         answers = getattr(result, "followup_answers", {})
@@ -1338,18 +1348,22 @@ class TriageResultsScreen(BaseScreen):
         if not findings_list and hasattr(result, "warning_signs_found") and result.warning_signs_found:
             findings_list = [w[:25] for w in result.warning_signs_found[:2]]
         findings_str = ", ".join(findings_list) if findings_list else "Standard symptom course"
-        findings_col.add_widget(WrappedLabel(
-            text=f"[color=#0D6EFD]✓[/color]  [b]Key Findings:[/b]   {findings_str}",
-            font_size="13sp",
-            color=COLOR_TEXT_DARK
-        ))
+        row_find = create_finding_row(
+            icon_type="check",
+            icon_bg=COLOR_BLUE_ACCENT,
+            label_text=f"[b]Key Findings:[/b]   {findings_str}"
+        )
+        findings_col.add_widget(row_find)
 
         # Triage Category
-        findings_col.add_widget(WrappedLabel(
-            text=f"[color=#DC2626]⚠️[/color]  [b]Triage Category:[/b]   Category {cat}",
-            font_size="13sp",
-            color=COLOR_TEXT_DARK
-        ))
+        cat_badge_bg = COLOR_URGENT_EMERGENCY if cat == 1 else (COLOR_URGENT_EARLY if cat == 2 else (COLOR_URGENT_ROUTINE if cat == 3 else COLOR_NAVY_PRIMARY))
+        cat_icon_type = "alert" if cat in (1, 2) else ("check" if cat == 3 else "info")
+        row_cat = create_finding_row(
+            icon_type=cat_icon_type,
+            icon_bg=cat_badge_bg,
+            label_text=f"[b]Triage Category:[/b]   Category {cat}"
+        )
+        findings_col.add_widget(row_cat)
 
         # Recommended Action
         if cat == 1:
@@ -1361,11 +1375,12 @@ class TriageResultsScreen(BaseScreen):
         else:
             rec_action = "Retake assessment or consult local clinic"
 
-        findings_col.add_widget(WrappedLabel(
-            text=f"[color=#10B981]✓[/color]  [b]Recommended Action:[/b]   {rec_action}",
-            font_size="13sp",
-            color=COLOR_TEXT_DARK
-        ))
+        row_act = create_finding_row(
+            icon_type="alert" if cat == 1 else "check",
+            icon_bg=COLOR_URGENT_EMERGENCY if cat == 1 else COLOR_URGENT_ROUTINE,
+            label_text=f"[b]Recommended Action:[/b]   {rec_action}"
+        )
+        findings_col.add_widget(row_act)
         content_row.add_widget(findings_col)
 
         # Right Column: Circular Medical Cross Emblem
@@ -1386,15 +1401,19 @@ class TriageResultsScreen(BaseScreen):
         emblem_box.add_widget(emblem_lbl)
         content_row.add_widget(emblem_box)
 
+        # Synchronize content_row height dynamically to findings_col height
+        findings_col.bind(height=lambda inst, val: setattr(content_row, "height", max(val, 76)))
+        content_row.height = max(findings_col.height, 76)
+
         summary_card.add_widget(content_row)
 
         # Bottom Warning Bar inside card (Matching Screen 3)
-        bottom_alert_bar = CardBox(orientation="horizontal", spacing=8, padding=[12, 8, 12, 8], size_hint_y=None, height=36)
+        bottom_alert_bar = CardBox(orientation="horizontal", spacing=10, padding=[12, 8, 12, 8], size_hint_y=None, height=36)
         bottom_alert_bar.corner_radius = 6
         if cat == 1:
             bottom_alert_bar.bg_color = COLOR_EMERGENCY_TINT
             bottom_alert_bar.border_color = (0.95, 0.75, 0.75, 1.0)
-            bottom_alert_bar.add_widget(Label(text="⚠️", font_size="12sp", color=COLOR_URGENT_EMERGENCY, size_hint=(None, None), size=(20, 20)))
+            bottom_alert_bar.add_widget(CanvasIcon(icon_type="triangle_alert", bg_color=COLOR_URGENT_EMERGENCY, icon_color=COLOR_WHITE, size=(18, 18), pos_hint={"center_y": 0.5}))
             bottom_alert_bar.add_widget(WrappedLabel(
                 text="[b][color=#DC2626]Do not delay treatment. This is a medical emergency.[/color][/b]",
                 font_size="11.5sp"
@@ -1402,7 +1421,7 @@ class TriageResultsScreen(BaseScreen):
         elif cat == 2:
             bottom_alert_bar.bg_color = COLOR_EARLY_TINT
             bottom_alert_bar.border_color = (0.95, 0.85, 0.7, 1.0)
-            bottom_alert_bar.add_widget(Label(text="⚠️", font_size="12sp", color=COLOR_URGENT_EARLY, size_hint=(None, None), size=(20, 20)))
+            bottom_alert_bar.add_widget(CanvasIcon(icon_type="triangle_alert", bg_color=COLOR_URGENT_EARLY, icon_color=COLOR_WHITE, size=(18, 18), pos_hint={"center_y": 0.5}))
             bottom_alert_bar.add_widget(WrappedLabel(
                 text="[b][color=#B45309]Schedule a same-day medical consultation promptly.[/color][/b]",
                 font_size="11.5sp"
@@ -1410,12 +1429,28 @@ class TriageResultsScreen(BaseScreen):
         else:
             bottom_alert_bar.bg_color = COLOR_ROUTINE_TINT
             bottom_alert_bar.border_color = (0.75, 0.9, 0.8, 1.0)
-            bottom_alert_bar.add_widget(Label(text="✓", font_size="12sp", color=COLOR_URGENT_ROUTINE, size_hint=(None, None), size=(20, 20)))
+            bottom_alert_bar.add_widget(CanvasIcon(icon_type="check", bg_color=COLOR_URGENT_ROUTINE, icon_color=COLOR_WHITE, size=(18, 18), pos_hint={"center_y": 0.5}))
             bottom_alert_bar.add_widget(WrappedLabel(
                 text="[b][color=#059669]Routine supportive care recommended. Monitor for changes.[/color][/b]",
                 font_size="11.5sp"
             ))
         summary_card.add_widget(bottom_alert_bar)
+
+        def _update_summary_card_height(*args):
+            total_h = (
+                summary_card.padding[1] + summary_card.padding[3]
+                + heading_box.height
+                + summary_card.spacing
+                + content_row.height
+                + summary_card.spacing
+                + bottom_alert_bar.height
+            )
+            summary_card.height = max(total_h, 160)
+
+        content_row.bind(height=_update_summary_card_height)
+        heading_box.bind(height=_update_summary_card_height)
+        _update_summary_card_height()
+
         self.content.add_widget(summary_card)
 
         # -------------------------------------------------------------
@@ -1476,11 +1511,11 @@ class TriageResultsScreen(BaseScreen):
         # -------------------------------------------------------------
         act_box = BoxLayout(orientation="horizontal", spacing=14, size_hint_y=None, height=44)
         
-        btn_pdf = SecondaryButton(text="📥  Download Report", size_hint=(0.5, 1))
+        btn_pdf = SecondaryButton(text="Download Report (PDF)", size_hint=(0.5, 1))
         btn_pdf.bind(on_release=self._generate_pdf)
         act_box.add_widget(btn_pdf)
 
-        btn_home = PrimaryButton(text="🏠  Back to Dashboard", size_hint=(0.5, 1))
+        btn_home = PrimaryButton(text="Back to Dashboard", size_hint=(0.5, 1))
         btn_home.bind(on_release=lambda x: self._nav_to("dashboard"))
         act_box.add_widget(btn_home)
 

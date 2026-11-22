@@ -8,6 +8,19 @@ import sys
 import os
 from pathlib import Path
 
+# --- Safe stdout / stderr for windowed mode ---
+# Must be done FIRST before anything that may write to stdout/stderr.
+class _NullWriter:
+    def write(self, s):
+        pass
+    def flush(self):
+        pass
+
+if sys.stdout is None:
+    sys.stdout = _NullWriter()
+if sys.stderr is None:
+    sys.stderr = _NullWriter()
+
 # --- sys.path fixup ---
 if hasattr(sys, "_MEIPASS"):
     meipass = sys._MEIPASS
@@ -51,16 +64,4 @@ if "KIVY_HOME" not in os.environ:
         except Exception:
             pass
 
-    # --- Safe stdout / stderr for windowed mode ---
-class _NullWriter:
-    def write(self, s):
-        pass
-    def flush(self):
-        pass
-
-if sys.stdout is None:
-    sys.stdout = _NullWriter()
-if sys.stderr is None:
-    sys.stderr = _NullWriter()
-
-os.environ["KIVY_HOME"] = chosen_kivy_home
+    os.environ["KIVY_HOME"] = chosen_kivy_home
