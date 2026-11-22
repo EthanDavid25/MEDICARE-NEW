@@ -37,7 +37,9 @@ class TestMedicareCore(unittest.TestCase):
             db_path=cls.temp_path / "test_medicare.db",
             log_path=cls.temp_path / "test.log",
             data_dir=PROJECT_ROOT / "data",
-            native_dir=PROJECT_ROOT / "native" / "build"
+            native_dir=PROJECT_ROOT / "native" / "build",
+            reports_dir=cls.temp_path / "reports",
+            downloads_dir=cls.temp_path / "downloads",
         )
         cls.config.ensure_directories()
         

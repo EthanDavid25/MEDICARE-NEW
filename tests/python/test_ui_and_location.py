@@ -4,11 +4,17 @@ Automated functional verification for UI fixes, adaptive questions, and location
 import unittest
 import os
 import sys
+import tempfile
 from pathlib import Path
 
 # Add project root to path
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
+
+# Redirect MEDICARE user-data to a temp dir so tests run in sandbox / CI
+# without needing write access to %LOCALAPPDATA%.
+_TEST_DATA_HOME = tempfile.mkdtemp(prefix="medicare_test_")
+os.environ.setdefault("MEDICARE_DATA_HOME", _TEST_DATA_HOME)
 
 # Set Kivy local home directory and headless/dummy mode for testing
 local_kivy_home = PROJECT_ROOT / ".kivy_home"

@@ -4,10 +4,18 @@ Tests C-compatible Python engine, spatial grid indexing, A* routing,
 tile math, boundary validation, and dataset reference integration.
 """
 
+import os
+import sys
+import tempfile
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent
+
+# Redirect MEDICARE user-data to a temp dir so tests run in sandbox / CI
+# without needing write access to %LOCALAPPDATA%.
+_TEST_DATA_HOME = tempfile.mkdtemp(prefix="medicare_test_")
+os.environ.setdefault("MEDICARE_DATA_HOME", _TEST_DATA_HOME)
 
 from app.core.config import load_config
 from app.core.app_controller import AppController

@@ -12,6 +12,11 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+# Redirect MEDICARE user-data to a temp dir so tests run in sandbox / CI
+# without needing write access to %LOCALAPPDATA%.
+_TEST_DATA_HOME = tempfile.mkdtemp(prefix="medicare_test_")
+os.environ.setdefault("MEDICARE_DATA_HOME", _TEST_DATA_HOME)
+
 local_kivy_home = PROJECT_ROOT / ".kivy_home"
 local_kivy_home.mkdir(exist_ok=True)
 os.environ["KIVY_HOME"] = str(local_kivy_home)
